@@ -11,6 +11,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
 - **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral.
 - **Opciones de liga** — Cambia al vuelo entre ligas (Fate of the Vaal, HC, Standard, Hardcore…) sin reiniciar.
+- **Crafting Cheat Sheet** — Panel de referencia rápida con todos los orbes, essences, omens, catalysts y los nuevos items de Fate of the Vaal. Incluye descripción, a qué se aplica y tips de uso para cada uno.
 - **Instalador NeverSink** — Descarga e instala directamente los filtros NeverSink para PoE2 desde GitHub. Detecta automáticamente la carpeta del juego, muestra la versión instalada y avisa cuando hay actualizaciones.
 
 ---
@@ -38,6 +39,21 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ### Economy Window
 ![Economy Window](screenshots/economy-window.png)
 *Monitor de economía con popup de tasas cruzadas (Mirror of Kalandra → rates)*
+
+### Crafting Cheat Sheet
+![Crafting](screenshots/crafting.png)
+*Panel de referencia rápida — todos los orbes y mecánicas de crafting de PoE2*
+
+Accesible desde la pestaña **📖 Crafting** en la ventana de economía. Cubre:
+
+- **Calidad** — Whetstone, Arcanist's Etcher, Armourer's Scrap, Gemcutter's Prism, Vaal Infuser
+- **Cambio de rareza** — Transmutation, Augmentation, Regal, Alchemy, Chance
+- **Modificación de mods** — Chaos Orb *(⚠ en PoE2 solo cambia 1 mod)*, Exalted, Annulment, Divine, Fracturing, Hinekora's Lock
+- **Essences, Omens (Ritual), Catalysts (Breach)**
+- **Corrupción y Vaal** — Vaal Orb, Vaal Cultivation Orb, Vaal Siphoner, Architect's Orb, Crystallised Corruption
+- **Fate of the Vaal** — Ancient Infuser, Core Destabiliser, Orb of Extraction
+- **Desecramiento (Abyss)** — Collarbone, Jawbone, Rib, Cranium, Vertebrae
+- **Sockets de gema** — Artificer's Orb, Jeweller's Orbs
 
 ### Opciones de Liga
 ![Opciones](screenshots/league-options.png)
