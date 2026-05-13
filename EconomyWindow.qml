@@ -7,6 +7,7 @@ import "js/PoeNinja2.js" as PoeNinja2
 import "js/EconomyApi.js" as EconomyApi
 import "js/State.js" as State
 import "js/NeverSink.js" as NeverSink
+import "js/CraftingData.js" as CraftingData
 
 PanelWindow {
     id: root
@@ -404,15 +405,47 @@ PanelWindow {
                         }
                     }
 
-                    // Options tab pinned to bottom
+                    // Crafting + Options tabs pinned to bottom
                     Rectangle {
                         anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
-                        height: 42
+                        height: 84
                         color: "#111820"
 
                         Rectangle {
                             anchors { left: parent.left; right: parent.right; top: parent.top }
                             height: 1; color: "#1e2d3e"
+                        }
+
+                        Rectangle {
+                            id: craftRow
+                            anchors { left: parent.left; right: parent.right; top: parent.top; topMargin: 8 }
+                            height: 34
+                            color: root.activeCategory === "__crafting__" ? "#1e3a50" : "transparent"
+                            radius: 4
+
+                            Rectangle {
+                                visible: root.activeCategory === "__crafting__"
+                                width: 3; height: parent.height * 0.6; radius: 2
+                                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                                color: "#4fc3a0"
+                            }
+
+                            Text {
+                                anchors { left: parent.left; leftMargin: 14; verticalCenter: parent.verticalCenter }
+                                text: "📖  Crafting"
+                                color: root.activeCategory === "__crafting__" ? "#4fc3a0" : "#6a8aaa"
+                                font.pixelSize: 12
+                                font.bold: root.activeCategory === "__crafting__"
+                            }
+
+                            MouseArea {
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onEntered: craftRow.color = root.activeCategory === "__crafting__" ? "#1e3a50" : "#182838"
+                                onExited:  craftRow.color = root.activeCategory === "__crafting__" ? "#1e3a50" : "transparent"
+                                onClicked: root.activeCategory = "__crafting__"
+                            }
                         }
 
                         Rectangle {
@@ -521,6 +554,7 @@ PanelWindow {
 
                     // Column headers
                     Rectangle {
+                        visible: root.activeCategory !== "__options__" && root.activeCategory !== "__crafting__"
                         Layout.fillWidth: true
                         height: 28
                         color: "#0f161f"
@@ -533,11 +567,14 @@ PanelWindow {
                             Text { text: "Vol / Hour  ⓘ"; color: "#4a6a8a"; font.pixelSize: 11; width: 100; horizontalAlignment: Text.AlignRight }
                         }
                     }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: "#1e2d3e" }
+                    Rectangle {
+                        visible: root.activeCategory !== "__options__" && root.activeCategory !== "__crafting__"
+                        Layout.fillWidth: true; height: 1; color: "#1e2d3e"
+                    }
 
                     // Empty / loading state
                     Item {
-                        visible: root.entries.length === 0 && root.activeCategory !== "__options__"
+                        visible: root.entries.length === 0 && root.activeCategory !== "__options__" && root.activeCategory !== "__crafting__"
                         Layout.fillWidth: true; Layout.fillHeight: true
                         Text {
                             anchors.centerIn: parent
@@ -550,7 +587,7 @@ PanelWindow {
                     // Currency list
                     ListView {
                         id: listView
-                        visible: root.entries.length > 0 && root.activeCategory !== "__options__"
+                        visible: root.entries.length > 0 && root.activeCategory !== "__options__" && root.activeCategory !== "__crafting__"
                         Layout.fillWidth: true; Layout.fillHeight: true
                         clip: true
                         model: root.filteredEntries
@@ -691,6 +728,106 @@ PanelWindow {
                                         root.hoveredEntry = modelData
                                         var pos = row.mapToItem(panel, 0, row.height / 2)
                                         root.hoveredRowY = pos.y
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ── Crafting cheat sheet panel ─────────────────
+                    Item {
+                        visible: root.activeCategory === "__crafting__"
+                        Layout.fillWidth: true; Layout.fillHeight: true
+
+                        Flickable {
+                            anchors.fill: parent
+                            contentWidth: width
+                            contentHeight: craftCol.implicitHeight + 20
+                            clip: true
+
+                            Column {
+                                id: craftCol
+                                x: 16; y: 16
+                                width: parent.width - 32
+                                spacing: 0
+
+                                Text {
+                                    text: "Chuleta de Crafteo"
+                                    color: "#d4a843"; font.pixelSize: 15; font.bold: true
+                                    bottomPadding: 12
+                                }
+
+                                Repeater {
+                                    model: CraftingData.SECTIONS
+                                    delegate: Column {
+                                        width: craftCol.width
+                                        spacing: 0
+
+                                        // Section header
+                                        Rectangle {
+                                            width: parent.width; height: 28
+                                            color: "transparent"
+                                            Rectangle {
+                                                anchors { left: parent.left; bottom: parent.bottom }
+                                                width: parent.width; height: 1
+                                                color: modelData.color; opacity: 0.4
+                                            }
+                                            Text {
+                                                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                                                text: modelData.title
+                                                color: modelData.color
+                                                font.pixelSize: 12; font.bold: true
+                                            }
+                                        }
+
+                                        // Orb rows
+                                        Repeater {
+                                            model: modelData.orbs
+                                            delegate: Rectangle {
+                                                width: craftCol.width
+                                                height: orbCol.implicitHeight + 16
+                                                color: index % 2 === 0 ? "#111e2c" : "#0f1a28"
+                                                radius: 3
+
+                                                Column {
+                                                    id: orbCol
+                                                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10; topMargin: 8 }
+                                                    spacing: 3
+
+                                                    RowLayout {
+                                                        width: parent.width
+                                                        Text {
+                                                            text: modelData.name
+                                                            color: "#dde8f0"; font.pixelSize: 12; font.bold: true
+                                                            Layout.fillWidth: true
+                                                        }
+                                                        Text {
+                                                            text: modelData.applies
+                                                            color: "#4a6a8a"; font.pixelSize: 10
+                                                            horizontalAlignment: Text.AlignRight
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        width: parent.width
+                                                        text: modelData.effect
+                                                        color: "#8a9aaa"; font.pixelSize: 11
+                                                        wrapMode: Text.WordWrap
+                                                    }
+
+                                                    Text {
+                                                        visible: modelData.tip !== ""
+                                                        width: parent.width
+                                                        text: "💡 " + modelData.tip
+                                                        color: "#6a8a6a"; font.pixelSize: 10
+                                                        wrapMode: Text.WordWrap
+                                                        topPadding: 2
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        Item { width: parent.width; height: 10 }
                                     }
                                 }
                             }
