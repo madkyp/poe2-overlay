@@ -19,30 +19,51 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ## Capturas
 
 ### Price Checker
-![Price Checker](screenshots/price-checker.png)
-*Overlay de búsqueda de precios — muestra listados reales de la API de trade*
+
+<p align="center">
+  <img src="screenshots/price-checker.png" alt="Price Checker" width="380">
+  <br><em>Overlay de búsqueda de precios — muestra listados reales de la API de trade</em>
+</p>
 
 > **Uso:** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — la app muestra el precio al instante.
 > Requiere tener instalado **xdotool** (`sudo pacman -S xdotool`).
 
+---
+
 ### Currency Tracker
-![Currency Tracker](screenshots/currency-tracker.png)
-*Widget siempre visible con el valor de las divisas principales*
+
+<p align="center">
+  <img src="screenshots/currency-tracker.png" alt="Currency Tracker" width="280">
+  <br><em>Widget siempre visible con el valor de las divisas principales</em>
+</p>
+
+---
 
 ### Notas de Build
 
-| | |
-|---|---|
-| ![Botón Notas](screenshots/build-notes-btn.png) | ![Panel Notas](screenshots/build-notes.png) |
-| Botón de acceso rápido | Editor de notas con formato Markdown |
+<p align="center">
+  <img src="screenshots/build-notes-btn.png" alt="Botón Notas" width="180">&nbsp;&nbsp;&nbsp;
+  <img src="screenshots/build-notes.png" alt="Panel Notas" width="380">
+  <br><em>Botón de acceso rápido &nbsp;·&nbsp; Editor de notas con formato Markdown</em>
+</p>
+
+---
 
 ### Economy Window
-![Economy Window](screenshots/economy-window.png)
-*Monitor de economía con popup de tasas cruzadas (Mirror of Kalandra → rates)*
+
+<p align="center">
+  <img src="screenshots/economy-window.png" alt="Economy Window" width="680">
+  <br><em>Monitor de economía con popup de tasas cruzadas</em>
+</p>
+
+---
 
 ### Crafting Cheat Sheet
-![Crafting](screenshots/crafting.png)
-*Panel de referencia rápida — todos los orbes y mecánicas de crafting de PoE2*
+
+<p align="center">
+  <img src="screenshots/crafting.png" alt="Crafting Cheat Sheet" width="680">
+  <br><em>Panel de referencia rápida — todos los orbes y mecánicas de crafting de PoE2</em>
+</p>
 
 Accesible desde la pestaña **📖 Crafting** en la ventana de economía. Cubre:
 
@@ -55,13 +76,23 @@ Accesible desde la pestaña **📖 Crafting** en la ventana de economía. Cubre:
 - **Desecramiento (Abyss)** — Collarbone, Jawbone, Rib, Cranium, Vertebrae
 - **Sockets de gema** — Artificer's Orb, Jeweller's Orbs
 
+---
+
 ### Opciones de Liga
-![Opciones](screenshots/league-options.png)
-*Selector de liga — cambia la fuente de datos sin reiniciar*
+
+<p align="center">
+  <img src="screenshots/league-options.png" alt="Opciones de Liga" width="680">
+  <br><em>Selector de liga — cambia la fuente de datos sin reiniciar</em>
+</p>
+
+---
 
 ### Filtros NeverSink
-![NeverSink](screenshots/neversink-filter.png)
-*Instalador integrado — detecta la ruta del juego, selecciona estilo y descarga todos los niveles de estrictez*
+
+<p align="center">
+  <img src="screenshots/neversink-filter.png" alt="Filtros NeverSink" width="680">
+  <br><em>Instalador integrado — detecta la ruta del juego, selecciona estilo y descarga todos los niveles de estrictez</em>
+</p>
 
 ---
 
