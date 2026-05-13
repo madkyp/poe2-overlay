@@ -94,6 +94,18 @@ O añadir a tu `hyprland.conf` para que arranque con el sistema:
 exec-once = qs -p ~/.config/quickshell/poe2
 ```
 
+### Atajo de teclado en Hyprland
+
+Si prefieres lanzar el overlay con un atajo en lugar de arrancarlo al inicio, añade esto a tu `~/.config/hypr/hyprland.conf`:
+
+```
+bind = SUPER, M, exec, qs -p ~/.config/quickshell/poe2
+```
+
+Esto abre el overlay con **Super + M**. Puedes cambiar `M` por cualquier otra tecla.
+
+> Si ya tienes el overlay corriendo y quieres usar el atajo para mostrarlo/ocultarlo, la opción más sencilla es arrancarlo con `exec-once` y controlar la visibilidad desde dentro de la app.
+
 ---
 
 ## Configuración
