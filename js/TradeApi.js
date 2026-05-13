@@ -94,28 +94,15 @@ function searchItem(item, statFilters, league, poesessid, callback) {
     }
 }
 
-// Progressive fallback: try up to 4 mods, drop one at a time only when 0 results.
-// Caps at 4 mods to limit API calls. Adds 600ms between attempts to avoid rate limits.
+// Single call with all mods (up to 6). One request, no fallback, no rate limiting.
 function _searchRareWithFallback(item, statFilters, league, poesessid, callback) {
-    var attempt = Math.min(statFilters.length, 4)
-
-    function tryNext() {
-        var filtersToUse = statFilters.slice(0, attempt)
-        var q = _buildRareQuery(item, filtersToUse)
-        _postSearch(q, league, poesessid, function(err, data) {
-            if (err) { callback(err, null); return }
-            var total = (data.result || []).length
-            if (total > 0 || attempt <= 0) {
-                _fetchListings(data.id, (data.result || []).slice(0, 6),
-                               league, poesessid, filtersToUse.length, callback)
-            } else {
-                attempt--
-                setTimeout(tryNext, 600)
-            }
-        })
-    }
-
-    tryNext()
+    var filtersToUse = statFilters.slice(0, 6)
+    var q = _buildRareQuery(item, filtersToUse)
+    _postSearch(q, league, poesessid, function(err, data) {
+        if (err) { callback(err, null); return }
+        _fetchListings(data.id, (data.result || []).slice(0, 6),
+                       league, poesessid, filtersToUse.length, callback)
+    })
 }
 
 var BUYOUT_FILTER = {
