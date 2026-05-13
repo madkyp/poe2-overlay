@@ -6,7 +6,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 
 ## Características
 
-- **Price Checker** — Consulta el precio de cualquier item al vuelo usando la API de trade de PoE2. Muestra los primeros listados con precio, vendedor y liga.
+- **Price Checker** — Consulta el precio de cualquier item al vuelo con **Ctrl + D**. Muestra los primeros listados con precio, vendedor y liga.
 - **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal).
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
 - **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral.
@@ -21,7 +21,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ![Price Checker](screenshots/price-checker.png)
 *Overlay de búsqueda de precios — muestra listados reales de la API de trade*
 
-> **Uso (provisional):** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — la app inyecta el Ctrl + C automáticamente y muestra el precio.
+> **Uso:** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — la app muestra el precio al instante.
 
 ### Currency Tracker
 ![Currency Tracker](screenshots/currency-tracker.png)
