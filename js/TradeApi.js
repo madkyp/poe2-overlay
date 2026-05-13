@@ -94,10 +94,10 @@ function searchItem(item, statFilters, league, poesessid, callback) {
     }
 }
 
-// Progressive fallback: try up to 6 mods, drop one at a time only when 0 results.
-// Stops as soon as any results are found, preserving as many mod filters as possible.
+// Progressive fallback: try up to 4 mods, drop one at a time only when 0 results.
+// Caps at 4 mods to limit API calls. Adds 600ms between attempts to avoid rate limits.
 function _searchRareWithFallback(item, statFilters, league, poesessid, callback) {
-    var attempt = statFilters.length
+    var attempt = Math.min(statFilters.length, 4)
 
     function tryNext() {
         var filtersToUse = statFilters.slice(0, attempt)
@@ -110,7 +110,7 @@ function _searchRareWithFallback(item, statFilters, league, poesessid, callback)
                                league, poesessid, filtersToUse.length, callback)
             } else {
                 attempt--
-                tryNext()
+                setTimeout(tryNext, 600)
             }
         })
     }
@@ -151,7 +151,8 @@ function _buildRareQuery(item, statFilters) {
     }
 }
 
-function _postSearch(query, league, poesessid, callback) {
+function _postSearch(query, league, poesessid, callback, _retry) {
+    var retry = _retry || 0
     var xhr = new XMLHttpRequest()
     var url = TRADE_BASE + "search/" + encodeURIComponent(league)
 
@@ -166,7 +167,13 @@ function _postSearch(query, league, poesessid, callback) {
             try { callback(null, JSON.parse(xhr.responseText)) }
             catch (e) { callback("Parse error: " + e, null) }
         } else if (xhr.status === 429) {
-            callback("Rate limited (espera unos segundos)", null)
+            if (retry < 2) {
+                setTimeout(function() {
+                    _postSearch(query, league, poesessid, callback, retry + 1)
+                }, 2000 + retry * 1000)
+            } else {
+                callback("Rate limited — espera unos segundos", null)
+            }
         } else {
             callback("HTTP " + xhr.status, null)
         }
