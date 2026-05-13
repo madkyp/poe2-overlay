@@ -22,6 +22,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 *Overlay de búsqueda de precios — muestra listados reales de la API de trade*
 
 > **Uso:** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — la app muestra el precio al instante.
+> Requiere tener instalado **xdotool** (`sudo pacman -S xdotool`).
 
 ### Currency Tracker
 ![Currency Tracker](screenshots/currency-tracker.png)
