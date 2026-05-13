@@ -21,7 +21,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ![Price Checker](screenshots/price-checker.png)
 *Overlay de búsqueda de precios — muestra listados reales de la API de trade*
 
-> **Uso (provisional):** Copia el nombre del item al portapapeles con **Ctrl + C** y lanza la búsqueda con **Ctrl + D**.
+> **Uso (provisional):** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — la app inyecta el Ctrl + C automáticamente y muestra el precio.
 
 ### Currency Tracker
 ![Currency Tracker](screenshots/currency-tracker.png)
@@ -66,12 +66,13 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 | `curl` | Descarga de filtros NeverSink desde GitHub |
 | `unzip` | Extracción del archivo ZIP de filtros |
 | `bash` | Scripts de instalación y gestión de filtros |
+| `xdotool` | Inyectar Ctrl+C al juego desde el Price Checker |
 
 ### Instalación de dependencias
 
 **Arch / CachyOS / Manjaro:**
 ```bash
-sudo pacman -S quickshell python curl unzip bash
+sudo pacman -S quickshell python curl unzip bash xdotool
 ```
 
 **Otros sistemas:**  

@@ -39,6 +39,7 @@ PanelWindow {
 
     // ── Ctrl+D global shortcut ────────────────────────────────────
     // Hyprland config needs: bind = CTRL, D, global, poe2-foundry:pricecheck
+    // Requires: xdotool (sudo pacman -S xdotool)
     GlobalShortcut {
         appid: "poe2-foundry"
         name: "pricecheck"
@@ -46,23 +47,17 @@ PanelWindow {
         triggerDescription: "Ctrl+D"
 
         onPressed: {
-            if (!pasteDelay.running) pasteDelay.start()
+            if (!pasteProc.running) pasteProc.running = true
         }
     }
 
-    // Small delay so Hyprland can sync X11→Wayland clipboard before we read
-    Timer {
-        id: pasteDelay
-        interval: 300
-        repeat: false
-        onTriggered: { if (!pasteProc.running) pasteProc.running = true }
-    }
-
-    // ── Clipboard read — xclip reads X11 clipboard (PoE2/XWayland),
-    //   wl-paste only sees the Wayland side.
+    // ── Inject Ctrl+C into the focused window (PoE2/XWayland), wait for
+    //   clipboard sync, then read. xdotool sends to the active X11 window.
     Process {
         id: pasteProc
-        command: ["bash", "-c", "xclip -selection clipboard -o 2>/dev/null || wl-paste --no-newline 2>/dev/null"]
+        command: ["bash", "-c",
+            "xdotool key --clearmodifiers ctrl+c; sleep 0.3; " +
+            "xclip -selection clipboard -o 2>/dev/null || wl-paste --no-newline 2>/dev/null"]
         stdout: StdioCollector { id: pasteOut }
 
         onRunningChanged: {
