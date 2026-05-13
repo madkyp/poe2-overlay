@@ -1,0 +1,7 @@
+# Quickshell runtime
+*.qslog
+*.lock
+
+# Filter files (installed locally, not part of the source)
+*.filter
+.neversink-version
