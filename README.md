@@ -21,6 +21,8 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ![Price Checker](screenshots/price-checker.png)
 *Overlay de búsqueda de precios — muestra listados reales de la API de trade*
 
+> **Uso (provisional):** Copia el nombre del item al portapapeles con **Ctrl + C** y lanza la búsqueda con **Ctrl + D**.
+
 ### Currency Tracker
 ![Currency Tracker](screenshots/currency-tracker.png)
 *Widget siempre visible con el valor de las divisas principales*
