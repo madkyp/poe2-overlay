@@ -110,7 +110,7 @@ function _searchRareWithFallback(item, statFilters, league, poesessid, callback)
                                league, poesessid, filtersToUse.length, callback)
             } else {
                 attempt--
-                setTimeout(tryNext, 600)
+                setTimeout(tryNext, 1000)
             }
         })
     }
