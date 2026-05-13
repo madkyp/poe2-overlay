@@ -57,7 +57,7 @@ PanelWindow {
         filteredEntries = out
     }
 
-    property string selectedLeague:  Config.league
+    property string selectedLeague:  "Fate of the Vaal"
     property var    availableLeagues: []
     property bool   leaguesFetched:  false
     property var    categoryIcons:   ({})
@@ -92,9 +92,8 @@ PanelWindow {
 
     Component.onCompleted: {
         State.addEconomyListener(function(v) { root.isOpen = v })
-        root.fetchLeagues()
-        root.startFetch(true)
-        root.prefetchCategoryIcons()
+        // fetchLeagues / startFetch / prefetchCategoryIcons are deferred until
+        // homeProc → leagueReadProc chain completes, so selectedLeague is correct first.
         NeverSink.checkLatestVersion(function(err, data) {
             if (!err && data && data.tag) {
                 root.filterLatestVersion = data.tag
@@ -141,11 +140,38 @@ PanelWindow {
         onRunningChanged: {
             if (!running) {
                 root._homeDir = homeOut.text.trim()
+                leagueReadProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-league\" 2>/dev/null || printf 'Fate of the Vaal'"]
+                leagueReadProc.running = true
                 versionCheckProc.command = ["sh", "-c",
                     "cat \"" + root.effectiveInstallPath + "/.neversink-version\" 2>/dev/null"]
                 versionCheckProc.running = true
             }
         }
+    }
+
+    // ── Read saved league from file ───────────────────────────────
+    Process {
+        id: leagueReadProc
+        stdout: StdioCollector { id: leagueReadOut }
+        onRunningChanged: {
+            if (!running) {
+                var lg = leagueReadOut.text.trim()
+                if (lg) {
+                    root.selectedLeague = lg
+                    State.setLeague(lg)
+                }
+                root.fetchLeagues()
+                root.startFetch(true)
+                root.prefetchCategoryIcons()
+            }
+        }
+    }
+
+    // ── Save league to file ───────────────────────────────────────
+    Process {
+        id: leagueSaveProc
+        stdout: StdioCollector {}
     }
 
     // ── Check installed NeverSink version from marker file ────────
@@ -1045,7 +1071,15 @@ PanelWindow {
                 for (var i = 0; i < raw.length; i++) {
                     if (raw[i].name) names.push(raw[i].name)
                 }
-                if (names.length > 0) root.availableLeagues = names
+                if (names.length > 0) {
+                    root.availableLeagues = names
+                    // Only switch if the saved league no longer exists in poe.ninja
+                    var found = false
+                    for (var j = 0; j < names.length; j++) {
+                        if (names[j] === root.selectedLeague) { found = true; break }
+                    }
+                    if (!found) root.applyLeague(names[0])
+                }
             } catch(e) {}
         }
         xhr.send()
@@ -1054,8 +1088,10 @@ PanelWindow {
     // ── League change ───────────────────────────────────────────
     function applyLeague(name) {
         root.selectedLeague = name
-        Config.setLeague(name)
         State.setLeague(name)
+        leagueSaveProc.command = ["sh", "-c",
+            "printf '%s' \"" + name + "\" > \"" + root._homeDir + "/.config/quickshell/poe2/.saved-league\""]
+        leagueSaveProc.running = true
         root.activeCategory = "Currency"
         root.startFetch(true)
     }
