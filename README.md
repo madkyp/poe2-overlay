@@ -122,6 +122,8 @@ Accesible desde la pestaña **📖 Crafting** en la ventana de economía. La sub
   <br><em>Vista expandida de una guía — pasos numerados, materiales necesarios y tips</em>
 </p>
 
+> ⚠️ **Aviso sobre las guías de crafting y ejemplos:** El contenido de las guías está generado en base a las mecánicas conocidas de PoE2 hasta **Fate of the Vaal (0.4)**. Algunos valores numéricos exactos, nombres de mods o builds meta pueden estar ligeramente desactualizados respecto a los últimos patches y balance changes. **La base conceptual del crafteo (prefijos/sufijos, tiers, Essences, Catalysts, Exalted, Chaos, Divine, Corruption…) sigue siendo la misma** y las guías son una referencia válida para entender el sistema. Para valores exactos y mods actuales consulta siempre [poe2db.tw](https://poe2db.tw).
+
 La sub-pestaña **Guías** incluye 28 guías de crafting organizadas en dos grupos:
 
 - **Guías** — fundamentos, mecánicas avanzadas y referencia rápida:
