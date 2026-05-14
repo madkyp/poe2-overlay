@@ -45,7 +45,7 @@ PanelWindow {
     property int    guideExpanded:  -1
     property string guideSearch:    ""
     property string guideCatFilter: "all"
-    property var    filteredGuides: CraftingGuides.GUIDES
+    property var    filteredGuides: []
 
     onEntriesChanged:        Qt.callLater(root._applyFilter)
     onSearchTextChanged:     Qt.callLater(root._applyFilter)
@@ -68,7 +68,7 @@ PanelWindow {
     }
 
     function _applyGuideFilter() {
-        var all = CraftingGuides.GUIDES
+        var all = CraftingGuides.GUIDES || []
         if (guideSearch === "" && guideCatFilter === "all") {
             filteredGuides = all
             return
@@ -135,6 +135,7 @@ PanelWindow {
     ]
 
     Component.onCompleted: {
+        root.filteredGuides = CraftingGuides.GUIDES
         State.addEconomyListener(function(v) { root.isOpen = v })
         // fetchLeagues / startFetch / prefetchCategoryIcons are deferred until
         // homeProc → leagueReadProc chain completes, so selectedLeague is correct first.
