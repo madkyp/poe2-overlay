@@ -8,6 +8,7 @@ import "js/ItemParser.js" as ItemParser
 import "js/TradeApi.js" as TradeApi
 import "js/StatIds.js" as StatIds
 import "js/State.js" as State
+import "js/MapMods.js" as MapMods
 
 PanelWindow {
     id: root
@@ -31,6 +32,7 @@ PanelWindow {
     property string errorMsg:      ""
     property bool   statsReady:    false
     property string lastClipboard: ""
+    property var    mapWarning:    null  // { summary, alerts: [...] }
 
     // ── Stash Pricer: watch clipboard every 1.5s ─────────────────
     Timer {
@@ -132,10 +134,18 @@ PanelWindow {
         root.loading = true
         root.priceResult = null
         root.errorMsg = ""
+        root.mapWarning = null
         root.showing = true
         hideTimer.restart()
 
         var league = State.getLeague()
+
+        // Waystone: skip trade lookup, run dangerous-mod analysis instead
+        if (MapMods.isWaystone(item)) {
+            root.loading = false
+            root.mapWarning = MapMods.analyzeMods(item.mods || [])
+            return
+        }
 
         if (item.rarity === "Currency" || item.itemClass === "Stackable Currency" ||
             item.itemClass === "Moneda apilable") {
@@ -287,6 +297,100 @@ PanelWindow {
                 font.pixelSize: 11
                 wrapMode: Text.WordWrap
                 Layout.fillWidth: true
+            }
+
+            // ── Waystone danger analysis ─────────────────────────
+            ColumnLayout {
+                visible: !root.loading && !!root.mapWarning
+                Layout.fillWidth: true
+                spacing: 4
+
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 22; radius: 3
+                    color: {
+                        if (!root.mapWarning) return "#2a2a2d"
+                        var s = root.mapWarning.summary
+                        if (s === "deadly") return "#3a0f0f"
+                        if (s === "danger") return "#3a2a0f"
+                        if (s === "warn")   return "#2a2a0f"
+                        return "#0f2a18"
+                    }
+                    border.color: {
+                        if (!root.mapWarning) return "#3a3a3a"
+                        var s = root.mapWarning.summary
+                        if (s === "deadly") return "#7a2020"
+                        if (s === "danger") return "#7a5020"
+                        if (s === "warn")   return "#7a7a20"
+                        return "#1e5030"
+                    }
+                    border.width: 1
+                    Text {
+                        anchors.centerIn: parent
+                        text: {
+                            if (!root.mapWarning) return ""
+                            var s = root.mapWarning.summary
+                            if (s === "deadly") return "☠  WAYSTONE LETAL"
+                            if (s === "danger") return "⚠  WAYSTONE PELIGROSO"
+                            if (s === "warn")   return "⚠  Mods a vigilar"
+                            return "✓  Waystone seguro"
+                        }
+                        color: {
+                            if (!root.mapWarning) return "#c0c0c0"
+                            var s = root.mapWarning.summary
+                            if (s === "deadly") return "#ff7070"
+                            if (s === "danger") return "#ffaa50"
+                            if (s === "warn")   return "#dddd60"
+                            return "#4fc3a0"
+                        }
+                        font.pixelSize: 11; font.bold: true
+                    }
+                }
+
+                Repeater {
+                    model: root.mapWarning ? root.mapWarning.alerts : []
+                    RowLayout {
+                        spacing: 6
+                        Layout.fillWidth: true
+
+                        Rectangle {
+                            width: 4
+                            Layout.preferredHeight: alertBody.implicitHeight + 4
+                            radius: 2
+                            color: modelData.sev === "deadly" ? "#d20000" :
+                                   modelData.sev === "danger" ? "#d28030" : "#c0c060"
+                        }
+
+                        ColumnLayout {
+                            id: alertBody
+                            Layout.fillWidth: true
+                            spacing: 1
+
+                            Text {
+                                text: modelData.label
+                                color: modelData.sev === "deadly" ? "#ff8080" :
+                                       modelData.sev === "danger" ? "#ffb060" : "#dddd80"
+                                font.pixelSize: 11
+                                font.bold: true
+                            }
+                            Text {
+                                text: modelData.why
+                                color: "#9a9a9a"
+                                font.pixelSize: 9
+                                wrapMode: Text.WordWrap
+                                Layout.fillWidth: true
+                            }
+                        }
+                    }
+                }
+
+                Text {
+                    visible: root.mapWarning && root.mapWarning.alerts.length === 0
+                    text: "Ningún mod peligroso detectado."
+                    color: "#7a9a7a"
+                    font.pixelSize: 10
+                    Layout.fillWidth: true
+                }
             }
 
             // Currency result
