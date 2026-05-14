@@ -7,7 +7,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ## Características
 
 - **Price Checker** — Consulta el precio de cualquier item al vuelo con **Ctrl + D**. Muestra los primeros listados con precio, vendedor y liga.
-- **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal).
+- **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal). Incluye **alertas de precio** configurables: recibe un aviso visual cuando una divisa sube o baja del umbral que definas.
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
 - **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral. Ventana redimensionable arrastrando los bordes (tamaño persistente entre sesiones).
 - **Opciones de liga** — Cambia al vuelo entre ligas (Fate of the Vaal, HC, Standard, Hardcore…) sin reiniciar.

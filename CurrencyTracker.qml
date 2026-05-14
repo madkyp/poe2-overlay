@@ -1,4 +1,5 @@
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
 import QtQuick.Layouts
@@ -8,19 +9,26 @@ PanelWindow {
     id: root
 
     WlrLayershell.layer: WlrLayer.Top
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+    WlrLayershell.keyboardFocus: alertTarget !== "" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
     WlrLayershell.margins.bottom: 10
     WlrLayershell.margins.right: 10
 
     anchors.bottom: true
-    anchors.right: true
+    anchors.right:  true
 
     color: "transparent"
     implicitWidth:  210
     implicitHeight: collapsed ? 30 : content.implicitHeight + 16
 
-    property bool   collapsed:  false
-    property string lastUpdate: "--:--"
+    property bool   collapsed:    false
+    property string lastUpdate:   "--:--"
+
+    property string _homeDir:     ""
+    property var    alerts:       ({})   // { "Divine Orb": { dir: "below", value: 150 } }
+    property var    firing:       ({})   // { "Divine Orb": true }
+    property string alertTarget:  ""
+    property string alertEditDir: "below"
+    property string alertEditVal: ""
 
     readonly property var tracked: ["Divine Orb", "Exalted Orb", "Orb of Annulment", "Vaal Orb"]
 
@@ -32,33 +40,77 @@ PanelWindow {
         "chaos":            Qt.resolvedUrl("icons/chaos.png")
     })
 
-    property var    rates:       ({})
-    property string leagueName:  State.getLeague()
+    property var    rates:      ({})
+    property string leagueName: State.getLeague()
 
     Component.onCompleted: {
         var cached = State.getEntries()
         if (cached && cached.length > 0) root._updateFromEntries(cached)
-
-        State.addRateListener(function(entries, err) {
-            root._updateFromEntries(entries)
-        })
-        State.addLeagueListener(function(name) {
-            root.leagueName = name
-        })
+        State.addRateListener(function(entries, err) { root._updateFromEntries(entries) })
+        State.addLeagueListener(function(name) { root.leagueName = name })
     }
 
     function _updateFromEntries(entries) {
         if (!entries || entries.length === 0) return
         var map = {}
-        for (var i = 0; i < entries.length; i++) {
-            map[entries[i].name] = entries[i]
-        }
+        for (var i = 0; i < entries.length; i++) map[entries[i].name] = entries[i]
         rates = map
-        var now = new Date()
-        var m = now.getMinutes()
+        var now = new Date(); var m = now.getMinutes()
         lastUpdate = now.getHours() + ":" + (m < 10 ? "0" + m : "" + m)
+        _checkAlerts()
     }
 
+    function _checkAlerts() {
+        var newFiring = {}
+        for (var name in alerts) {
+            var al = alerts[name]; var rate = rates[name]
+            if (!rate || !al) continue
+            var v = rate.chaosValue
+            if (al.dir === "below" && v <= al.value) newFiring[name] = true
+            if (al.dir === "above" && v >= al.value) newFiring[name] = true
+        }
+        firing = newFiring
+    }
+
+    function _saveAlerts() {
+        if (_homeDir === "" || alertSaveProc.running) return
+        var json = JSON.stringify(alerts)
+        alertSaveProc.command = ["sh", "-c",
+            "printf '%s' '" + json + "' > \"" + _homeDir + "/.config/quickshell/poe2/.saved-alerts\""]
+        alertSaveProc.running = true
+    }
+
+    // ── Resolve $HOME ─────────────────────────────────────────────
+    Process {
+        id: trackerHomeProc
+        command: ["sh", "-c", "printf '%s' \"$HOME\""]
+        stdout: StdioCollector { id: trackerHomeOut }
+        Component.onCompleted: running = true
+        onRunningChanged: {
+            if (!running) {
+                root._homeDir = trackerHomeOut.text.trim()
+                alertLoadProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-alerts\" 2>/dev/null"]
+                alertLoadProc.running = true
+            }
+        }
+    }
+
+    Process {
+        id: alertLoadProc
+        stdout: StdioCollector { id: alertLoadOut }
+        onRunningChanged: {
+            if (!running) {
+                var txt = alertLoadOut.text.trim()
+                if (txt) { try { root.alerts = JSON.parse(txt) } catch(e) {} }
+                root._checkAlerts()
+            }
+        }
+    }
+
+    Process { id: alertSaveProc }
+
+    // ── UI ────────────────────────────────────────────────────────
     Rectangle {
         anchors.fill: parent
         color: "#1c1c1e"
@@ -75,46 +127,22 @@ PanelWindow {
             // Header
             RowLayout {
                 Layout.fillWidth: true
-
                 Text {
                     Layout.fillWidth: true
                     text: root.leagueName
-                    color: "#d4a843"
-                    font.pixelSize: 11
-                    font.bold: true
+                    color: "#d4a843"; font.pixelSize: 11; font.bold: true
                 }
-
                 Text {
-                    text: "▶"
-                    color: "#8B7355"
-                    font.pixelSize: 9
-                    rightPadding: 4
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: State.setEconomyOpen(true)
-                    }
+                    text: "▶"; color: "#8B7355"; font.pixelSize: 9; rightPadding: 4
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: State.setEconomyOpen(true) }
                 }
-
                 Text {
-                    text: State.isFetching() ? "..." : "↺"
-                    color: "#7a6a50"
-                    font.pixelSize: 11
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: { /* fetch is owned by EconomyWindow */ }
-                    }
+                    text: State.isFetching() ? "..." : "↺"; color: "#7a6a50"; font.pixelSize: 11
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor }
                 }
-
                 Text {
-                    text: root.collapsed ? "v" : "^"
-                    color: "#7a6a50"
-                    font.pixelSize: 10
-                    MouseArea {
-                        anchors.fill: parent
-                        onClicked: root.collapsed = !root.collapsed
-                    }
+                    text: root.collapsed ? "v" : "^"; color: "#7a6a50"; font.pixelSize: 10
+                    MouseArea { anchors.fill: parent; onClicked: root.collapsed = !root.collapsed }
                 }
             }
 
@@ -127,68 +155,196 @@ PanelWindow {
                 Text {
                     visible: State.getError() !== ""
                     text: State.getError()
-                    color: "#d20000"
-                    font.pixelSize: 10
-                    wrapMode: Text.WordWrap
-                    Layout.fillWidth: true
+                    color: "#d20000"; font.pixelSize: 10
+                    wrapMode: Text.WordWrap; Layout.fillWidth: true
                 }
 
                 Repeater {
                     model: root.tracked
 
-                    RowLayout {
-                        spacing: 6
+                    ColumnLayout {
+                        spacing: 2
                         Layout.fillWidth: true
 
-                        Image {
-                            width: 18; height: 18
-                            sourceSize.width: 18; sourceSize.height: 18
-                            source: root.icons[modelData] || ""
-                            fillMode: Image.PreserveAspectFit
-                            smooth: true
-                        }
-
-                        Text {
-                            text: modelData.replace("Orb of ", "").replace(" Orb", "")
-                            color: "#c0b090"
-                            font.pixelSize: 11
-                            Layout.fillWidth: true
-                        }
-
+                        // Currency row
                         RowLayout {
-                            spacing: 3
+                            spacing: 5; Layout.fillWidth: true
+
                             Image {
-                                width: 13; height: 13
-                                sourceSize.width: 13; sourceSize.height: 13
-                                source: root.icons["chaos"]
-                                fillMode: Image.PreserveAspectFit
-                                visible: !!root.rates[modelData]
+                                width: 18; height: 18
+                                sourceSize.width: 18; sourceSize.height: 18
+                                source: root.icons[modelData] || ""
+                                fillMode: Image.PreserveAspectFit; smooth: true
                             }
                             Text {
-                                text: {
-                                    var r = root.rates[modelData]
-                                    if (!r) return "..."
-                                    var v = r.chaosValue
-                                    return v >= 10 ? v.toFixed(0) : v.toFixed(1)
+                                text: modelData.replace("Orb of ", "").replace(" Orb", "")
+                                color: "#c0b090"; font.pixelSize: 11; Layout.fillWidth: true
+                            }
+
+                            // Bell icon
+                            Text {
+                                text: root.alerts[modelData] ? "🔔" : "🔕"
+                                font.pixelSize: 10
+                                color: root.firing[modelData]  ? "#ff6060" :
+                                       root.alerts[modelData]  ? "#d4a843" : "#2a2a2a"
+                                opacity: root.alerts[modelData] || root.alertTarget === modelData ? 1.0 : 0.35
+                                MouseArea {
+                                    anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (root.alertTarget === modelData) {
+                                            root.alertTarget = ""
+                                        } else {
+                                            var ex = root.alerts[modelData]
+                                            root.alertEditDir = ex ? ex.dir   : "below"
+                                            root.alertEditVal = ex ? String(ex.value) : ""
+                                            root.alertTarget  = modelData
+                                        }
+                                    }
                                 }
-                                color: root.rates[modelData] ? "#d4a843" : "#5a5a5a"
-                                font.pixelSize: 12
-                                font.bold: true
+                            }
+
+                            // Value
+                            RowLayout {
+                                spacing: 3
+                                Image {
+                                    width: 13; height: 13
+                                    sourceSize.width: 13; sourceSize.height: 13
+                                    source: root.icons["chaos"]
+                                    fillMode: Image.PreserveAspectFit
+                                    visible: !!root.rates[modelData]
+                                }
+                                Text {
+                                    text: {
+                                        var r = root.rates[modelData]
+                                        if (!r) return "..."
+                                        var v = r.chaosValue
+                                        return v >= 10 ? v.toFixed(0) : v.toFixed(1)
+                                    }
+                                    color: root.firing[modelData] ? "#ff6060" :
+                                           root.rates[modelData]  ? "#d4a843" : "#5a5a5a"
+                                    font.pixelSize: 12; font.bold: true
+                                }
+                            }
+                        }
+
+                        // Alert badge (when firing)
+                        Rectangle {
+                            visible: !!root.firing[modelData]
+                            Layout.fillWidth: true
+                            height: 16; radius: 3
+                            color: "#3a0f0f"
+                            border.color: "#7a2020"; border.width: 1
+                            Text {
+                                anchors.centerIn: parent
+                                text: {
+                                    var al = root.alerts[modelData]
+                                    if (!al) return ""
+                                    return "⚠ " + (al.dir === "below" ? "▼" : "▲") + " " + al.value + " c"
+                                }
+                                color: "#ff8080"; font.pixelSize: 9; font.bold: true
+                            }
+                        }
+
+                        // Alert config panel (inline)
+                        Rectangle {
+                            id: alertPanel
+                            visible: root.alertTarget === modelData
+                            Layout.fillWidth: true
+                            height: 26; radius: 3
+                            color: "#0d1520"
+                            border.color: "#2d4060"; border.width: 1
+
+                            onVisibleChanged: {
+                                if (visible) configInput.text = root.alertEditVal
+                            }
+
+                            RowLayout {
+                                anchors { fill: parent; margins: 3 }
+                                spacing: 3
+
+                                // Direction toggle
+                                Rectangle {
+                                    width: 58; height: 20; radius: 3
+                                    color: "#1a2535"; border.color: "#2d4060"; border.width: 1
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: root.alertEditDir === "below" ? "▼ below" : "▲ above"
+                                        color: "#8ab4d4"; font.pixelSize: 9
+                                    }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.alertEditDir = root.alertEditDir === "below" ? "above" : "below"
+                                    }
+                                }
+
+                                // Chaos value input
+                                Rectangle {
+                                    Layout.fillWidth: true; height: 20; radius: 3
+                                    color: "#060e18"; border.color: "#2d4060"; border.width: 1
+                                    TextInput {
+                                        id: configInput
+                                        anchors { fill: parent; leftMargin: 4; rightMargin: 14 }
+                                        color: "#dde8f0"; font.pixelSize: 10
+                                        verticalAlignment: TextInput.AlignVCenter
+                                        validator: IntValidator { bottom: 0; top: 99999 }
+                                        onTextChanged: root.alertEditVal = text
+                                    }
+                                    Text {
+                                        anchors { right: parent.right; rightMargin: 4; verticalCenter: parent.verticalCenter }
+                                        text: "c"; color: "#4a6a8a"; font.pixelSize: 9
+                                    }
+                                }
+
+                                // Set
+                                Rectangle {
+                                    width: 28; height: 20; radius: 3
+                                    color: "#0f2a18"; border.color: "#1e5030"; border.width: 1
+                                    Text { anchors.centerIn: parent; text: "Set"; color: "#4fc3a0"; font.pixelSize: 9 }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            var val = parseInt(root.alertEditVal, 10)
+                                            if (!isNaN(val) && val > 0) {
+                                                var na = {}
+                                                for (var k in root.alerts) na[k] = root.alerts[k]
+                                                na[root.alertTarget] = { dir: root.alertEditDir, value: val }
+                                                root.alerts = na
+                                                root._checkAlerts()
+                                                root._saveAlerts()
+                                            }
+                                            root.alertTarget = ""
+                                        }
+                                    }
+                                }
+
+                                // Clear (only if alert exists)
+                                Rectangle {
+                                    visible: !!root.alerts[root.alertTarget]
+                                    width: 20; height: 20; radius: 3
+                                    color: "#2a0f0f"; border.color: "#501818"; border.width: 1
+                                    Text { anchors.centerIn: parent; text: "✕"; color: "#d05050"; font.pixelSize: 9 }
+                                    MouseArea {
+                                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            var na = {}
+                                            for (var k in root.alerts) if (k !== root.alertTarget) na[k] = root.alerts[k]
+                                            root.alerts = na
+                                            root._checkAlerts()
+                                            root._saveAlerts()
+                                            root.alertTarget = ""
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
 
-                Rectangle {
-                    Layout.fillWidth: true
-                    height: 1
-                    color: "#2a2a2d"
-                }
+                Rectangle { Layout.fillWidth: true; height: 1; color: "#2a2a2d" }
 
                 Text {
                     text: "act. " + root.lastUpdate + "  trade API"
-                    color: "#3a3a3a"
-                    font.pixelSize: 9
+                    color: "#3a3a3a"; font.pixelSize: 9
                 }
             }
         }
