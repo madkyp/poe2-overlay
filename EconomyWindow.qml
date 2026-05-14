@@ -1010,7 +1010,6 @@ PanelWindow {
                                                                 delegate: RowLayout {
                                                                     width: parent.width
                                                                     spacing: 8
-                                                                    topPadding: 2
 
                                                                     Rectangle {
                                                                         width: 18; height: 18; radius: 9
@@ -1048,8 +1047,7 @@ PanelWindow {
                                                                 delegate: RowLayout {
                                                                     width: parent.width
                                                                     spacing: 6
-                                                                    topPadding: 2
-                                                                    Text { text: "💡"; font.pixelSize: 9; Layout.alignment: Qt.AlignTop; topPadding: 1 }
+                                                                    Text { text: "💡"; font.pixelSize: 9; Layout.alignment: Qt.AlignTop }
                                                                     Text {
                                                                         Layout.fillWidth: true
                                                                         text: modelData
