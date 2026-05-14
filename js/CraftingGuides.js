@@ -2,6 +2,302 @@
 
 var GUIDES = [
     {
+        id: "reading_items",
+        title: "Cómo leer un item: Tiers y Prefijos/Sufijos",
+        category: "Fundamentos",
+        categoryColor: "#6a9aaa",
+        difficulty: "Beginner",
+        summary: "Entiende si un mod es bueno o malo, qué es T1, y cómo distinguir prefijos de sufijos.",
+        sections: [
+            {
+                heading: "Prefijos y Sufijos",
+                content: "Cada item Rare puede tener hasta 6 mods: 3 Prefijos (izquierda/arriba) y 3 Sufijos (derecha/abajo). En el tooltip del juego los prefijos aparecen primero. Saber de qué tipo es cada mod es crítico: si tienes 3 prefijos llenos no puedes añadir más prefijos con Exalted Orb aunque te queden sufijos libres.",
+                steps: [],
+                tips: [
+                    "Prefijos típicos: Vida, ES, Armour, Evasion, Daño físico, Spell Damage, +Level of Skills",
+                    "Sufijos típicos: Resistencias, Attack Speed, Cast Speed, Accuracy, Atributos (STR/DEX/INT), Mana",
+                    "Movement Speed en botas es SIEMPRE prefijo — uno de los pocos casos que confunde"
+                ]
+            },
+            {
+                heading: "Tiers de mods (T1, T2, T3...)",
+                content: "Cada mod tiene varios tiers — el T1 es el mejor (valores más altos), T2 es el segundo mejor, etc. El tier que puede salir depende del ilvl de la base: necesitas ilvl alto para que el T1 esté disponible. En el tooltip del juego el tier aparece a la derecha del mod entre corchetes como [T1] o [T2].",
+                steps: [],
+                tips: [
+                    "ilvl 75+ suele desbloquear T1 en la mayoría de mods importantes",
+                    "Un mod T1 con valor bajo (cerca del mínimo del tier) sigue siendo T1 — el Divine Orb puede subir ese valor",
+                    "Un mod T2 con valor máximo NO es mejor que un T1 con valor mínimo — el tier importa más que el valor dentro del tier"
+                ]
+            },
+            {
+                heading: "Cómo saber si un valor es bueno",
+                content: "Cada tier tiene un rango de valores (min–max). Si el valor está cerca del máximo del tier es casi perfecto. Si está cerca del mínimo, un Divine Orb puede mejorarlo. Por ejemplo: Life T1 puede ir de 85 a 99 — un valor de 87 es T1 pero mejorable, un 98 es casi perfecto.",
+                steps: [],
+                tips: [
+                    "Poe2db.tw muestra los rangos exactos por tier para cada mod — consúltalo antes de gastar un Divine",
+                    "No uses Divine en un item que no tiene todos los mods correctos — primero consigue los mods, luego optimiza valores",
+                    "Un item con todos los mods correctos en T1 aunque con valores bajos ya vale mucho — el Divine es el último paso"
+                ]
+            },
+            {
+                heading: "Implicits vs. Explicits",
+                content: "Los mods Implicit son los que vienen fijos con la base del item (p.ej. Two-Stone Ring siempre tiene resistencias como implicit). Los Explicit son los mods que se añaden mediante crafteo. Los Implicit no cuentan para el límite de 3 prefijos / 3 sufijos y no pueden ser cambiados por orbes normales — solo por corrupción o en algunos casos por mecánicas especiales.",
+                steps: [],
+                tips: [
+                    "Un item corrompido puede tener un Implicit corrompido adicional — muy poderoso si salió bueno",
+                    "La calidad del item amplifica el Implicit en algunos tipos de item (p.ej. Catalysts en joyería)"
+                ]
+            }
+        ]
+    },
+    {
+        id: "fracturing_strategy",
+        title: "Fracturing Orb: cuándo y cómo usarla",
+        category: "Mecánicas",
+        categoryColor: "#aa4a4a",
+        difficulty: "Advanced",
+        summary: "La Fracturing Orb bloquea un mod para siempre. Úsala bien y ahorra recursos enormes; úsala mal y los desperdicias.",
+        sections: [
+            {
+                heading: "Qué hace exactamente",
+                content: "La Fracturing Orb elige un mod aleatorio del item y lo 'fractura' — lo bloquea permanentemente. El mod fracturado nunca puede ser cambiado por ningún orbe posterior (Chaos, Annulment, Exalted). El item queda marcado como Fractured. El resto de mods siguen siendo modificables con normalidad.",
+                steps: [],
+                tips: [
+                    "Solo se puede fracturar UN mod por item — no hay forma de fracturar dos mods",
+                    "La Fracturing Orb elige el mod a fracturar ALEATORIAMENTE — no puedes elegir cuál",
+                    "Hinekora's Lock previsualiza qué mod fracturará antes de aplicar la Orb — úsala siempre en items caros"
+                ]
+            },
+            {
+                heading: "Cuándo usar Fracturing Orb",
+                content: "Úsala cuando el item tenga exactamente UN mod T1 muy valioso que no quieres arriesgar perder con crafteo posterior. Si el item tiene 2+ mods buenos, la Fracturing puede fracturar el que no quieres — usa Hinekora's Lock para confirmar antes.",
+                steps: [],
+                tips: [
+                    "Mods que merecen ser fracturados: +Level of all Skills T1, Adds Physical Damage T1, Life T1 alto (95+), Movement Speed 30%",
+                    "NO fractures mods mediocres esperando que sean suficientes — espera a tener T1 real"
+                ]
+            },
+            {
+                heading: "Orden correcto en el proceso de crafteo",
+                content: "El momento ideal para fracturar es DESPUÉS de tener el mod T1 que quieres conservar, pero ANTES de seguir modificando con Chaos Orbs o Annulment que podrían borrarlo. No fractures al principio (puede salir un mod malo) ni al final (puede que ya hayas gastado recursos en el mod que querías proteger).",
+                steps: [
+                    { n: 1, action: "Consigue el mod T1 objetivo", detail: "Via Essence, Exalted, o crafteo normal. Asegúrate de que el valor es bueno (cerca del máximo del tier)." },
+                    { n: 2, action: "Usa Hinekora's Lock para previsualizar", detail: "Aplica Hinekora's Lock y luego la Fracturing Orb sobre el item — la previsualización mostrará qué mod se fracturaría. Si no es el que quieres, cancela." },
+                    { n: 3, action: "Fractura si la previsualización es correcta", detail: "Confirma la fractura. El mod queda bloqueado para siempre." },
+                    { n: 4, action: "Sigue crafteando el resto del item", detail: "Ahora puedes usar Chaos Orbs, Annulment, Exalted con tranquilidad — el mod fracturado nunca se perderá." }
+                ],
+                tips: [
+                    "Si el item tiene solo 1 mod y es el que quieres fracturar, no necesitas Hinekora's Lock — solo hay un candidato",
+                    "Un item Fractured en el trade vale MÁS que uno sin fracturar si el mod fracturado es valioso — es una garantía para el comprador"
+                ]
+            },
+            {
+                heading: "Errores comunes",
+                content: "Fracturar demasiado pronto (cuando el mod está en valor bajo del tier — después no puedes usar Divine en ese mod). Fracturar sin Hinekora's Lock y que salga el mod incorrecto. Fracturar un mod que luego resulta ser innecesario para tu build.",
+                steps: [],
+                tips: [
+                    "El Divine Orb NO afecta al mod fracturado — fractura DESPUÉS de haber optimizado el valor con Divine si es importante",
+                    "Hay una excepción: si el mod fracturado ya es el máximo posible del tier, no importa que no puedas usar Divine en él"
+                ]
+            }
+        ]
+    },
+    {
+        id: "essence_table",
+        title: "Tabla de Essences: qué usar para cada slot",
+        category: "Referencia",
+        categoryColor: "#9a6aaa",
+        difficulty: "Beginner",
+        summary: "Referencia rápida de qué Essence garantiza qué mod en cada tipo de item.",
+        sections: [
+            {
+                heading: "Essences de Vida y Defensa",
+                content: "Essence of the Body → +(85–99) Life en Amuleto, Botas, Guantes, Anillo (Greater tier). Essence of the Mind → +(90–104) Mana en Joyería. Essence of Enhancement → % increased Armour/ES/Evasion en Armadura.",
+                steps: [],
+                tips: [
+                    "Essence of the Body (Greater) es la más usada del juego — sirve para cualquier slot de joyería o botas",
+                    "Para Life en Pecho o Casco no hay Essence directa — usa Alchemy o Essences de resistencia y reza por Life aleatoria"
+                ]
+            },
+            {
+                heading: "Essences de Resistencias",
+                content: "Essence of Insulation → +% Fire Resistance (Lesser: 11–15%, Standard: 21–25%, Greater: 31–35%). Essence of Thawing → +% Cold Resistance (mismos rangos). Essence of Grounding → +% Lightning Resistance (mismos rangos). Aplican en joyería, botas, guantes y armadura.",
+                steps: [],
+                tips: [
+                    "Si necesitas cerrar una resistencia específica, estas Essences son la forma más directa",
+                    "En joyería combínalas con el Catalyst correspondiente para amplificar el mod de resistencia"
+                ]
+            },
+            {
+                heading: "Essences de Armas (Ataque)",
+                content: "Essence of Torment → Adds Physical Damage to Attacks. Essence of Rage → % increased Attack Speed. Essence of Battle → mod de ataque según tipo de arma. Essence of Flames → Adds Fire Damage. Essence of Ice → Adds Cold Damage. Essence of Electricity → Adds Lightning Damage.",
+                steps: [],
+                tips: [
+                    "Essence of Rage para Attack Speed garantizada es muy eficiente en armas físicas",
+                    "Elige el elemento de la Essence según el elemento principal de tu build de ataque"
+                ]
+            },
+            {
+                heading: "Essences de Armas (Hechizos)",
+                content: "Essence of Sorcery → % increased Spell Damage en Varita/Bastón (55–64%). Essence of Flames/Ice/Electricity → Adds elemental Damage to Spells en armas de caster. Essence of Hysteria → Helmet: +1 to Level of all Minion Skills / Boots: 30% increased Movement Speed.",
+                steps: [],
+                tips: [
+                    "Essence of Hysteria es la más valiosa del juego para dos usos completamente distintos: Movement Speed en botas y +1 Minion Skills en casco",
+                    "Essence of Sorcery es el equivalente a Essence of Rage pero para builds de hechizo"
+                ]
+            },
+            {
+                heading: "Essences especiales",
+                content: "Essence of Delirium → Body Armour: Allocates a random Notable Passive Skill (muy poderoso, aleatorio). Essence of the Abyss → crea 'Mark of the Abyssal Lord' en el item para un mod Desecrado de tier superior en el Well of Souls. Perfect Essences → trabajan sobre items ya Rare reemplazando un mod aleatorio por el garantizado.",
+                steps: [],
+                tips: [
+                    "Essence of Delirium en pecho puede dar un Notable pasivo gratuito — muy valioso si sale el correcto",
+                    "Perfect Essences son las más raras y caras — úsalas solo para refinar items que ya tienen 5/6 mods correctos"
+                ]
+            }
+        ]
+    },
+    {
+        id: "example_helmet",
+        title: "Ejemplo: Casco (Helmet)",
+        category: "Ejemplo",
+        categoryColor: "#c47a3a",
+        difficulty: "Beginner",
+        summary: "Casco Rare con Life + Resistencias. Si juegas Minions: +1 to Minion Skills garantizado con Essence of Hysteria.",
+        sections: [
+            {
+                heading: "Dos rutas según tu build",
+                content: "Ruta A (cualquier build): Life + dos Resistencias + mod secundario. Ruta B (builds de Minions): +1 to Level of all Minion Skills garantizado con Essence of Hysteria, luego Life y Resistencias en el resto de mods. El casco es el único slot donde puedes garantizar +1 Minion Skills con una Essence.",
+                steps: [],
+                tips: [
+                    "Si juegas Minions, el casco con +1 Minion Skills es una prioridad absoluta — sube el nivel efectivo de todas tus gemas de minion",
+                    "Para otras builds, el casco comparte prioridad con guantes y botas en cuanto a inversión de resources"
+                ]
+            },
+            {
+                heading: "Material necesario",
+                content: "Base de casco ilvl 75+ del tipo correcto (Armour/Evasion/ES según build). Armourer's Scrap ×4. Essence of Hysteria (si builds Minions: garantiza +1 Minion Skills en casco) O Essence of the Body (Greater) para Life garantizada. Exalted Orbs ×2–3. Chaos Orb + Omen of Whittling ×1–2. Divine Orb ×1.",
+                steps: [],
+                tips: []
+            },
+            {
+                heading: "Pasos (ruta Minions)",
+                content: "",
+                steps: [
+                    { n: 1, action: "Calidad al 20% con Armourer's Scrap", detail: "En estado Normal. Aumenta Armour/Evasion/ES base del casco." },
+                    { n: 2, action: "Essence of Hysteria → Rare", detail: "Garantiza exactamente '+1 to Level of all Minion Skills' en el casco. Este es el mod más valioso para builds de minions — ya está asegurado." },
+                    { n: 3, action: "Evalúa los 3 mods aleatorios", detail: "Busca Life y al menos una Resistencia. Si salió Life + 1 Resistencia → excelente. Si los 3 mods son inútiles → repite con otra base." },
+                    { n: 4, action: "Rellena con Exalted Orbs", detail: "Añade Life (si no salió) y Resistencias en los huecos. Controla prefix/suffix disponibles." },
+                    { n: 5, action: "Elimina mods inútiles", detail: "Chaos Orb + Omen of Whittling para el peor mod. Cuida de no borrar el +1 Minion Skills — es un prefix." },
+                    { n: 6, action: "Divine Orb", detail: "Optimiza Life y Resistencias. El +1 Minion Skills es un valor fijo — el Divine no lo afecta." },
+                    { n: 7, action: "Socket con Artificer's Orb", detail: "Añade socket para Rune o Soul Core. Iron Rune (defensa) o una Soul Core relevante para tu build de minions." }
+                ],
+                tips: [
+                    "Para la ruta no-Minions usa Essence of the Body en el paso 2 para Life garantizada en vez de +1 Skills",
+                    "+1 to Level of all Minion Skills afecta a TODAS las gemas de minion que uses — es multiplicativo en el daño total"
+                ]
+            }
+        ]
+    },
+    {
+        id: "example_belt",
+        title: "Ejemplo: Cinturón",
+        category: "Ejemplo",
+        categoryColor: "#8a7a5a",
+        difficulty: "Beginner",
+        summary: "Cinturón Rare con Life + Resistencias + Flask Charges. Uno de los slots más fáciles de craftear bien.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Cinturón Rare con: +(70–99) to maximum Life · +(25–35)% a dos Resistencias · Flask Charges Generated o Stun Threshold. El cinturón es un slot relativamente fácil de craftear — tiene menos slots que otros items y los mods objetivo son claros.",
+                steps: [],
+                tips: [
+                    "El cinturón es ideal para practicar el flujo de crafteo antes de atacar slots más caros como el pecho",
+                    "Stun Threshold en cinturón reduce mucho la probabilidad de ser stunneado en endgame — muy útil para builds de melee"
+                ]
+            },
+            {
+                heading: "Elegir la base",
+                content: "Heavy Belt: +25–35 Strength implicit — bueno para builds STR. Chain Belt: +9–12 Mana Regen implicit. Leather Belt: +25–40 Life implicit — la mejor base para Life builds, el implicit ya suma vida. Rustic Sash: % increased Physical Damage implicit — bueno para builds de ataque físico. Studded Belt: % increased Evasion implicit. Ilvl 75+ siempre.",
+                steps: [],
+                tips: [
+                    "Leather Belt es la base más usada — el implicit de Life es directamente útil para cualquier build",
+                    "Rustic Sash para builds de ataque físico que quieren exprimir todo el daño posible"
+                ]
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Essence of the Body (Standard o Greater)", detail: "Garantiza Life en el cinturón. Standard da +(70–84), Greater da +(85–99). Con Leather Belt como base sumas el implicit de Life encima." },
+                    { n: 2, action: "Evalúa los mods aleatorios", detail: "Busca Resistencias. El cinturón tiene solo 4 mods totales (2 prefix + 2 suffix) — con Life garantizada solo quedan 3 huecos. Si salió 1–2 Resistencias → perfecto." },
+                    { n: 3, action: "Rellena con Exalted Orb", detail: "Añade la Resistencia que falte o Flask Charges Generated (suffix muy buscado para QoL en endgame)." },
+                    { n: 4, action: "Elimina mod inútil si aparece", detail: "Chaos Orb + Omen of Whittling. En cinturones los mods típicamente inútiles son Mana o Accuracy." },
+                    { n: 5, action: "Divine Orb para optimizar", detail: "Maximiza Life y Resistencias. El impacto en cinturón no es tan grande como en pecho, pero si el cinturón es muy bueno vale la pena." },
+                    { n: 6, action: "Collarbone Abyss (opcional)", detail: "Aplica Collarbone Ancient si tienes huecos libres. Los mods Abyss en cinturones pueden incluir bonuses únicos de Flask o efectos especiales." }
+                ],
+                tips: [
+                    "El cinturón tiene MENOS slots que otros items (4 mods max en lugar de 6) — no intentes poner 6 mods, no caben",
+                    "Flask Charges Generated es uno de los sufijos más cómodos del juego — los flasks se recargan mucho más rápido"
+                ]
+            }
+        ]
+    },
+    {
+        id: "example_weapon_minion",
+        title: "Ejemplo: Arma para Builds de Minions",
+        category: "Ejemplo",
+        categoryColor: "#aa4a4a",
+        difficulty: "Intermediate",
+        summary: "Crafteo de arma para Witch/Necromancer. Los mods objetivo son completamente distintos a armas de ataque o hechizo propio.",
+        sections: [
+            {
+                heading: "Diferencia clave respecto a otras armas",
+                content: "En builds de Minions el personaje NO ataca directamente — los minions hacen el daño. Por tanto los mods de Adds Physical Damage, Attack Speed o Spell Damage para el jugador no sirven de nada. Los mods objetivo son: +Level of Minion Skills, % increased Minion Damage, Minion Attack/Cast Speed, Minions have % increased Life.",
+                steps: [],
+                tips: [
+                    "+# to Level of all Minion Skills es el mod más poderoso — sube el nivel de todas tus gemas de minion a la vez",
+                    "Un arma con +2 to all Minion Skills puede doblar efectivamente el daño de tus minions si las gemas son de alto nivel"
+                ]
+            },
+            {
+                heading: "Elegir la base",
+                content: "Para builds de Minions la base del arma importa menos que para otras builds — no la usas para atacar. Lo importante es el ilvl (75+) y el tipo de arma que requiera tu build. Wand o Sceptre son los más comunes para Witch/Necromancer. El implicit del Sceptre suele dar bonuses de Minions o Elemental — muy útil.",
+                steps: [],
+                tips: [
+                    "Sceptre con implicit de +1 to Level of all Minion Skills es la base endgame para Necromancer — muy cara en trade",
+                    "Si llevas escudo, una Wand con +1 Skills en mano principal es el setup más eficiente"
+                ]
+            },
+            {
+                heading: "Mods objetivo",
+                content: "Prefijos: +# to Level of all Minion Skills (el más valioso), % increased Minion Damage, Minions have % increased Maximum Life. Sufijos: Minions have % increased Attack Speed, Minions have % increased Cast Speed, +# to Level of all [tipo específico] Skills (Skeleton Skills, Zombie Skills, etc.).",
+                steps: [],
+                tips: [
+                    "+Level of all Minion Skills es PREFIX — controla que tienes espacio de prefijo antes de usar Exalted",
+                    "Los mods específicos por tipo de minion (Skeleton, Zombie, Spectre) son más fáciles de conseguir que el genérico 'all Minion Skills'"
+                ]
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Busca base con implicit de Minions", detail: "Sceptre con +1 to Minion Skills o Wand con Spell Damage (que al menos no sea inútil aunque no sea minion-específico). ilvl 75+." },
+                    { n: 2, action: "Arcanist's Etcher al 20% calidad", detail: "Para Wand/Sceptre/Staff usa Arcanist's Etcher, no Whetstone." },
+                    { n: 3, action: "Orb of Alchemy → Rare", detail: "Para armas de Minion el método más eficiente al principio es Alchemy directo — si salió +1 Minion Skills entre los 4 mods ya tienes una base sólida." },
+                    { n: 4, action: "Si no salió +1 Minion Skills: Essence o Exalted", detail: "Usa Exalted Orb buscando +Level of Minion Skills si aún tienes huecos de prefix. O busca la base directamente en trade con el mod ya presente." },
+                    { n: 5, action: "Añade Minion Damage y Speed", detail: "Rellena los huecos restantes con mods de daño y velocidad de minions con Exalted Orbs." },
+                    { n: 6, action: "Fracturing Orb en +1 Minion Skills", detail: "Si conseguiste +1 to Level of all Minion Skills en valor máximo, fractura ese mod con Hinekora's Lock para previsualizar primero." },
+                    { n: 7, action: "Divine Orb para Minion Damage", detail: "Optimiza los valores de % Minion Damage y Minion Speed — el rango puede ser grande." }
+                ],
+                tips: [
+                    "En muchos casos es más eficiente comprar en trade un arma con +1–2 Minion Skills ya en ella y luego añadir el resto de mods",
+                    "Essence of Hysteria en CASCO (no arma) da +1 Minion Skills — el casco y el arma son los dos slots donde se acumula esta bonificación"
+                ]
+            }
+        ]
+    },
+    {
         id: "campaign_vs_endgame",
         title: "Campaña vs. Endgame: cuándo craftear",
         category: "Progresión",
