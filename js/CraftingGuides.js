@@ -2,6 +2,123 @@
 
 var GUIDES = [
     {
+        id: "example_ring",
+        title: "Ejemplo: Anillo de Resistencias + Vida",
+        category: "Ejemplo",
+        categoryColor: "#3aaa8a",
+        difficulty: "Beginner",
+        summary: "Crafteo concreto de un anillo Rare con All Elemental Resistances, Life y un mod ofensivo.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Anillo Rare con: +(70–85) to maximum Life · +(25–35)% to All Elemental Resistances · un tercer mod útil (Accuracy, Added Damage, Attribute). Ideal para cerrar resistencias en cualquier build.",
+                steps: [],
+                tips: ["Este anillo es el más versátil del juego — sirve para cualquier build que necesite resistencias"]
+            },
+            {
+                heading: "Material necesario",
+                content: "Base: Two-Stone Ring ilvl 75+ (implicit: +12–16% a dos resistencias — el mejor implicit para este objetivo). Prismatic Catalyst ×4. Essence of the Body (Standard o Greater). Exalted Orbs ×2–3. Chaos Orb + Omen of Whittling (si sale un mod malo). Divine Orb ×1 (opcional, para optimizar).",
+                steps: [],
+                tips: ["Two-Stone Ring es mejor que Coral Ring para este objetivo porque su implicit ya cubre 2 resistencias", "Coge 3–4 copias de la base — a veces la Essence no da buenos mods adicionales"]
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Aplica Prismatic Catalyst ×4", detail: "Sube la calidad al máximo sesgada hacia mods de Resistencias. Hazlo en estado Normal. La calidad amplificará los % de resistencias que salgan." },
+                    { n: 2, action: "Usa Essence of the Body (Standard)", detail: "Garantiza +(70–84) to maximum Life en el anillo al convertirlo a Rare. Los otros 3 mods salen aleatorios — busca que alguno sea All Resistances, Fire, Cold o Lightning Resistance." },
+                    { n: 3, action: "Evalúa el resultado", detail: "¿Salió alguna resistencia en los mods aleatorios? Si tienes Life garantizada + 1 resistencia buena → sigue. Si los 3 mods aleatorios son inútiles → repite con otra base." },
+                    { n: 4, action: "Añade All Elemental Resistances con Exalted Orb", detail: "Si el anillo tiene hueco libre, usa Exalted Orb buscando '% to All Elemental Resistances'. Si ya tiene este mod, usa Exalted para añadir el tercer mod útil." },
+                    { n: 5, action: "Elimina mods malos", detail: "Si hay un mod inútil (p.ej. Mana Regeneration cuando no lo necesitas), usa Chaos Orb + Omen of Whittling para borrar el peor mod y añadir uno nuevo." },
+                    { n: 6, action: "Prismatic Catalyst (si se gastó la calidad)", detail: "Algunos procesos de crafteo consumen calidad. Re-aplica Catalyst si es necesario." },
+                    { n: 7, action: "Divine Orb (opcional)", detail: "Si todos los mods son buenos pero los valores son bajos, un Divine Orb maximiza los % de resistencias y la vida dentro del tier." },
+                    { n: 8, action: "Collarbone Abyss (endgame)", detail: "Aplica Collarbone Ancient si quedan huecos de mod libres o quieres un mod Desecrado único adicional. Revela en el Well of Souls." }
+                ],
+                tips: ["Si Orb of Annulment borra el Life — mala suerte, vuelve al paso 2 con otra base", "No gastes Divine en un anillo que no tenga todos los mods que buscas — primero consigue los mods, después optimiza valores"]
+            }
+        ]
+    },
+    {
+        id: "example_boots",
+        title: "Ejemplo: Botas con Movement Speed garantizado",
+        category: "Ejemplo",
+        categoryColor: "#6a9aaa",
+        difficulty: "Beginner",
+        summary: "Botas Rare con 30% Movement Speed garantizado usando Essence of Hysteria + Life + Resistencias.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Botas Rare con: 30% increased Movement Speed (garantizado) · +(70–99) to maximum Life · +(21–35)% a una o dos Resistencias. El Movement Speed es el mod más buscado en botas — sin él las botas no son endgame.",
+                steps: [],
+                tips: ["30% Movement Speed de Essence of Hysteria es el tier más alto posible en botas — no necesitarás Divine para este mod"]
+            },
+            {
+                heading: "Material necesario",
+                content: "Base: cualquier botas ilvl 75+ que encaje con tu tipo de defensa (Armour/Evasion/ES según build). Armourer's Scrap ×4. Essence of Hysteria (garantiza 30% Movement Speed en botas). Exalted Orbs ×2–3. Chaos Orb + Omen of Sinistral o Dextral Erasure (si sale un mod muy malo). Divine Orb ×1 (para Life y Resistencias).",
+                steps: [],
+                tips: ["Essence of Hysteria puede ser cara — cómprala en el trade si no la encuentras drops", "Guarda siempre al menos 3 copias de la base por si los mods aleatorios son malos"]
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Armourer's Scrap × calidad 20%", detail: "Aplica en estado Normal para máxima eficiencia. La calidad aumenta el valor de Armour/Evasion/ES base de las botas." },
+                    { n: 2, action: "Essence of Hysteria → Rare", detail: "Garantiza exactamente '30% increased Movement Speed' como mod en las botas. Los otros 3 mods son aleatorios. Este es el mod más importante — ya está asegurado." },
+                    { n: 3, action: "Evalúa mods aleatorios", detail: "Busca que salgan Life y al menos una Resistencia entre los 3 mods aleatorios. Si salieron 2+ mods útiles → excelente, sigue. Si los 3 son inútiles → repite con otra base." },
+                    { n: 4, action: "Rellena con Exalted Orbs", detail: "Añade Life con Exalted si no salió, o una Resistencia. Controla si necesitas prefix o suffix antes de tirar (Life es prefix, Resistencias son suffix)." },
+                    { n: 5, action: "Elimina el mod más inútil", detail: "Si hay un mod que no necesitas (p.ej. Mana o Accuracy en boots), usa Chaos Orb + Omen of Whittling. O Omen of Dextral/Sinistral Erasure si sabes qué tipo es el mod malo." },
+                    { n: 6, action: "Divine Orb para maximizar", detail: "Optimiza los valores de Life y Resistencias. El Movement Speed ya está al máximo tier — el Divine no lo afecta." },
+                    { n: 7, action: "Artificer's Orb para socket", detail: "Añade socket para Iron Rune (Armour) o Body Rune (Life) según tu tipo de defensa." },
+                    { n: 8, action: "Rib Abyss (opcional, endgame)", detail: "Aplica Rib Ancient para añadir un mod Desecrado de armadura. Los mods Abyss en botas pueden incluir bonuses únicos de movimiento o recuperación." }
+                ],
+                tips: ["Movement Speed en botas es SIEMPRE prefijo — si ves que ya tienes 3 prefijos y no está el Mov Speed, algo salió mal", "Si el resultado tiene Mov Speed + Life + 1 resistencia ya es una bota usable — no la deseches aunque no sea perfecta"]
+            }
+        ]
+    },
+    {
+        id: "example_amulet",
+        title: "Ejemplo: Amuleto Caster (Hechizos)",
+        category: "Ejemplo",
+        categoryColor: "#9a6aaa",
+        difficulty: "Intermediate",
+        summary: "Amuleto Rare para build de hechizos con Life, Spell Damage o +Skills, y anointment con Liquid Emotions.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Amuleto Rare con: +(85–99) to maximum Life · % increased Spell Damage o +# to Level of all [tipo] Skills · % increased Cast Speed o Resistencia. Anointado con un Notable del árbol pasivo relevante para tu build.",
+                steps: [],
+                tips: ["+# to Level of all Skills en amuleto es uno de los mods más poderosos del juego para casters — duplica el nivel efectivo de tus gemas"]
+            },
+            {
+                heading: "Elegir la base",
+                content: "Marble Amulet: implicit de Life Regeneration — bueno para builds con poca regeneración. Gold Amulet: implicit de Item Rarity — bueno para farmeo. Lapis Amulet: implicit de +Intelligence — bueno para casters INT. Jade Amulet: implicit de +Dexterity. Amber Amulet: implicit de +Strength. Ilvl 75+ en todos los casos.",
+                steps: [],
+                tips: ["Para un caster puro, Lapis Amulet (INT) o Marble Amulet son las mejores bases"]
+            },
+            {
+                heading: "Material necesario",
+                content: "Base de amuleto ilvl 75+. Catalyst relevante ×4 (Turbulent para Spell Damage, Fertile para Life, Intrinsic para Atributos). Essence of the Body (Greater o Perfect) para Life garantizada. Exalted Orbs ×2–3. Chaos Orb + Omen of Whittling/Erasure. Liquid Emotions para anointment. Divine Orb (opcional).",
+                steps: [],
+                tips: []
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Aplica Catalyst ×4", detail: "Turbulent Catalyst si priorizas Spell Damage. Fertile si priorizas Life. Intrinsic si necesitas Atributos. Aplica en estado Normal." },
+                    { n: 2, action: "Essence of the Body (Greater) → Rare", detail: "Garantiza +(85–99) to maximum Life en el amuleto. La vida es el mod más difícil de conseguir de otra forma en un amuleto con buenos mods — asegúralo aquí." },
+                    { n: 3, action: "Evalúa mods aleatorios", detail: "Busca que salga Spell Damage, +Level of Skills, Cast Speed, o una Resistencia importante. Si salieron 2 mods buenos → sigue. Si los mods son todos inútiles → repite." },
+                    { n: 4, action: "Añade mod ofensivo con Exalted Orb", detail: "Si no salió Spell Damage ni +Skills, usa Exalted buscando uno de estos. Son prefix — comprueba que tengas espacio de prefijo libre." },
+                    { n: 5, action: "Añade Cast Speed o Resistencia con Exalted", detail: "Rellena el último hueco con Cast Speed (suffix) o una resistencia que te falte." },
+                    { n: 6, action: "Elimina mods inútiles", detail: "Si hay un mod irrelevante (p.ej. Mana Regeneration Rate siendo un mod muy pequeño), usa Chaos + Omen of Whittling." },
+                    { n: 7, action: "Divine Orb para maximizar", detail: "Optimiza los valores de Spell Damage, Life y cualquier otro mod numérico." },
+                    { n: 8, action: "Anointment con Liquid Emotions", detail: "Elige el Notable pasivo más impactante para tu build. Este anointment es permanente — investiga bien qué Notable quieres antes de aplicarlo. Ejemplos para casters: nodos de Spell Damage, Cast Speed, o penetración." }
+                ],
+                tips: ["El anointment con Liquid Emotions es lo que hace el amuleto realmente poderoso — un Notable del árbol pasivo gratis sin gastar puntos", "Perfect Essence of the Body puede usarse en un amuleto ya Rare para reemplazar un mod malo por Life garantizada — muy útil si tienes todos los otros mods buenos pero la vida es baja"]
+            }
+        ]
+    },
+    {
         id: "jewelry",
         title: "Craftear Joyería (Anillo, Amuleto, Cinturón)",
         category: "Joyería",
