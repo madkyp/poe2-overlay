@@ -2,6 +2,154 @@
 
 var GUIDES = [
     {
+        id: "campaign_vs_endgame",
+        title: "Campaña vs. Endgame: cuándo craftear",
+        category: "Progresión",
+        categoryColor: "#7aaa6a",
+        difficulty: "Beginner",
+        summary: "Qué currency guardar, qué gastar y cuándo merece la pena invertir en craftear.",
+        sections: [
+            {
+                heading: "Durante la campaña (Actos 1–4)",
+                content: "No merece la pena invertir currency seria en gear de campaña. El gear que usas en el Acto 2 quedará obsoleto en el Acto 3. Equipa lo que caiga al suelo o usa Transmutation + Augmentation en buenas bases para tener algo funcional.",
+                steps: [],
+                tips: [
+                    "USA libremente: Transmutation, Augmentation, Armourer's Scrap, Whetstone — son abundantes y no valen mucho",
+                    "GUARDA siempre: Exalted Orbs, Divine Orbs, Fracturing Orbs, Essences, Omens — son endgame",
+                    "Las Essences son la excepción: úsalas en el Acto 3–4 si necesitas un slot específico que no puedes cubrir con drops"
+                ]
+            },
+            {
+                heading: "Transición al endgame (primeros mapas)",
+                content: "Al entrar al Atlas con los primeros Waystones tu gear de campaña se queda corto rápido. Aquí empieza el crafteo real. Busca bases de ilvl 60–70 y empieza a usar Essences para piezas que te duelen (resistencias rotas, vida baja).",
+                steps: [],
+                tips: [
+                    "Cierra las resistencias primero — sin el cap de res (75%) morirás mucho en mapas",
+                    "Un Exalted Orb en un item de ilvl 55 es currency tirada — espera a tener bases ilvl 75+"
+                ]
+            },
+            {
+                heading: "Endgame establecido (T10+ Waystones)",
+                content: "Aquí ya merece la pena el crafteo completo: base ilvl 75+, Essence para mod garantizado, Exalteds para rellenar, Chaos + Omens para ajustar, Divine para maximizar. Empieza a farmear las bases correctas en lugar de usar lo primero que caiga.",
+                steps: [],
+                tips: [
+                    "No gastes Divine Orbs en items que no tienen todos los mods correctos — primero consigue los mods, luego optimiza valores",
+                    "Fracturing Orb vale la pena cuando tienes T1 en el mod más importante del item",
+                    "A partir de aquí el trade también es una opción válida — a veces comprar una base buena es más barato que farmearla"
+                ]
+            },
+            {
+                heading: "Regla de oro: el coste de oportunidad",
+                content: "Antes de gastar currency en un item pregúntate: ¿Voy a usar este item durante más de 10 mapas? Si la respuesta es no, usa solo currency barata (Transmutation, Augmentation). Si es sí, invierte. Si llevas 20+ horas en el mismo item, ese es el momento de gastar Divines y Fracturing Orbs.",
+                steps: [],
+                tips: [
+                    "Un item 'bueno pero no perfecto' con el que farmeas más currency para craftear el perfecto es siempre mejor que quedarte sin resources",
+                    "Desenchanta (Salvage) todo el gear que no uses — los shards de currency suman con el tiempo"
+                ]
+            }
+        ]
+    },
+    {
+        id: "liquid_emotions",
+        title: "Liquid Emotions y Anointment de Amuletos",
+        category: "Mecánicas",
+        categoryColor: "#9a6aaa",
+        difficulty: "Intermediate",
+        summary: "Cómo anotar un Notable pasivo en tu amuleto y cómo añadir Delirium a Waystones.",
+        sections: [
+            {
+                heading: "Qué son las Liquid Emotions",
+                content: "Antes llamadas Distilled Emotions. Currency de endgame obtenida en encuentros de Delirium. Tienen dos usos: anotar un Notable pasivo en un Amuleto (permanente) o añadir modificadores de Delirium a un Waystone.",
+                steps: [],
+                tips: [
+                    "Se obtienen principalmente dentro de la niebla de Delirium en mapas — cuanto más tiempo aguantes dentro, más drops",
+                    "Son currency de endgame — no las gastes en amuletos que vas a cambiar pronto"
+                ]
+            },
+            {
+                heading: "Anointment en Amuleto",
+                content: "Aplicar una Liquid Emotion a un amuleto otorga permanentemente un Notable Pasivo del árbol — como si hubieras asignado ese punto, pero sin coste de pasiva. El Notable depende del tipo de Liquid Emotion que uses. Una vez aplicado no se puede cambiar sin una nueva Liquid Emotion.",
+                steps: [],
+                tips: [
+                    "El anointment es UNO por amuleto — elige el Notable más impactante para tu build",
+                    "Busca Notables que estén lejos de tu posición en el árbol pasivo — los que están cerca ya los cogerías normalmente"
+                ]
+            },
+            {
+                heading: "Cómo elegir el Notable correcto",
+                content: "Cada tipo de Liquid Emotion corresponde a una región del árbol pasivo: Desolation → daño de caos. Isolation → defensa. Anguish → ataque físico. Contempt → crítico. Dread → velocidad de movimiento/ataque. Fear → magia y hechizos. Guilt → minions. Hatred → elemental. Loathing → resistencias y atributos. Paranoia → life y regeneración. Rage → daño de área. Torment → mana y energy shield.",
+                steps: [],
+                tips: [
+                    "Para casters: Fear (hechizos) o Torment (ES/Mana) suelen dar los mejores Notables",
+                    "Para builds de ataque físico: Anguish o Contempt (crítico)",
+                    "Para builds de minions: Guilt",
+                    "Consulta la wiki o el árbol pasivo in-game antes de aplicar — el Notable específico depende de cuál escoges dentro de esa categoría"
+                ]
+            },
+            {
+                heading: "Uso en Waystones (Delirium)",
+                content: "Aplicar Liquid Emotions a un Waystone añade modificadores de Delirium al mapa: más niebla, más monstruos de Delirium, y recompensas específicas según el tipo. Ideal para farmear un tipo de item concreto (armas, armaduras, currency, etc.).",
+                steps: [],
+                tips: [
+                    "Combina Liquid Emotions en Waystones con Catalysts de Breach para una sesión de farmeo muy optimizada",
+                    "Los Waystones con Delirium son más difíciles — asegúrate de tener gear suficiente antes de meter múltiples modificadores"
+                ]
+            }
+        ]
+    },
+    {
+        id: "example_chest",
+        title: "Ejemplo: Pecho Defensivo (Body Armour)",
+        category: "Ejemplo",
+        categoryColor: "#6a9aaa",
+        difficulty: "Intermediate",
+        summary: "Crafteo de un pecho Rare con Life o Energy Shield + Resistencias. El slot más importante del personaje.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Pecho Rare con: +(85–120) to maximum Life (o Energy Shield alto si juegas ES) · +(25–35)% a dos o tres Resistencias · % increased Armour/ES/Evasion. El pecho es el slot con más impacto en survivability — merece la mayor inversión.",
+                steps: [],
+                tips: [
+                    "Un buen pecho puede compensar deficiencias en otros slots — priorízalo sobre guantes o casco",
+                    "Decide ANTES de empezar si quieres Life build o ES build — las bases son distintas"
+                ]
+            },
+            {
+                heading: "Elegir la base",
+                content: "Life build (STR): Crusader Plate, Astral Plate — alta Armour base, requiere STR. Evasion build (DEX): Zodiac Leather, Varnished Coat — alta Evasion base. ES build (INT): Vaal Regalia, Occultist's Vestment — alto ES base. Híbrido popular: Armour+ES (STR/INT) o Evasion+ES (DEX/INT). ilvl 75+ obligatorio.",
+                steps: [],
+                tips: [
+                    "Asegúrate de que puedes cumplir el requisito de atributo de la base — un pecho que no puedes equipar no sirve de nada",
+                    "Las bases de mayor tier tienen más defensa base — dentro del mismo tipo, siempre la base más alta que puedas usar"
+                ]
+            },
+            {
+                heading: "Material necesario",
+                content: "Base ilvl 75+ del tipo correcto ×3. Armourer's Scrap ×4. Essence of the Body (Greater: +(85–99) Life) o Essence of the Mind (Greater: +(90–104) ES para builds de ES). Exalted Orbs ×3. Chaos Orb + Omen of Whittling ×2. Divine Orb ×1. Artificer's Orb ×1.",
+                steps: [],
+                tips: []
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Armourer's Scrap al 20% de calidad", detail: "En estado Normal. La calidad en el pecho aumenta directamente el valor de Armour, Evasion o ES base." },
+                    { n: 2, action: "Essence of the Body (Greater) → Rare", detail: "Garantiza +(85–99) to maximum Life. Para ES builds usa Essence of the Mind. Los mods restantes (3) son aleatorios — busca que salga alguna Resistencia." },
+                    { n: 3, action: "Evalúa los 3 mods aleatorios", detail: "Ideal: 2+ Resistencias entre los mods aleatorios. Aceptable: 1 Resistencia + 1 mod defensivo. Malo: todo ofensivo o mods completamente inútiles → repite con otra base." },
+                    { n: 4, action: "Rellena Resistencias con Exalted Orbs", detail: "Añade Fire, Cold o Lightning Resistance (sufijos) en los huecos libres. Si ya tienes 3 sufijos pero son malos, no puedes añadir más — necesitarás Annulment primero." },
+                    { n: 5, action: "% increased Armour/ES con Exalted (prefijo)", detail: "Si tienes hueco de prefijo libre, añade un mod de % increased defensa. Aumenta el valor base de la defensa del pecho." },
+                    { n: 6, action: "Elimina el mod más inútil", detail: "Chaos Orb + Omen of Whittling para el peor mod. En un pecho, mods como Mana o Accuracy suelen ser los candidatos a eliminar." },
+                    { n: 7, action: "Divine Orb para maximizar", detail: "Optimiza Life (o ES), Resistencias y % defensa. En el pecho el rango entre min y max de Life puede ser grande — el Divine tiene mucho impacto aquí." },
+                    { n: 8, action: "Artificer's Orb + Rib Abyss", detail: "Añade socket para Body Rune (Life leech en arma / +Life en armadura). Luego Rib Ancient para mod Desecrado si aún tienes huecos de affix libres." }
+                ],
+                tips: [
+                    "Si en el paso 3 salieron 0 Resistencias pero la Life está bien, puedes continuar — cubre las resistencias en anillos y cinturón",
+                    "Perfect Essence of the Body en un pecho que ya tiene buenos mods pero Life baja es una opción de endgame para refinar sin rehacer todo"
+                ]
+            }
+        ]
+    },
+    {
         id: "example_ring",
         title: "Ejemplo: Anillo de Resistencias + Vida",
         category: "Ejemplo",
