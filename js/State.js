@@ -40,6 +40,20 @@ function setLeague(name) {
 function getLeague() { return _league }
 function addLeagueListener(fn) { _leagueListeners.push(fn) }
 
+// ── Widget visibility ────────────────────────────────────────
+var _currencyVisible = true
+var _sessionVisible  = true
+var _cvListeners = []
+var _svListeners = []
+
+function setCurrencyVisible(v) { _currencyVisible = (v === true); for (var i=0;i<_cvListeners.length;i++) _cvListeners[i](_currencyVisible) }
+function isCurrencyVisible()   { return _currencyVisible }
+function addCurrencyVisibleListener(fn) { _cvListeners.push(fn) }
+
+function setSessionVisible(v)  { _sessionVisible  = (v === true); for (var i=0;i<_svListeners.length;i++) _svListeners[i](_sessionVisible) }
+function isSessionVisible()    { return _sessionVisible }
+function addSessionVisibleListener(fn) { _svListeners.push(fn) }
+
 // Lookup by name (for CurrencyTracker)
 function getRate(name) {
     for (var i = 0; i < _entries.length; i++) {

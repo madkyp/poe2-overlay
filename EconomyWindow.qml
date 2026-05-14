@@ -43,6 +43,8 @@ PanelWindow {
     property var    filteredEntries: []
     property var    currencyEntries:  []
 
+    property bool   currencyWidgetOn: true
+    property bool   sessionWidgetOn:  true
     property string craftSubTab:    "chuleta"
     property int    guideExpanded:  -1
     property string guideSearch:    ""
@@ -142,6 +144,10 @@ PanelWindow {
     Component.onCompleted: {
         root.filteredGuides = CraftingGuides.GUIDES
         State.addEconomyListener(function(v) { root.isOpen = v })
+        root.currencyWidgetOn = State.isCurrencyVisible()
+        root.sessionWidgetOn  = State.isSessionVisible()
+        State.addCurrencyVisibleListener(function(v) { root.currencyWidgetOn = v })
+        State.addSessionVisibleListener(function(v)  { root.sessionWidgetOn  = v })
         // fetchLeagues / startFetch / prefetchCategoryIcons are deferred until
         // homeProc → leagueReadProc chain completes, so selectedLeague is correct first.
         NeverSink.checkLatestVersion(function(err, data) {
@@ -1276,6 +1282,45 @@ PanelWindow {
                                 x: 24; y: 20
                                 width: parent.width - 48
                                 spacing: 8
+
+                                // ── Widgets ─────────────────────────────────
+                                Text { text: "Widgets"; color: "#d4a843"; font.pixelSize: 14; font.bold: true }
+
+                                RowLayout {
+                                    width: parent.width; spacing: 8
+                                    Rectangle {
+                                        Layout.fillWidth: true; height: 36; radius: 5
+                                        color:        root.currencyWidgetOn ? "#0e2a1a" : "#131b26"
+                                        border.color: root.currencyWidgetOn ? "#4fc3a0" : "#2a3d50"
+                                        border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (root.currencyWidgetOn ? "✓ " : "") + "💰 Currency Tracker"
+                                            color: root.currencyWidgetOn ? "#4fc3a0" : "#6a8aaa"; font.pixelSize: 11
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: State.setCurrencyVisible(!root.currencyWidgetOn)
+                                        }
+                                    }
+                                    Rectangle {
+                                        Layout.fillWidth: true; height: 36; radius: 5
+                                        color:        root.sessionWidgetOn ? "#0e2a1a" : "#131b26"
+                                        border.color: root.sessionWidgetOn ? "#4fc3a0" : "#2a3d50"
+                                        border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (root.sessionWidgetOn ? "✓ " : "") + "⏱ Session Tracker"
+                                            color: root.sessionWidgetOn ? "#4fc3a0" : "#6a8aaa"; font.pixelSize: 11
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: State.setSessionVisible(!root.sessionWidgetOn)
+                                        }
+                                    }
+                                }
+
+                                Rectangle { width: parent.width; height: 1; color: "#1e2d3e" }
 
                                 // ── League ──────────────────────────────────
                                 Text { text: "Liga activa"; color: "#d4a843"; font.pixelSize: 14; font.bold: true }

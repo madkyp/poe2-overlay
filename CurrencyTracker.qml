@@ -10,18 +10,21 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Top
     WlrLayershell.keyboardFocus: alertTarget !== "" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.margins.bottom: 10
-    WlrLayershell.margins.right: 10
+    WlrLayershell.margins.left: offsetX
+    WlrLayershell.margins.top:  offsetY
 
-    anchors.bottom: true
-    anchors.right:  true
+    anchors.top:  true
+    anchors.left: true
 
     color: "transparent"
-    implicitWidth:  210
-    implicitHeight: collapsed ? 30 : content.implicitHeight + 16
+    implicitWidth:  widgetVisible ? 210 : 1
+    implicitHeight: widgetVisible ? (collapsed ? 30 : content.implicitHeight + 16) : 1
 
-    property bool   collapsed:    false
+    property bool   widgetVisible: true
+    property bool   collapsed:     false
     property string lastUpdate:   "--:--"
+    property int    offsetX:      1700
+    property int    offsetY:      890
 
     property string _homeDir:     ""
     property var    alerts:       ({})   // { "Divine Orb": { dir: "below", value: 150 } }
@@ -48,6 +51,16 @@ PanelWindow {
         if (cached && cached.length > 0) root._updateFromEntries(cached)
         State.addRateListener(function(entries, err) { root._updateFromEntries(entries) })
         State.addLeagueListener(function(name) { root.leagueName = name })
+        root.widgetVisible = State.isCurrencyVisible()
+        State.addCurrencyVisibleListener(function(v) {
+            root.widgetVisible = v
+            if (root._homeDir !== "" && !saveVisProc.running) {
+                saveVisProc.command = ["sh", "-c",
+                    "printf '%s' " + (v ? "1" : "0") +
+                    " > \"" + root._homeDir + "/.config/quickshell/poe2/.saved-widget-currency\""]
+                saveVisProc.running = true
+            }
+        })
     }
 
     function _updateFromEntries(entries) {
@@ -72,6 +85,14 @@ PanelWindow {
         firing = newFiring
     }
 
+    function _savePos() {
+        if (_homeDir === "" || savePosProc.running) return
+        savePosProc.command = ["sh", "-c",
+            "printf '%d,%d' " + Math.round(offsetX) + " " + Math.round(offsetY) +
+            " > \"" + _homeDir + "/.config/quickshell/poe2/.saved-pos-currency\""]
+        savePosProc.running = true
+    }
+
     function _saveAlerts() {
         if (_homeDir === "" || alertSaveProc.running) return
         var json = JSON.stringify(alerts)
@@ -92,6 +113,12 @@ PanelWindow {
                 alertLoadProc.command = ["sh", "-c",
                     "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-alerts\" 2>/dev/null"]
                 alertLoadProc.running = true
+                posLoadProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-pos-currency\" 2>/dev/null"]
+                posLoadProc.running = true
+                visLoadProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-widget-currency\" 2>/dev/null"]
+                visLoadProc.running = true
             }
         }
     }
@@ -109,6 +136,33 @@ PanelWindow {
     }
 
     Process { id: alertSaveProc }
+    Process { id: savePosProc }
+    Process { id: saveVisProc }
+    Process {
+        id: visLoadProc
+        stdout: StdioCollector { id: visLoadOut }
+        onRunningChanged: {
+            if (!running) {
+                var v = visLoadOut.text.trim()
+                if (v === "0") State.setCurrencyVisible(false)
+            }
+        }
+    }
+    Process {
+        id: posLoadProc
+        stdout: StdioCollector { id: posLoadOut }
+        onRunningChanged: {
+            if (!running) {
+                var txt = posLoadOut.text.trim()
+                if (txt && txt.indexOf(",") !== -1) {
+                    var parts = txt.split(",")
+                    var x = parseInt(parts[0], 10); var y = parseInt(parts[1], 10)
+                    if (!isNaN(x) && x >= 0) root.offsetX = x
+                    if (!isNaN(y) && y >= 0) root.offsetY = y
+                }
+            }
+        }
+    }
 
     // ── UI ────────────────────────────────────────────────────────
     Rectangle {
@@ -129,8 +183,17 @@ PanelWindow {
                 Layout.fillWidth: true
                 Text {
                     Layout.fillWidth: true
-                    text: root.leagueName
+                    text: "⠿ " + root.leagueName
                     color: "#d4a843"; font.pixelSize: 11; font.bold: true
+                    MouseArea {
+                        anchors.fill: parent
+                        property real mx: 0; property real my: 0
+                        property int  ox: 0; property int  oy: 0
+                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        onPressed:         { mx = mouseX; my = mouseY; ox = root.offsetX; oy = root.offsetY }
+                        onPositionChanged: { if (pressed) { root.offsetX = Math.max(0, ox + (mouseX - mx)); root.offsetY = Math.max(0, oy + (mouseY - my)) } }
+                        onReleased:        root._savePos()
+                    }
                 }
                 Text {
                     text: "▶"; color: "#8B7355"; font.pixelSize: 9; rightPadding: 4

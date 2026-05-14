@@ -24,12 +24,39 @@ PanelWindow {
     implicitWidth:  showing ? 330 : 1
     implicitHeight: showing ? panel.implicitHeight + 20 : 1
 
-    property bool   showing:     false
-    property var    currentItem: null
-    property var    priceResult: null
-    property bool   loading:     false
-    property string errorMsg:    ""
-    property bool   statsReady:  false
+    property bool   showing:       false
+    property var    currentItem:   null
+    property var    priceResult:   null
+    property bool   loading:       false
+    property string errorMsg:      ""
+    property bool   statsReady:    false
+    property string lastClipboard: ""
+
+    // ── Stash Pricer: watch clipboard every 1.5s ─────────────────
+    Timer {
+        id: clipWatcher
+        interval: 1500; running: true; repeat: true
+        onTriggered: { if (!clipReadProc.running) clipReadProc.running = true }
+    }
+
+    Process {
+        id: clipReadProc
+        command: ["bash", "-c", "wl-paste --no-newline 2>/dev/null || xclip -selection clipboard -o 2>/dev/null"]
+        stdout: StdioCollector { id: clipReadOut }
+        onRunningChanged: {
+            if (!running) {
+                var text = clipReadOut.text
+                if (text === root.lastClipboard) return
+                root.lastClipboard = text
+                var trimmed = text.trim()
+                if (!trimmed || !ItemParser.isPoeItem(trimmed)) return
+                var item = ItemParser.parse(trimmed)
+                if (!item) return
+                root.currentItem = item
+                root.startSearch(item)
+            }
+        }
+    }
 
     Component.onCompleted: {
         StatIds.fetchStats(function(err, _) {
