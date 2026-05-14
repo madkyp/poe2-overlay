@@ -2,6 +2,185 @@
 
 var GUIDES = [
     {
+        id: "jewelry",
+        title: "Craftear Joyería (Anillo, Amuleto, Cinturón)",
+        category: "Joyería",
+        categoryColor: "#3aaa8a",
+        difficulty: "Intermediate",
+        summary: "Cómo craftear accesorios para cerrar resistencias y stats clave. Incluye Catalysts y Liquid Emotions.",
+        sections: [
+            {
+                heading: "1. Mods objetivo por pieza",
+                content: "Anillos: to Fire/Cold/Lightning/All Elemental Resistances, to Maximum Life, Accuracy Rating, Attributes, Added Damage to Attacks. Amuleto: igual que anillos + posibilidad de anointment con Liquid Emotions para ganar un Notable del árbol pasivo sin gastar puntos. Cinturón: Maximum Life, Resistances, Strength, Flask Charges Generated, Stun Threshold.",
+                steps: [],
+                tips: ["Los anillos son el slot más fácil para cerrar resistencias — prioriza All Elemental Resistances si tienes hueco", "El amuleto es uno de los slots más poderosos — busca uno con implicit útil para tu build antes de craftear"]
+            },
+            {
+                heading: "2. Catalysts (Breach)",
+                content: "Los Catalysts aumentan la calidad de Anillos y Amuletos sesgando el efecto hacia un tipo de mod. Prismatic Catalyst → mods de Resistencias Elementales (el más usado). Fertile Catalyst → mods de Vida y Mana. Abrasive Catalyst → mods de Ataque. Intrinsic Catalyst → mods de Atributos. Turbulent Catalyst → mods de Daño Elemental. Unstable Catalyst → mods de Crítico. Tempering Catalyst → mods de Defensa.",
+                steps: [],
+                tips: ["Aplica el Catalyst ANTES de modificar el item — la calidad se aplica sobre los mods existentes", "Prismatic Catalyst es el más valioso en el mercado — úsalo solo si vas a quedarte el accesorio"]
+            },
+            {
+                heading: "3. Ruta de crafteo",
+                content: "",
+                steps: [
+                    { n: 1, action: "Elige base con buen implicit", detail: "Cada base de anillo/amuleto tiene un implicit distinto. Busca el que se ajuste a tu build (p.ej. Coral Ring → Life, Sapphire Ring → Cold Resistance)." },
+                    { n: 2, action: "Aplica Catalyst para calidad", detail: "Usa el Catalyst relevante para tu build antes de empezar a craftear. La calidad amplifica los mods del tipo elegido." },
+                    { n: 3, action: "Essence para un mod garantizado", detail: "Usa la Essence correspondiente al stat que más necesitas. Las Essences de resistencias son las más habituales para joyería." },
+                    { n: 4, action: "Rellena huecos con Exalted Orb", detail: "Añade los mods que faltan. En joyería suelen buscar: resistencias + vida + un mod ofensivo o de utilidad." },
+                    { n: 5, action: "Ajusta mods malos", detail: "Chaos Orb + Omen of Whittling o Omen of Sinistral/Dextral Erasure para eliminar el mod menos útil." },
+                    { n: 6, action: "Optimiza con Divine Orb", detail: "Solo si todos los mods son correctos. En joyería el Divine es especialmente valioso para maximizar resistencias." },
+                    { n: 7, action: "Abyss con Collarbone (opcional)", detail: "Aplica Collarbone Ancient para añadir un mod Desecrado oculto. Revela en el Well of Souls." },
+                    { n: 8, action: "Liquid Emotions (amuleto)", detail: "Si es un amuleto, usa Liquid Emotions para anotar un Notable del árbol pasivo. Muy poderoso — elige el notable que más impacte tu build." }
+                ],
+                tips: []
+            },
+            {
+                heading: "4. Collarbone de Abyss",
+                content: "El Collarbone (Jawbone para armas, Rib para armadura) es exclusivo de Anillos, Amuletos y Cinturones. Los mods Abyss para accesorios incluyen opciones únicas como bonificaciones de resistencias, regeneración, o efectos especiales que no existen en el pool normal.",
+                steps: [],
+                tips: ["Ancient Collarbone requiere nivel 40+ — úsalo en items de endgame", "El Preserved Cranium es para Joyas (Jewels), no para accesorios"]
+            }
+        ]
+    },
+    {
+        id: "armor",
+        title: "Craftear Armadura (Pecho, Casco, Guantes, Botas)",
+        category: "Armadura",
+        categoryColor: "#6a9aaa",
+        difficulty: "Intermediate",
+        summary: "Guía para craftear piezas defensivas con Vida, ES, Evasion o Armour según tu build.",
+        sections: [
+            {
+                heading: "1. Elegir la base según tu build",
+                content: "Cada tipo de armadura da un tipo de defensa base: Armour puro (rojo, STR) → reducción de daño físico. Evasion puro (verde, DEX) → esquiva ataques. Energy Shield puro (azul, INT) → escudo de maná antes de vida. Armour/Evasion, Armour/ES, Evasion/ES → híbridos. Elige la base que cuadre con los nodos defensivos de tu árbol pasivo.",
+                steps: [],
+                tips: ["Un ilvl 75+ asegura acceso a los tiers más altos de Vida y Energy Shield", "Las bases híbridas (Armour/Evasion etc.) tienen menos defensa base pero más flexibilidad en mods"]
+            },
+            {
+                heading: "2. Mods objetivo por slot",
+                content: "Pecho (Body Armour): Maximum Life / Energy Shield (prefijo más valioso), Resistencias (sufijos), % increased Armour/ES/Evasion. Casco: Life/ES, Resistencias, Accuracy Rating. Guantes: Life/ES, Attack Speed o Cast Speed, Resistencias, Accuracy. Botas: Life/ES, % increased Movement Speed (el prefijo más buscado en botas), Resistencias.",
+                steps: [],
+                tips: ["Movement Speed en botas es casi obligatorio para endgame — búscalo como prefijo principal", "El pecho es el slot con mayor impacto en survivability — invierte más recursos aquí"]
+            },
+            {
+                heading: "3. Calidad primero",
+                content: "Usa Armourer's Scrap antes de subir de rareza. La calidad aumenta el valor de la defensa base (Armour, Evasion o Energy Shield).",
+                steps: [],
+                tips: ["Aplica quality en estado Normal — obtienes más % por scrap que en items de mayor rareza"]
+            },
+            {
+                heading: "4. Ruta de crafteo",
+                content: "",
+                steps: [
+                    { n: 1, action: "Calidad al 20% con Armourer's Scrap", detail: "Hazlo en estado Normal para mayor eficiencia de scraps." },
+                    { n: 2, action: "Essence para mod garantizado", detail: "Essence of Iron (Armour), Essence of the Body (Life), Essence of the Mind (ES) según tu necesidad principal." },
+                    { n: 3, action: "Evalúa y rellena con Exalted Orbs", detail: "Añade los mods que faltan. Prioriza: Vida/ES + Resistencias + stat ofensivo secundario." },
+                    { n: 4, action: "Elimina mods inútiles", detail: "Chaos Orb + Omen of Whittling. Para botas: si no salió Movement Speed, puede valer la pena volver a intentar desde el paso 2 con otra base." },
+                    { n: 5, action: "Divine Orb para valores", detail: "Especialmente útil en Life y ES donde la diferencia entre el mínimo y máximo del tier es grande." },
+                    { n: 6, action: "Añade socket con Artificer's Orb", detail: "Coloca Runes defensivas — Body Rune para Life, Iron Rune para Armour." },
+                    { n: 7, action: "Abyss con Rib (opcional)", detail: "Aplica un Rib Ancient para añadir un mod Desecrado. Los mods Abyss para armaduras incluyen bonuses defensivos únicos." },
+                    { n: 8, action: "Corrompe (opcional)", detail: "La corrupción en armadura puede añadir implícitos poderosos como resistencias adicionales o bonuses de Life. Solo en items ya muy buenos." }
+                ],
+                tips: []
+            }
+        ]
+    },
+    {
+        id: "waystones",
+        title: "Craftear Waystones (Maps)",
+        category: "Endgame",
+        categoryColor: "#c4903a",
+        difficulty: "Beginner",
+        summary: "Cómo modificar Waystones para maximizar drops y experiencia en endgame.",
+        sections: [
+            {
+                heading: "¿Por qué craftear Waystones?",
+                content: "Un Waystone sin modificar es básicamente un mapa vacío. Añadiendo mods aumentas Item Quantity (más items drops), Item Rarity (mejor calidad de drops), Pack Size (más monstruos) y dificultad general. A mayor dificultad aceptada, más recompensas.",
+                steps: [],
+                tips: ["La mayoría de jugadores de endgame corren solo Waystones Rare — Normal y Magic no compensan el tiempo invertido"]
+            },
+            {
+                heading: "Mods buenos vs. mods peligrosos",
+                content: "Buenos: % increased Item Quantity, % increased Item Rarity, % increased Pack Size, Monsters drop additional Currency, Rare Monsters drop additional items. Peligrosos pero aceptables: Monsters have X% increased Life, Monsters deal X% increased Damage. Evitar si no tienes buen gear: Players have -max Resistances, Players are Cursed with [efecto fuerte], No Life/Mana recovery.",
+                steps: [],
+                tips: ["Con el tiempo aprenderás qué mods puedes ignorar con tu build — al principio evita los que anulan resistencias", "Los mods de 'additional Currency drops' y 'Pack Size' son los más valiosos económicamente"]
+            },
+            {
+                heading: "Ruta de crafteo",
+                content: "",
+                steps: [
+                    { n: 1, action: "Orb of Transmutation → Magic (1 mod)", detail: "Convierte el Waystone Normal a Magic. Comprueba si el mod es bueno o neutro." },
+                    { n: 2, action: "Orb of Augmentation → Magic (2 mods)", detail: "Añade un segundo mod al Magic. Si los dos mods son aceptables, sigue." },
+                    { n: 3, action: "Regal Orb → Rare (3 mods)", detail: "Sube a Rare para acceder a más mods. Los Waystones Rare son el estándar de endgame." },
+                    { n: 4, action: "Exalted Orb para más mods", detail: "Añade 1-2 mods más al Rare. Busca Item Quantity y Pack Size." },
+                    { n: 5, action: "Si salió un mod muy peligroso", detail: "Usa Orb of Annulment para eliminar el peor mod, o descarta ese Waystone y empieza con otro." }
+                ],
+                tips: ["Guarda los Waystones de tier alto (T14+) para correrlos con máximos mods — no los gastes en vacío", "Los Waystones Rare con Pack Size + IQ + IR son los más rentables aunque sean más difíciles"]
+            },
+            {
+                heading: "Abyss en Waystones",
+                content: "El Preserved Vertebrae añade un mod Desecrado a un Waystone Rare. Los mods Abyss para Waystones pueden incluir efectos de encontrar más abismos, más monstruos abisales o mejores recompensas de Abyss encounters.",
+                steps: [],
+                tips: ["Muy útil si quieres farmear Abyssal Bones o loot de Abyss", "Combina con Liquid Emotions para añadir también modificadores de Delirium al mapa"]
+            },
+            {
+                heading: "Liquid Emotions (Delirium en Waystones)",
+                content: "Las Liquid Emotions se pueden aplicar a Waystones para añadir modificadores de Delirium: más niebla, más monstruos Delirium, mejores recompensas específicas de Delirium. Elige el tipo de Liquid Emotion según el loot que busques.",
+                steps: [],
+                tips: ["Las Liquid Emotions de Armour, Weapons o Currency amplifican los drops de esa categoría en el mapa"]
+            }
+        ]
+    },
+    {
+        id: "flasks",
+        title: "Craftear Flasks",
+        category: "General",
+        categoryColor: "#7aaa6a",
+        difficulty: "Beginner",
+        summary: "Cómo conseguir los mods correctos en tus flasks para máxima utilidad y resistencia a status.",
+        sections: [
+            {
+                heading: "Por qué importan los flasks",
+                content: "Un flask bien rolleado puede marcar la diferencia entre morir o no morir. Los sufijos de Immunity eliminan status negativos (Freeze, Bleed, Poison, Shock, Curses) que de otro modo te matarían. Los prefijos aumentan la cantidad o velocidad de recuperación.",
+                steps: [],
+                tips: ["Tener al menos 2 flasks con sufijos de Immunity es prácticamente obligatorio en endgame"]
+            },
+            {
+                heading: "Calidad con Glassblower's Bauble",
+                content: "Aplica Glassblower's Bauble para subir la calidad del flask al 20%. La calidad aumenta la cantidad recuperada (Life/Mana) o la duración del efecto según el tipo de flask.",
+                steps: [],
+                tips: ["Aplica la calidad en estado Normal para mayor eficiencia de Baubles"]
+            },
+            {
+                heading: "Prefijos clave",
+                content: "Surgeon's: recarga cargas al hacer un Critical Strike — ideal para builds de crítico. Chemist's: el flask usa menos cargas por uso — más usos por pack. Perpetual: genera cargas continuamente durante el efecto. Ample: comienza con el máximo de cargas. Concentrated: mayor efecto pero menor duración.",
+                steps: [],
+                tips: ["Surgeon's es el mejor prefijo para builds de crítico — prácticamente infinito en endgame", "Chemist's o Perpetual son mejores para builds sin crítico"]
+            },
+            {
+                heading: "Sufijos clave (Immunities)",
+                content: "Of Heat: elimina e inmuniza a Freeze y Chill. Of Staunching: elimina e inmuniza a Bleed. Of Grounding: elimina e inmuniza a Shock. Of Dousing: elimina e inmuniza a Ignite. Of Warding: elimina e inmuniza a Curses. Of Antidoting: elimina e inmuniza a Poison. Of Iron Skin: aumenta Armour durante el efecto. Of Reflexes: aumenta Evasion durante el efecto.",
+                steps: [],
+                tips: ["Prioriza los Immunity sufijos según los status que más te maten en endgame", "Of Warding (Immunity a Curses) es muy útil en mapas con mods de Curse"]
+            },
+            {
+                heading: "Ruta de crafteo",
+                content: "",
+                steps: [
+                    { n: 1, action: "Consigue el tipo de flask correcto", detail: "Life Flask, Mana Flask o Utility Flask (Quicksilver, Granite, Jade, Bismuth...). Tier más alto que encuentres." },
+                    { n: 2, action: "Calidad al 20% con Glassblower's Bauble", detail: "En estado Normal. Necesitarás varios Baubles — los da la campaña con frecuencia." },
+                    { n: 3, action: "Orb of Transmutation → Magic", detail: "Convierte a Magic con 1 mod. Comprueba si es útil." },
+                    { n: 4, action: "Orb of Augmentation → Magic (2 mods)", detail: "Añade el segundo mod. Si obtienes el prefijo y sufijo que buscabas, ¡listo!" },
+                    { n: 5, action: "Si los mods no son buenos", detail: "Vuelve a Normal con Orb of Scouring... No existe en PoE2. Directamente usa otro flask base y repite." },
+                    { n: 6, action: "Orb of Annulment si hay 1 mod malo", detail: "Si tienes el prefijo que buscas pero el sufijo es malo (o viceversa), usa Orb of Annulment para eliminar el mod malo. Riesgo: puede eliminar el bueno." }
+                ],
+                tips: ["Los flasks son baratos de craftear — si no sale en 3-4 intentos, coge otra base y repite", "En PoE2 no existe Orb of Scouring — si el flask quedó con mods malos usa otro flask base directamente"]
+            }
+        ]
+    },
+    {
         id: "weapon_physical",
         title: "Craftear un Arma Física (Attack)",
         category: "Armas",
