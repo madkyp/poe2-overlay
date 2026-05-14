@@ -7,6 +7,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 ## Características
 
 - **Price Checker** — Consulta el precio de cualquier item con **Ctrl + D** o simplemente **copiándolo al portapapeles** — el Stash Pricer lo detecta automáticamente. Muestra los primeros listados con precio, vendedor y liga.
+- **Waystone Danger Analyzer** — Al copiar un Waystone, la app analiza sus mods y avisa de combinaciones letales (Reflect, No Regen + Less Recovery, etc.) con código de severidad ☠/⚠. Detecta inglés y español.
 - **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal). Incluye **alertas de precio** configurables: recibe un aviso visual cuando una divisa sube o baja del umbral que definas. Arrastrable a cualquier posición.
 - **Session Tracker** — Widget de sesión con cronómetro, contador de muertes (detectado automáticamente desde el log del juego) y zona actual. Arrastrable y colapsable. Reseteable con un clic.
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
@@ -29,6 +30,18 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 > **Modo Ctrl+D:** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — inyecta un Ctrl+C al juego y muestra el precio al instante.  
 > **Stash Pricer:** Al hacer Ctrl+C sobre cualquier item en el stash el overlay lo detecta automáticamente (monitorización del portapapeles cada 1.5 s) y lanza la búsqueda sin pulsar nada.  
 > Requiere **xdotool** (`sudo pacman -S xdotool`) para el modo Ctrl+D.
+
+---
+
+### Waystone Danger Analyzer
+
+Al copiar (Ctrl+C) un **Waystone** desde el inventario o el map device, el overlay analiza sus mods automáticamente y muestra una alerta de severidad antes de que abras el mapa:
+
+- ☠ **LETAL** — Reflect Phys/Ele, No Regen, combos sin sustain
+- ⚠ **PELIGROSO** — Less Recovery, −Max Resists, Penetración de resistencias, Daño caos extra, Vulnerability, Elemental Weakness
+- ⚠ **A vigilar** — Temporal Chains, Enfeeble, +Crit de mobs, +Proyectiles, +AoE, buffs expiran antes, −Movement Speed
+
+Cada alerta explica por qué ese mod es peligroso. Detecta tanto texto en inglés como en español. Útil sobre todo para builds frágiles que no toleran ciertos mods (reflect en builds de daño puro, no regen sin leech, etc.).
 
 ---
 
@@ -197,15 +210,18 @@ exec-once = qs -p ~/.config/quickshell/poe2
 
 ### Atajo de teclado en Hyprland
 
-Si prefieres lanzar el overlay con un atajo en lugar de arrancarlo al inicio, añade esto a tu `~/.config/hypr/hyprland.conf`:
+Para abrir/cerrar el overlay con un atajo (toggle), añade esto a tu `~/.config/hypr/hyprland.conf` o `keybindings.conf`:
 
 ```
-bind = SUPER, M, exec, qs -p ~/.config/quickshell/poe2
+bind = CTRL, P, exec, pkill -x qs || qs -p ~/.config/quickshell/poe2
 ```
 
-Esto abre el overlay con **Super + M**. Puedes cambiar `M` por cualquier otra tecla.
+Con **Ctrl + P** la app se lanza si no está corriendo, y se cierra si ya lo está. Recarga la config con `hyprctl reload`.
 
-> Si ya tienes el overlay corriendo y quieres usar el atajo para mostrarlo/ocultarlo, la opción más sencilla es arrancarlo con `exec-once` y controlar la visibilidad desde dentro de la app.
+Para el price check global hace falta el bind adicional:
+```
+bind = CTRL, D, global, poe2-foundry:pricecheck
+```
 
 ---
 
