@@ -90,8 +90,11 @@ PanelWindow {
     }
 
     function _orbPrice(name) {
-        var dummy = root.entries.length
-        var r = State.getRate(name)
+        var dummy = root.currencyEntries.length
+        var r = null
+        for (var i = 0; i < root.currencyEntries.length; i++) {
+            if (root.currencyEntries[i].name === name) { r = root.currencyEntries[i]; break }
+        }
         if (!r || !r.chaosValue) return ""
         var v = r.chaosValue
         if (v >= 1000) return (v / 1000).toFixed(1) + "k c"

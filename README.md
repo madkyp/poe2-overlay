@@ -58,14 +58,14 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 
 ---
 
-### Crafting Cheat Sheet
+### Crafting Cheat Sheet & Guías
 
 <p align="center">
   <img src="screenshots/crafting.png" alt="Crafting Cheat Sheet" width="680">
-  <br><em>Panel de referencia rápida — todos los orbes y mecánicas de crafting de PoE2</em>
+  <br><em>Chuleta de referencia rápida — todos los orbes y mecánicas de crafting con precio en tiempo real</em>
 </p>
 
-Accesible desde la pestaña **📖 Crafting** en la ventana de economía. Cubre:
+Accesible desde la pestaña **📖 Crafting** en la ventana de economía. La sub-pestaña **Chuleta** cubre:
 
 - **Calidad** — Whetstone, Arcanist's Etcher, Armourer's Scrap, Gemcutter's Prism, Vaal Infuser
 - **Cambio de rareza** — Transmutation, Augmentation, Regal, Alchemy, Chance
@@ -75,6 +75,36 @@ Accesible desde la pestaña **📖 Crafting** en la ventana de economía. Cubre:
 - **Fate of the Vaal** — Ancient Infuser, Core Destabiliser, Orb of Extraction
 - **Desecramiento (Abyss)** — Collarbone, Jawbone, Rib, Cranium, Vertebrae
 - **Sockets de gema** — Artificer's Orb, Jeweller's Orbs
+
+---
+
+### Guías de Crafting
+
+<p align="center">
+  <img src="screenshots/crafting-guides.png" alt="Guías de Crafting — listado" width="680">
+  <br><em>Sub-pestaña Guías — 28 guías con buscador y filtros por categoría</em>
+</p>
+
+<p align="center">
+  <img src="screenshots/crafting-guide-detail.png" alt="Guías de Crafting — detalle" width="680">
+  <br><em>Vista expandida de una guía — pasos numerados, materiales necesarios y tips</em>
+</p>
+
+La sub-pestaña **Guías** incluye 28 guías de crafting organizadas en dos grupos:
+
+- **Guías** — fundamentos, mecánicas avanzadas y referencia rápida:
+  - Cómo leer un ítem: Tiers, Prefijos y Sufijos
+  - Fracturing Orb: cuándo y cómo usarla
+  - Tabla de Essences por slot
+  - Recombinator: estrategia y riesgos
+  - Corrupción por slot (qué buscar en cada pieza)
+  - Crafting de joyas, armaduras, armas, waystones, frascos y más
+
+- **Ejemplos** — recetas paso a paso para slots concretos:
+  - Casco, Cinturón, Pecho, Arma (físico/hechizo), Anillo, Botas, Collar, Guantes
+  - Cada ejemplo incluye materiales, pasos numerados con acciones y detalles, y tips específicos del slot
+
+Cada guía es expandible con un clic y muestra el nivel de dificultad (Beginner / Intermediate / Advanced).
 
 ---
 
