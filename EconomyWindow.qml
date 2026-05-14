@@ -8,6 +8,7 @@ import "js/EconomyApi.js" as EconomyApi
 import "js/State.js" as State
 import "js/NeverSink.js" as NeverSink
 import "js/CraftingData.js" as CraftingData
+import "js/CraftingGuides.js" as CraftingGuides
 
 PanelWindow {
     id: root
@@ -40,9 +41,12 @@ PanelWindow {
     property var    filteredEntries: []
     property var    currencyEntries:  []
 
+    property string craftSubTab:   "chuleta"
+    property int    guideExpanded: -1
+
     onEntriesChanged:        Qt.callLater(root._applyFilter)
     onSearchTextChanged:     Qt.callLater(root._applyFilter)
-    onActiveCategoryChanged: root.searchText = ""
+    onActiveCategoryChanged: { root.searchText = ""; root.craftSubTab = "chuleta"; root.guideExpanded = -1 }
 
     function _applyFilter() {
         if (searchText.length === 0) {
@@ -734,100 +738,337 @@ PanelWindow {
                         }
                     }
 
-                    // ── Crafting cheat sheet panel ─────────────────
+                    // ── Crafting panel (chuleta + guías) ───────────
                     Item {
                         visible: root.activeCategory === "__crafting__"
                         Layout.fillWidth: true; Layout.fillHeight: true
 
-                        Flickable {
+                        ColumnLayout {
                             anchors.fill: parent
-                            contentWidth: width
-                            contentHeight: craftCol.implicitHeight + 20
-                            clip: true
+                            spacing: 0
 
-                            Column {
-                                id: craftCol
-                                x: 16; y: 16
-                                width: parent.width - 32
-                                spacing: 0
+                            // Sub-tab bar
+                            Rectangle {
+                                Layout.fillWidth: true
+                                height: 34
+                                color: "#0d1520"
 
-                                Text {
-                                    text: "Chuleta de Crafteo"
-                                    color: "#d4a843"; font.pixelSize: 15; font.bold: true
-                                    bottomPadding: 12
+                                Rectangle {
+                                    anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                                    height: 1; color: "#1e2d3e"
                                 }
 
-                                Repeater {
-                                    model: CraftingData.SECTIONS
-                                    delegate: Column {
-                                        width: craftCol.width
-                                        spacing: 0
+                                Row {
+                                    anchors { left: parent.left; leftMargin: 12; verticalCenter: parent.verticalCenter }
+                                    spacing: 4
 
-                                        // Section header
-                                        Rectangle {
-                                            width: parent.width; height: 28
-                                            color: "transparent"
+                                    Repeater {
+                                        model: [
+                                            { id: "chuleta", label: "📋  Chuleta" },
+                                            { id: "guias",   label: "📚  Guías"  }
+                                        ]
+                                        delegate: Rectangle {
+                                            height: 24
+                                            width: tabLabel.implicitWidth + 20
+                                            radius: 4
+                                            color: root.craftSubTab === modelData.id ? "#1e3a50" : "transparent"
+
                                             Rectangle {
-                                                anchors { left: parent.left; bottom: parent.bottom }
-                                                width: parent.width; height: 1
-                                                color: modelData.color; opacity: 0.4
+                                                visible: root.craftSubTab === modelData.id
+                                                anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                                                height: 2; color: "#4fc3a0"; radius: 1
                                             }
+
                                             Text {
-                                                anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                                                text: modelData.title
-                                                color: modelData.color
-                                                font.pixelSize: 12; font.bold: true
+                                                id: tabLabel
+                                                anchors.centerIn: parent
+                                                text: modelData.label
+                                                color: root.craftSubTab === modelData.id ? "#4fc3a0" : "#5a7a8a"
+                                                font.pixelSize: 11
+                                                font.bold: root.craftSubTab === modelData.id
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: { root.craftSubTab = modelData.id; root.guideExpanded = -1 }
                                             }
                                         }
+                                    }
+                                }
+                            }
 
-                                        // Orb rows
-                                        Repeater {
-                                            model: modelData.orbs
-                                            delegate: Rectangle {
-                                                width: craftCol.width
-                                                height: orbCol.implicitHeight + 16
-                                                color: index % 2 === 0 ? "#111e2c" : "#0f1a28"
-                                                radius: 3
+                            // ── Chuleta ──────────────────────────────
+                            Flickable {
+                                visible: root.craftSubTab === "chuleta"
+                                Layout.fillWidth: true; Layout.fillHeight: true
+                                contentWidth: width
+                                contentHeight: craftCol.implicitHeight + 20
+                                clip: true
 
-                                                Column {
-                                                    id: orbCol
-                                                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10; topMargin: 8 }
-                                                    spacing: 3
+                                Column {
+                                    id: craftCol
+                                    x: 16; y: 16
+                                    width: parent.width - 32
+                                    spacing: 0
 
-                                                    RowLayout {
-                                                        width: parent.width
-                                                        Text {
-                                                            text: modelData.name
-                                                            color: "#dde8f0"; font.pixelSize: 12; font.bold: true
-                                                            Layout.fillWidth: true
+                                    Repeater {
+                                        model: CraftingData.SECTIONS
+                                        delegate: Column {
+                                            width: craftCol.width
+                                            spacing: 0
+
+                                            Rectangle {
+                                                width: parent.width; height: 28
+                                                color: "transparent"
+                                                Rectangle {
+                                                    anchors { left: parent.left; bottom: parent.bottom }
+                                                    width: parent.width; height: 1
+                                                    color: modelData.color; opacity: 0.4
+                                                }
+                                                Text {
+                                                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                                                    text: modelData.title
+                                                    color: modelData.color
+                                                    font.pixelSize: 12; font.bold: true
+                                                }
+                                            }
+
+                                            Repeater {
+                                                model: modelData.orbs
+                                                delegate: Rectangle {
+                                                    width: craftCol.width
+                                                    height: orbCol.implicitHeight + 16
+                                                    color: index % 2 === 0 ? "#111e2c" : "#0f1a28"
+                                                    radius: 3
+
+                                                    Column {
+                                                        id: orbCol
+                                                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10; topMargin: 8 }
+                                                        spacing: 3
+
+                                                        RowLayout {
+                                                            width: parent.width
+                                                            Text {
+                                                                text: modelData.name
+                                                                color: "#dde8f0"; font.pixelSize: 12; font.bold: true
+                                                                Layout.fillWidth: true
+                                                            }
+                                                            Text {
+                                                                text: modelData.applies
+                                                                color: "#4a6a8a"; font.pixelSize: 10
+                                                                horizontalAlignment: Text.AlignRight
+                                                            }
                                                         }
+
                                                         Text {
-                                                            text: modelData.applies
-                                                            color: "#4a6a8a"; font.pixelSize: 10
-                                                            horizontalAlignment: Text.AlignRight
+                                                            width: parent.width
+                                                            text: modelData.effect
+                                                            color: "#8a9aaa"; font.pixelSize: 11
+                                                            wrapMode: Text.WordWrap
                                                         }
-                                                    }
 
-                                                    Text {
-                                                        width: parent.width
-                                                        text: modelData.effect
-                                                        color: "#8a9aaa"; font.pixelSize: 11
-                                                        wrapMode: Text.WordWrap
-                                                    }
-
-                                                    Text {
-                                                        visible: modelData.tip !== ""
-                                                        width: parent.width
-                                                        text: "💡 " + modelData.tip
-                                                        color: "#6a8a6a"; font.pixelSize: 10
-                                                        wrapMode: Text.WordWrap
-                                                        topPadding: 2
+                                                        Text {
+                                                            visible: modelData.tip !== ""
+                                                            width: parent.width
+                                                            text: "💡 " + modelData.tip
+                                                            color: "#6a8a6a"; font.pixelSize: 10
+                                                            wrapMode: Text.WordWrap
+                                                            topPadding: 2
+                                                        }
                                                     }
                                                 }
                                             }
-                                        }
 
-                                        Item { width: parent.width; height: 10 }
+                                            Item { width: parent.width; height: 10 }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // ── Guías ─────────────────────────────────
+                            Flickable {
+                                visible: root.craftSubTab === "guias"
+                                Layout.fillWidth: true; Layout.fillHeight: true
+                                contentWidth: width
+                                contentHeight: guidesCol.implicitHeight + 20
+                                clip: true
+
+                                Column {
+                                    id: guidesCol
+                                    x: 12; y: 12
+                                    width: parent.width - 24
+                                    spacing: 6
+
+                                    Repeater {
+                                        model: CraftingGuides.GUIDES
+                                        delegate: Rectangle {
+                                            id: guideCard
+                                            width: guidesCol.width
+                                            height: guideCardCol.implicitHeight + 16
+                                            color: "#0f1a28"
+                                            border.color: root.guideExpanded === index ? modelData.categoryColor : "#1e2d3e"
+                                            border.width: 1
+                                            radius: 4
+                                            clip: true
+
+                                            Behavior on height { NumberAnimation { duration: 150 } }
+
+                                            Column {
+                                                id: guideCardCol
+                                                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12; topMargin: 10 }
+                                                spacing: 0
+
+                                                // Header row
+                                                RowLayout {
+                                                    width: parent.width
+
+                                                    Column {
+                                                        Layout.fillWidth: true
+                                                        spacing: 4
+
+                                                        RowLayout {
+                                                            spacing: 6
+                                                            Rectangle {
+                                                                radius: 3
+                                                                width: catLabel.implicitWidth + 10; height: 16
+                                                                color: Qt.rgba(
+                                                                    parseInt(modelData.categoryColor.slice(1,3),16)/255 * 0.25,
+                                                                    parseInt(modelData.categoryColor.slice(3,5),16)/255 * 0.25,
+                                                                    parseInt(modelData.categoryColor.slice(5,7),16)/255 * 0.25, 1)
+                                                                border.color: modelData.categoryColor; border.width: 1
+                                                                Text {
+                                                                    id: catLabel
+                                                                    anchors.centerIn: parent
+                                                                    text: modelData.category
+                                                                    color: modelData.categoryColor
+                                                                    font.pixelSize: 9
+                                                                }
+                                                            }
+                                                            Text {
+                                                                text: modelData.difficulty
+                                                                color: modelData.difficulty === "Advanced" ? "#aa4a4a" :
+                                                                       modelData.difficulty === "Intermediate" ? "#aaa06a" : "#4a8a4a"
+                                                                font.pixelSize: 9
+                                                            }
+                                                        }
+
+                                                        Text {
+                                                            width: parent.width
+                                                            text: modelData.title
+                                                            color: "#dde8f0"; font.pixelSize: 12; font.bold: true
+                                                        }
+                                                        Text {
+                                                            width: parent.width
+                                                            text: modelData.summary
+                                                            color: "#5a7a8a"; font.pixelSize: 10
+                                                            wrapMode: Text.WordWrap
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        text: root.guideExpanded === index ? "▲" : "▼"
+                                                        color: "#3a5a70"; font.pixelSize: 10
+                                                        topPadding: 4
+                                                    }
+                                                }
+
+                                                // Expanded content
+                                                Column {
+                                                    visible: root.guideExpanded === index
+                                                    width: parent.width
+                                                    spacing: 0
+                                                    topPadding: 10
+
+                                                    Repeater {
+                                                        model: modelData.sections
+                                                        delegate: Column {
+                                                            width: parent.width
+                                                            spacing: 4
+                                                            topPadding: 8
+
+                                                            // Section heading
+                                                            Text {
+                                                                width: parent.width
+                                                                text: modelData.heading
+                                                                color: guideCard.border.color
+                                                                font.pixelSize: 11; font.bold: true
+                                                            }
+
+                                                            // Section text
+                                                            Text {
+                                                                visible: modelData.content !== ""
+                                                                width: parent.width
+                                                                text: modelData.content
+                                                                color: "#8a9aaa"; font.pixelSize: 10
+                                                                wrapMode: Text.WordWrap
+                                                            }
+
+                                                            // Steps
+                                                            Repeater {
+                                                                model: modelData.steps
+                                                                delegate: RowLayout {
+                                                                    width: parent.width
+                                                                    spacing: 8
+                                                                    topPadding: 2
+
+                                                                    Rectangle {
+                                                                        width: 18; height: 18; radius: 9
+                                                                        color: "#1e3a50"
+                                                                        Layout.alignment: Qt.AlignTop
+                                                                        Text {
+                                                                            anchors.centerIn: parent
+                                                                            text: modelData.n
+                                                                            color: "#4fc3a0"; font.pixelSize: 9; font.bold: true
+                                                                        }
+                                                                    }
+
+                                                                    Column {
+                                                                        Layout.fillWidth: true
+                                                                        spacing: 1
+                                                                        Text {
+                                                                            width: parent.width
+                                                                            text: modelData.action
+                                                                            color: "#c8d8e0"; font.pixelSize: 10; font.bold: true
+                                                                        }
+                                                                        Text {
+                                                                            visible: modelData.detail !== ""
+                                                                            width: parent.width
+                                                                            text: modelData.detail
+                                                                            color: "#6a8a9a"; font.pixelSize: 10
+                                                                            wrapMode: Text.WordWrap
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            // Tips
+                                                            Repeater {
+                                                                model: modelData.tips
+                                                                delegate: RowLayout {
+                                                                    width: parent.width
+                                                                    spacing: 6
+                                                                    topPadding: 2
+                                                                    Text { text: "💡"; font.pixelSize: 9; Layout.alignment: Qt.AlignTop; topPadding: 1 }
+                                                                    Text {
+                                                                        Layout.fillWidth: true
+                                                                        text: modelData
+                                                                        color: "#6a8a6a"; font.pixelSize: 10
+                                                                        wrapMode: Text.WordWrap
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            MouseArea {
+                                                anchors.fill: parent
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.guideExpanded = (root.guideExpanded === index) ? -1 : index
+                                            }
+                                        }
                                     }
                                 }
                             }
