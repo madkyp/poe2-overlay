@@ -21,14 +21,16 @@ PanelWindow {
     anchors.top:  true
     anchors.left: true
 
-    implicitWidth:  isOpen ? 1020 : 1
-    implicitHeight: isOpen ? 580  : 1
+    implicitWidth:  isOpen ? windowW : 1
+    implicitHeight: isOpen ? windowH : 1
 
     color: "transparent"
 
     property bool   isOpen:         false
     property int    offsetX:        400
     property int    offsetY:        240
+    property real   windowW:        1020
+    property real   windowH:        580
 
     property var    entries:        []
     property bool   fetching:       false
@@ -194,6 +196,9 @@ PanelWindow {
                 versionCheckProc.command = ["sh", "-c",
                     "cat \"" + root.effectiveInstallPath + "/.neversink-version\" 2>/dev/null"]
                 versionCheckProc.running = true
+                sizeReadProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-size\" 2>/dev/null"]
+                sizeReadProc.running = true
             }
         }
     }
@@ -291,6 +296,37 @@ PanelWindow {
                 })
             }
         }
+    }
+
+    // ── Save / load window size ──────────────────────────────────
+    Process {
+        id: saveSizeProc
+    }
+    Process {
+        id: sizeReadProc
+        stdout: StdioCollector { id: sizeReadOut }
+        onRunningChanged: {
+            if (!running) {
+                var txt = sizeReadOut.text.trim()
+                if (txt && txt.indexOf("x") !== -1) {
+                    var parts = txt.split("x")
+                    if (parts.length === 2) {
+                        var w = parseInt(parts[0], 10)
+                        var h = parseInt(parts[1], 10)
+                        if (w >= 700 && w <= 1600) root.windowW = w
+                        if (h >= 400 && h <= 1200) root.windowH = h
+                    }
+                }
+            }
+        }
+    }
+
+    function _saveSize() {
+        if (root._homeDir === "") return
+        saveSizeProc.command = ["sh", "-c",
+            "printf '%sx%s' " + Math.round(root.windowW) + " " + Math.round(root.windowH) +
+            " > \"" + root._homeDir + "/.config/quickshell/poe2/.saved-size\""]
+        saveSizeProc.running = true
     }
 
     // ── Main panel ──────────────────────────────────────────────
@@ -608,10 +644,19 @@ PanelWindow {
                         RowLayout {
                             anchors { fill: parent; leftMargin: 62; rightMargin: 14 }
                             spacing: 0
-                            Text { text: "Name";          color: "#4a6a8a"; font.pixelSize: 11; Layout.fillWidth: true }
-                            Text { text: "Value  ⓘ";      color: "#4a6a8a"; font.pixelSize: 11; width: 210; horizontalAlignment: Text.AlignRight }
-                            Text { text: "Last 7 days";   color: "#4a6a8a"; font.pixelSize: 11; width: 155; horizontalAlignment: Text.AlignHCenter }
-                            Text { text: "Vol / Hour  ⓘ"; color: "#4a6a8a"; font.pixelSize: 11; width: 100; horizontalAlignment: Text.AlignRight }
+                            Text { text: "Name"; color: "#4a6a8a"; font.pixelSize: 11; Layout.fillWidth: true }
+                            Item {
+                                Layout.preferredWidth: 210
+                                Text { text: "Value  ⓘ"; color: "#4a6a8a"; font.pixelSize: 11; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter }
+                            }
+                            Item {
+                                Layout.preferredWidth: 155
+                                Text { text: "Last 7 days"; color: "#4a6a8a"; font.pixelSize: 11; anchors.centerIn: parent }
+                            }
+                            Item {
+                                Layout.preferredWidth: 130
+                                Text { text: "Volume / Hour  ⓘ"; color: "#4a6a8a"; font.pixelSize: 11; anchors.right: parent.right; anchors.verticalCenter: parent.verticalCenter }
+                            }
                         }
                     }
                     Rectangle {
@@ -668,7 +713,7 @@ PanelWindow {
 
                                 // Value: [num] [divine] ⇄ 1.0 [icon]
                                 Item {
-                                    width: 210
+                                    Layout.preferredWidth: 210; width: 210
                                     Row {
                                         anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                                         spacing: 5
@@ -695,7 +740,7 @@ PanelWindow {
 
                                 // Sparkline + % change
                                 Item {
-                                    width: 155
+                                    Layout.preferredWidth: 155; width: 155
                                     Row {
                                         anchors.centerIn: parent
                                         spacing: 6
@@ -748,7 +793,7 @@ PanelWindow {
 
                                 // Volume / Hour
                                 Item {
-                                    width: 100
+                                    Layout.preferredWidth: 130; width: 130
                                     Row {
                                         anchors { right: parent.right; verticalCenter: parent.verticalCenter }
                                         spacing: 5
@@ -1473,6 +1518,70 @@ PanelWindow {
                                 Item { width: parent.width; height: 10 }
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // ── Resize handles ─────────────────────────────────────
+        Item {
+            id: resizeRight
+            width: 6
+            anchors { top: parent.top; bottom: parent.bottom; bottomMargin: 16; right: parent.right }
+            property real pressLocalX: 0
+            property real startW: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeHorCursor
+                onPressed:        { resizeRight.pressLocalX = mapToItem(panel, mouseX, mouseY).x; resizeRight.startW = root.windowW }
+                onPositionChanged: { if (pressed) root.windowW = Math.max(700, Math.min(1600, resizeRight.startW + (mapToItem(panel, mouseX, mouseY).x - resizeRight.pressLocalX))) }
+                onReleased:        root._saveSize()
+            }
+        }
+        Item {
+            id: resizeBottom
+            height: 6
+            anchors { left: parent.left; right: parent.right; rightMargin: 16; bottom: parent.bottom }
+            property real pressLocalY: 0
+            property real startH: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeVerCursor
+                onPressed:        { resizeBottom.pressLocalY = mapToItem(panel, mouseX, mouseY).y; resizeBottom.startH = root.windowH }
+                onPositionChanged: { if (pressed) root.windowH = Math.max(400, Math.min(1200, resizeBottom.startH + (mapToItem(panel, mouseX, mouseY).y - resizeBottom.pressLocalY))) }
+                onReleased:        root._saveSize()
+            }
+        }
+        Item {
+            id: resizeCorner
+            width: 16; height: 16
+            anchors { right: parent.right; bottom: parent.bottom }
+            property real pressLocalX: 0; property real pressLocalY: 0
+            property real startW: 0;      property real startH: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: {
+                    var pt = mapToItem(panel, mouseX, mouseY)
+                    resizeCorner.pressLocalX = pt.x; resizeCorner.pressLocalY = pt.y
+                    resizeCorner.startW = root.windowW;  resizeCorner.startH = root.windowH
+                }
+                onPositionChanged: {
+                    if (pressed) {
+                        var pt = mapToItem(panel, mouseX, mouseY)
+                        root.windowW = Math.max(700, Math.min(1600, resizeCorner.startW + (pt.x - resizeCorner.pressLocalX)))
+                        root.windowH = Math.max(400, Math.min(1200, resizeCorner.startH + (pt.y - resizeCorner.pressLocalY)))
+                    }
+                }
+                onReleased: root._saveSize()
+            }
+            Canvas {
+                anchors.fill: parent
+                onPaint: {
+                    var c = getContext("2d"); c.clearRect(0, 0, width, height)
+                    c.strokeStyle = "#3a5060"; c.lineWidth = 1.5
+                    for (var i = 1; i <= 3; i++) {
+                        c.beginPath(); c.moveTo(width - i * 4, height); c.lineTo(width, height - i * 4); c.stroke()
                     }
                 }
             }

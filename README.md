@@ -9,7 +9,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 - **Price Checker** — Consulta el precio de cualquier item al vuelo con **Ctrl + D**. Muestra los primeros listados con precio, vendedor y liga.
 - **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal).
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
-- **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral.
+- **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral. Ventana redimensionable arrastrando los bordes (tamaño persistente entre sesiones).
 - **Opciones de liga** — Cambia al vuelo entre ligas (Fate of the Vaal, HC, Standard, Hardcore…) sin reiniciar.
 - **Crafting Cheat Sheet** — Panel de referencia rápida con todos los orbes, essences, omens, catalysts y los nuevos items de Fate of the Vaal. Incluye descripción, a qué se aplica y tips de uso para cada uno.
 - **Instalador NeverSink** — Descarga e instala directamente los filtros NeverSink para PoE2 desde GitHub. Detecta automáticamente la carpeta del juego, muestra la versión instalada y avisa cuando hay actualizaciones.
