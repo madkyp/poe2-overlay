@@ -298,6 +298,147 @@ var GUIDES = [
         ]
     },
     {
+        id: "example_gloves",
+        title: "Ejemplo: Guantes",
+        category: "Ejemplo",
+        categoryColor: "#6a9aaa",
+        difficulty: "Beginner",
+        summary: "Guantes Rare con Life + Attack/Cast Speed + Resistencias. El slot más flexible para añadir velocidad.",
+        sections: [
+            {
+                heading: "Objetivo final",
+                content: "Guantes Rare con: +(70–99) to maximum Life · % increased Attack Speed (para builds de ataque) o % increased Cast Speed (para casters) · +(21–35)% a una o dos Resistencias. Los guantes son el mejor slot para conseguir velocidad de ataque o casteo además de defensas.",
+                steps: [],
+                tips: [
+                    "Attack Speed en guantes afecta a TODOS los ataques con cualquier arma — muy eficiente por slot",
+                    "Para casters, Cast Speed en guantes libera ese sufijo en el arma para otros mods"
+                ]
+            },
+            {
+                heading: "Elegir la base",
+                content: "Elige el tipo de defensa de la base según tu build: Armour (STR), Evasion (DEX), ES (INT) o híbrido. Los guantes tienen solo 1 socket. ilvl 75+ para tener acceso a T1 en Life y velocidad.",
+                steps: [],
+                tips: ["Las bases de guantes no tienen grandes diferencias de implicit — elige principalmente por el tipo de defensa"]
+            },
+            {
+                heading: "Pasos",
+                content: "",
+                steps: [
+                    { n: 1, action: "Calidad al 20% con Armourer's Scrap", detail: "En estado Normal." },
+                    { n: 2, action: "Essence of the Body (Greater) → Rare", detail: "Garantiza +(85–99) Life. Los 3 mods restantes son aleatorios — busca que salga Attack/Cast Speed o una Resistencia." },
+                    { n: 3, action: "Evalúa mods aleatorios", detail: "¿Salió Attack Speed o Cast Speed? Si sí, es un gran resultado. Si no, decide si continúas o repites con otra base." },
+                    { n: 4, action: "Añade Attack/Cast Speed con Exalted", detail: "Si no salió, usa Exalted Orb buscando el sufijo de velocidad. Attack Speed y Cast Speed son SUFIJOS — comprueba que tengas huecos de suffix." },
+                    { n: 5, action: "Añade Resistencias", detail: "Rellena los huecos de suffix restantes con Resistencias. Fire, Cold o Lightning según lo que más necesites." },
+                    { n: 6, action: "Elimina mods inútiles", detail: "Chaos + Omen of Whittling para el mod más débil. En guantes los mods típicamente inútiles son Mana o Accuracy Rating." },
+                    { n: 7, action: "Divine Orb", detail: "Optimiza Life y los % de velocidad. Attack/Cast Speed T1 puede ir del 12% al 17% — un Divine puede subir varios puntos de DPS." },
+                    { n: 8, action: "Socket + Rib Abyss (opcional)", detail: "Añade socket con Artificer's Orb. Rib Ancient para mod Desecrado si tienes hueco." }
+                ],
+                tips: [
+                    "Si tras el paso 2 salió Attack Speed + Life, ya tienes los 2 mods clave — añade Resistencias en los huecos",
+                    "Accuracy Rating en guantes es útil para builds de ataque que tengan problemas de hit chance — no lo descartes sin comprobarlo"
+                ]
+            }
+        ]
+    },
+    {
+        id: "example_recombinator",
+        title: "Ejemplo: Recombinator paso a paso",
+        category: "Ejemplo",
+        categoryColor: "#c47a3a",
+        difficulty: "Advanced",
+        summary: "Cómo usar el Recombinator para fusionar los mejores mods de dos items en uno. Ejemplo con dos anillos.",
+        sections: [
+            {
+                heading: "El objetivo del ejemplo",
+                content: "Tenemos dos anillos: Anillo A con Life T1 + All Resistances T1 + dos mods malos. Anillo B con Accuracy T1 + Added Physical Damage T1 + dos mods malos. Queremos un anillo con Life T1 + All Resistances T1 + Added Physical Damage T1.",
+                steps: [],
+                tips: [
+                    "El Recombinator es endgame — solo úsalo en items con al menos 2 mods T1 reales que valga la pena preservar",
+                    "Cuantos más mods quieras transferir, menor es la probabilidad de éxito — apunta a máximo 2 mods"
+                ]
+            },
+            {
+                heading: "Preparación",
+                content: "Ambos items deben ser de la MISMA clase (p.ej. dos anillos, o dos amuletos). La base puede ser diferente — el resultado hereda una de las dos bases aleatoriamente. Necesitas Artifacts obtenidos en encuentros de Expedition en el Atlas.",
+                steps: [],
+                tips: [
+                    "Farmea Expedition en el Atlas para acumular Artifacts antes de intentar el Recombinator",
+                    "El coste en Artifacts es mayor cuanto más raros/poderosos son los mods que intentas transferir"
+                ]
+            },
+            {
+                heading: "Proceso",
+                content: "",
+                steps: [
+                    { n: 1, action: "Craftea dos copias del mismo item base", detail: "Ejemplo: craftea varios anillos hasta tener uno con Life T1 + Res T1 y otro con el mod ofensivo T1 que buscas." },
+                    { n: 2, action: "Desbloquea el Recombinator", detail: "Completa tu primer Expedition en el Atlas. El bench aparece en tu Hideout." },
+                    { n: 3, action: "Selecciona los mods a transferir", detail: "En el Recombinator, marca exactamente los 2 mods que quieres en el resultado: Life T1 del Anillo A y Added Physical Damage T1 del Anillo B." },
+                    { n: 4, action: "Revisa el coste y la probabilidad", detail: "El interface muestra el coste en Artifacts y una probabilidad estimada. Con 2 mods T1 el coste es alto — asegúrate de tener suficientes Artifacts." },
+                    { n: 5, action: "Confirma la recombinación", detail: "Si la probabilidad es aceptable (>20% es razonable para mods T1), confirma. Ambos anillos se destruyen en caso de fallo." },
+                    { n: 6, action: "Si falla: repite desde el paso 1", detail: "Necesitas craftear dos nuevos anillos con los mods objetivo. Por eso siempre hay que tener varias copias de la base." },
+                    { n: 7, action: "Si tiene éxito: añade el tercer mod", detail: "El resultado tiene Life T1 + Added Physical Damage T1 (y posiblemente algún mod extra aleatorio). Ahora usa Exalted Orb para añadir All Resistances o lo que falte." }
+                ],
+                tips: [
+                    "NO intentes transferir 3 mods — la probabilidad cae tanto que no compensa",
+                    "Farmea múltiples copias de las bases antes de empezar — un intento fallido sin material de repuesto es muy frustrante",
+                    "El Recombinator es especialmente potente para items de alto valor donde los mods T1 son rarísimos juntos de forma natural"
+                ]
+            },
+            {
+                heading: "Cuándo merece la pena",
+                content: "Vale la pena cuando: tienes dos items cada uno con UN mod T1 muy difícil de conseguir junto al otro, y el coste de craftear más items manualmente sería mayor que el coste de los Artifacts. No vale la pena para items con mods comunes que puedes conseguir fácil con Essences.",
+                steps: [],
+                tips: []
+            }
+        ]
+    },
+    {
+        id: "corruption_by_slot",
+        title: "Corrupción estratégica por slot",
+        category: "Mecánicas",
+        categoryColor: "#aa4a4a",
+        difficulty: "Advanced",
+        summary: "Qué implicits corruptos buscar en cada pieza de gear para máximo impacto.",
+        sections: [
+            {
+                heading: "Cómo funcionan los implicits corruptos",
+                content: "Al corromper con Vaal Orb, uno de los resultados posibles es añadir un implicit corrupto al item (además de otros resultados: sin cambio, modificar un mod existente, o añadir un socket). Los implicits corruptos son únicos y no pueden conseguirse de ninguna otra forma. Cada tipo de item tiene su propio pool de implicits posibles.",
+                steps: [],
+                tips: [
+                    "Usa Omen of Corruption para garantizar que la Vaal Orb aplica un implicit corrupto en lugar de otros efectos",
+                    "Hinekora's Lock previsualiza el resultado — usa ambas en items muy valiosos"
+                ]
+            },
+            {
+                heading: "Implicits por slot",
+                content: "Casco: % increased Area of Effect, Socketed Gems have +# Level, % increased Minion Damage. Pecho: % increased Life, Reflected Damage reduction, Socketed Gems have +# Level. Guantes: % increased Attack Speed, % increased Cast Speed, Adds Physical/Elemental Damage. Botas: % increased Movement Speed (adicional al mod explícito), % increased Mana Regeneration, Cannot be Frozen. Armas: +# to Level of all Skills (muy poderoso), % increased Spell/Physical Damage, Gain % of Physical as extra Element.",
+                steps: [],
+                tips: [
+                    "+# to Level of all Skills en arma como implicit corrupto es uno de los mejores resultados posibles del juego",
+                    "% increased Movement Speed en botas como implicit se suma al explicit — puedes superar el cap normal de Mov Speed"
+                ]
+            },
+            {
+                heading: "Implicits de joyería",
+                content: "Anillos: % increased Life Leech, Elemental Damage Penetration, Reflects Damage to Attackers, % increased Mana. Amuletos: % increased Global Critical Multiplier, +# to Level of all Skills, % increased Damage, Elemental Weakening on Hit. Cinturón: % increased Flask Effect Duration, % increased Stun and Block Recovery.",
+                steps: [],
+                tips: [
+                    "+# to Level of all Skills en amuleto como implicit corrupto es equiparable al anointment en valor",
+                    "% increased Global Critical Multiplier en anillo es muy buscado en builds de crítico"
+                ]
+            },
+            {
+                heading: "Cuándo corromper para implicits",
+                content: "Solo merece la pena intentar implicits específicos cuando el item base ya es casi perfecto y tienes Omen of Corruption para garantizar que salga un implicit (en lugar de un resultado menos útil). Sin el Omen, la corrupción puede simplemente bloquear el item sin añadir nada.",
+                steps: [],
+                tips: [
+                    "Comprar items ya corrompidos con el implicit que buscas en el trade suele ser más barato que intentar conseguirlo tú mismo",
+                    "Los items con implicits corruptos muy buenos valen mucho más en el mercado — es una fuente de ingresos para crafters avanzados"
+                ]
+            }
+        ]
+    },
+    {
         id: "campaign_vs_endgame",
         title: "Campaña vs. Endgame: cuándo craftear",
         category: "Progresión",

@@ -41,12 +41,17 @@ PanelWindow {
     property var    filteredEntries: []
     property var    currencyEntries:  []
 
-    property string craftSubTab:   "chuleta"
-    property int    guideExpanded: -1
+    property string craftSubTab:    "chuleta"
+    property int    guideExpanded:  -1
+    property string guideSearch:    ""
+    property string guideCatFilter: "all"
+    property var    filteredGuides: CraftingGuides.GUIDES
 
     onEntriesChanged:        Qt.callLater(root._applyFilter)
     onSearchTextChanged:     Qt.callLater(root._applyFilter)
-    onActiveCategoryChanged: { root.searchText = ""; root.craftSubTab = "chuleta"; root.guideExpanded = -1 }
+    onActiveCategoryChanged: { root.searchText = ""; root.craftSubTab = "chuleta"; root.guideExpanded = -1; root.guideSearch = ""; root.guideCatFilter = "all" }
+    onGuideSearchChanged:    Qt.callLater(root._applyGuideFilter)
+    onGuideCatFilterChanged: Qt.callLater(root._applyGuideFilter)
 
     function _applyFilter() {
         if (searchText.length === 0) {
@@ -60,6 +65,40 @@ PanelWindow {
                 out.push(entries[i])
         }
         filteredEntries = out
+    }
+
+    function _applyGuideFilter() {
+        var all = CraftingGuides.GUIDES
+        if (guideSearch === "" && guideCatFilter === "all") {
+            filteredGuides = all
+            return
+        }
+        var s = guideSearch.toLowerCase()
+        var result = []
+        for (var i = 0; i < all.length; i++) {
+            var g = all[i]
+            if (guideCatFilter !== "all") {
+                var isExample = g.id.indexOf("example_") === 0
+                if (guideCatFilter === "ejemplos" && !isExample) continue
+                if (guideCatFilter === "guias"    &&  isExample) continue
+            }
+            if (s !== "" && g.title.toLowerCase().indexOf(s) === -1 &&
+                g.summary.toLowerCase().indexOf(s) === -1) continue
+            result.push(g)
+        }
+        filteredGuides = result
+    }
+
+    function _orbPrice(name) {
+        var dummy = root.entries.length
+        var r = State.getRate(name)
+        if (!r || !r.chaosValue) return ""
+        var v = r.chaosValue
+        if (v >= 1000) return (v / 1000).toFixed(1) + "k c"
+        if (v >= 100)  return v.toFixed(0) + " c"
+        if (v >= 10)   return v.toFixed(1) + " c"
+        if (v >= 1)    return v.toFixed(2) + " c"
+        return v.toFixed(3) + " c"
     }
 
     property string selectedLeague:  "Fate of the Vaal"
@@ -855,6 +894,11 @@ PanelWindow {
                                                                 Layout.fillWidth: true
                                                             }
                                                             Text {
+                                                                visible: root._orbPrice(modelData.name) !== ""
+                                                                text: root._orbPrice(modelData.name)
+                                                                color: "#d4a843"; font.pixelSize: 10
+                                                            }
+                                                            Text {
                                                                 text: modelData.applies
                                                                 color: "#4a6a8a"; font.pixelSize: 10
                                                                 horizontalAlignment: Text.AlignRight
@@ -887,12 +931,105 @@ PanelWindow {
                             }
 
                             // ── Guías ─────────────────────────────────
-                            Flickable {
+                            ColumnLayout {
                                 visible: root.craftSubTab === "guias"
                                 Layout.fillWidth: true; Layout.fillHeight: true
-                                contentWidth: width
-                                contentHeight: guidesCol.implicitHeight + 20
-                                clip: true
+                                spacing: 0
+
+                                // Search + category filter bar
+                                Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 76
+                                    color: "#0d1520"
+                                    Rectangle {
+                                        anchors { bottom: parent.bottom; left: parent.left; right: parent.right }
+                                        height: 1; color: "#1e2d3e"
+                                    }
+
+                                    Column {
+                                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 10 }
+                                        spacing: 6
+
+                                        // Search input
+                                        Rectangle {
+                                            width: parent.width; height: 26
+                                            color: "#111e2c"; radius: 4
+                                            border.color: "#2a3a4a"; border.width: 1
+
+                                            RowLayout {
+                                                anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                                                Text { text: "🔍"; font.pixelSize: 10; color: "#4a6a8a" }
+                                                TextInput {
+                                                    id: guideSearchInput
+                                                    Layout.fillWidth: true
+                                                    text: root.guideSearch
+                                                    color: "#c0d0e0"; font.pixelSize: 11
+                                                    selectByMouse: true
+                                                    onTextChanged: root.guideSearch = text
+                                                    Text {
+                                                        visible: parent.text === ""
+                                                        anchors.verticalCenter: parent.verticalCenter
+                                                        text: "Buscar guía..."
+                                                        color: "#3a5070"; font.pixelSize: 11
+                                                    }
+                                                }
+                                                Text {
+                                                    visible: root.guideSearch !== ""
+                                                    text: "✕"; color: "#5a7a8a"; font.pixelSize: 10
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: { root.guideSearch = ""; guideSearchInput.text = "" }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Category filter buttons
+                                        Row {
+                                            spacing: 4
+                                            Repeater {
+                                                model: [
+                                                    { id: "all",      label: "Todos"    },
+                                                    { id: "ejemplos", label: "Ejemplos" },
+                                                    { id: "guias",    label: "Guías"    }
+                                                ]
+                                                delegate: Rectangle {
+                                                    height: 20
+                                                    width: catFilterLabel.implicitWidth + 14
+                                                    radius: 3
+                                                    color: root.guideCatFilter === modelData.id ? "#1e3a50" : "#0f1a28"
+                                                    border.color: root.guideCatFilter === modelData.id ? "#4fc3a0" : "#1e2d3e"
+                                                    border.width: 1
+                                                    Text {
+                                                        id: catFilterLabel
+                                                        anchors.centerIn: parent
+                                                        text: modelData.label
+                                                        color: root.guideCatFilter === modelData.id ? "#4fc3a0" : "#4a6a8a"
+                                                        font.pixelSize: 10
+                                                    }
+                                                    MouseArea {
+                                                        anchors.fill: parent
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: root.guideCatFilter = modelData.id
+                                                    }
+                                                }
+                                            }
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: root.filteredGuides.length + " guías"
+                                                color: "#2a4a5a"; font.pixelSize: 9
+                                                leftPadding: 6
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Flickable {
+                                    Layout.fillWidth: true; Layout.fillHeight: true
+                                    contentWidth: width
+                                    contentHeight: guidesCol.implicitHeight + 20
+                                    clip: true
 
                                 Column {
                                     id: guidesCol
@@ -901,7 +1038,7 @@ PanelWindow {
                                     spacing: 6
 
                                     Repeater {
-                                        model: CraftingGuides.GUIDES
+                                        model: root.filteredGuides
                                         delegate: Rectangle {
                                             id: guideCard
                                             width: guidesCol.width
@@ -1069,9 +1206,10 @@ PanelWindow {
                                         }
                                     }
                                 }
-                            }
-                        }
-                    }
+                                }  // Flickable
+                            }      // ColumnLayout guías
+                        }          // ColumnLayout crafting panel
+                    }              // Item crafting panel
 
                     // ── Options panel ──────────────────────────────
                     Item {
