@@ -36,6 +36,29 @@ PanelWindow {
 
     onSelectedChanged: variantSel = 0
 
+    // Builds list grouped by character class, alphabetised, headers in
+    // the same array so a single Repeater renders both.
+    readonly property var _groupedBuilds: {
+        var groups = {}
+        for (var i = 0; i < builds.length; i++) {
+            var b = builds[i]
+            var cls = b.charClass || "Otros"
+            if (!groups[cls]) groups[cls] = { icon: b.classIcon || "", items: [] }
+            groups[cls].items.push({ build: b, origIndex: i })
+        }
+        var classNames = Object.keys(groups).sort()
+        var out = []
+        for (var c = 0; c < classNames.length; c++) {
+            var g = groups[classNames[c]]
+            out.push({ kind: "header", className: classNames[c], icon: g.icon, count: g.items.length })
+            for (var k = 0; k < g.items.length; k++) {
+                var it = g.items[k]
+                out.push({ kind: "item", build: it.build, origIndex: it.origIndex })
+            }
+        }
+        return out
+    }
+
     Component.onCompleted: {
         State.addBuildsOpenListener(function(v) { root.isOpen = v })
     }
@@ -434,23 +457,64 @@ PanelWindow {
                                 Layout.margins: 6
                             }
 
+                            // Build the grouped model client-side: array of
+                            // { kind: "header", className, icon } and
+                            // { kind: "item", build, origIndex } entries.
                             Repeater {
-                                model: root.builds
-                                Rectangle {
+                                model: root._groupedBuilds
+                                Loader {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: 42
+                                    sourceComponent: modelData.kind === "header" ? headerRow : itemRow
+                                    property var rowData: modelData
+                                }
+                            }
+
+                            Component {
+                                id: headerRow
+                                Rectangle {
+                                    width: parent ? parent.width : 0
+                                    height: 26
+                                    color: "#161a20"
                                     radius: 3
-                                    color: index === root.selected ? "#2a2a3a" : (rowMouse.containsMouse ? "#181820" : "transparent")
-                                    border.color: index === root.selected ? "#5a5a7a" : "transparent"
+                                    RowLayout {
+                                        anchors { fill: parent; leftMargin: 6; rightMargin: 6 }
+                                        spacing: 6
+                                        Image {
+                                            visible: rowData && rowData.icon !== ""
+                                            source: rowData ? rowData.icon : ""
+                                            sourceSize.width: 18; sourceSize.height: 18
+                                            width: 18; height: 18
+                                            fillMode: Image.PreserveAspectFit
+                                        }
+                                        Text {
+                                            text: rowData ? rowData.className : ""
+                                            color: "#d4a843"; font.pixelSize: 11; font.bold: true
+                                            Layout.fillWidth: true
+                                        }
+                                        Text {
+                                            text: rowData ? "(" + rowData.count + ")" : ""
+                                            color: "#5a5a5a"; font.pixelSize: 9
+                                        }
+                                    }
+                                }
+                            }
+
+                            Component {
+                                id: itemRow
+                                Rectangle {
+                                    width: parent ? parent.width : 0
+                                    height: 42
+                                    radius: 3
+                                    color: rowData && rowData.origIndex === root.selected ? "#2a2a3a" : (rowMouse.containsMouse ? "#181820" : "transparent")
+                                    border.color: rowData && rowData.origIndex === root.selected ? "#5a5a7a" : "transparent"
                                     border.width: 1
 
-                                    // Row click → select. Hover so we can show the trash on hover.
                                     MouseArea {
                                         id: rowMouse
                                         anchors.fill: parent
                                         hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: root.selected = index
+                                        onClicked: if (rowData) root.selected = rowData.origIndex
                                     }
 
                                     RowLayout {
@@ -461,20 +525,24 @@ PanelWindow {
                                             Layout.fillWidth: true
                                             spacing: 1
                                             Text {
-                                                text: modelData.name
+                                                text: rowData && rowData.build ? rowData.build.name : ""
                                                 color: "#c0b090"; font.pixelSize: 10; font.bold: true
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
                                             Text {
-                                                text: "by " + modelData.author
+                                                text: {
+                                                    if (!rowData || !rowData.build) return ""
+                                                    var b = rowData.build
+                                                    var asc = b.ascendancy ? "  ·  " + b.ascendancy : ""
+                                                    return "by " + b.author + asc
+                                                }
                                                 color: "#5a5a5a"; font.pixelSize: 9
                                                 elide: Text.ElideRight
                                                 Layout.fillWidth: true
                                             }
                                         }
 
-                                        // Per-row trash button
                                         Rectangle {
                                             visible: rowMouse.containsMouse || trashMouse.containsMouse
                                             Layout.alignment: Qt.AlignVCenter
@@ -492,7 +560,7 @@ PanelWindow {
                                                 anchors.fill: parent
                                                 hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
-                                                onClicked: root._deleteAt(index)
+                                                onClicked: if (rowData) root._deleteAt(rowData.origIndex)
                                             }
                                         }
                                     }

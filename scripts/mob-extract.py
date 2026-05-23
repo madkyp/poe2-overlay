@@ -336,20 +336,35 @@ def flatten(doc, source_url):
     variants = (d.get("buildVariants") or {}).get("values") or []
     variant = variants[0] if variants else {}
 
+    tags = ((doc.get("tags") or {}).get("data")) or []
+
+    def _tag_by_group(group):
+        for t in tags:
+            if t.get("groupSlug") == group:
+                return t
+        return None
+
+    cls_tag    = _tag_by_group("class")
+    ascend_tag = _tag_by_group("ascendancy")
+
     guide = {
-        "id":         doc.get("id"),
-        "slug":       doc.get("slugifiedName"),
-        "url":        source_url,
-        "name":       d.get("name") or doc.get("slugifiedName") or "Sin título",
-        "author":     ((doc.get("author") or {}).get("displayName")
-                       or (doc.get("author") or {}).get("username")
-                       or (doc.get("author") or {}).get("name")
-                       or "Anónimo"),
-        "updatedAt":  doc.get("updatedAt") or doc.get("firstPublishedAt") or "",
-        "coverImage": d.get("backgroundImage") or "",
-        "pobCode":    d.get("pobCode") or "",
-        "sections":   [],
-        "variants":   [],
+        "id":             doc.get("id"),
+        "slug":           doc.get("slugifiedName"),
+        "url":            source_url,
+        "name":           d.get("name") or doc.get("slugifiedName") or "Sin título",
+        "author":         ((doc.get("author") or {}).get("displayName")
+                           or (doc.get("author") or {}).get("username")
+                           or (doc.get("author") or {}).get("name")
+                           or "Anónimo"),
+        "updatedAt":      doc.get("updatedAt") or doc.get("firstPublishedAt") or "",
+        "coverImage":     d.get("backgroundImage") or "",
+        "pobCode":        d.get("pobCode") or "",
+        "charClass":      (cls_tag or {}).get("name") or "Otros",
+        "classIcon":      _to_webp((cls_tag or {}).get("imageUrl")),
+        "ascendancy":     (ascend_tag or {}).get("name") or "",
+        "ascendancyIcon": _to_webp((ascend_tag or {}).get("imageUrl")),
+        "sections":       [],
+        "variants":       [],
     }
 
     by_id = content_index(content)
