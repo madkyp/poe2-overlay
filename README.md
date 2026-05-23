@@ -8,6 +8,7 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 
 - **Price Checker** — Consulta el precio de cualquier item con **Ctrl + D** o simplemente **copiándolo al portapapeles** — el Stash Pricer lo detecta automáticamente. Muestra los primeros listados con precio, vendedor y liga.
 - **Waystone Danger Analyzer** — Al copiar un Waystone, la app analiza sus mods y avisa de combinaciones letales (Reflect, No Regen + Less Recovery, etc.) con código de severidad ☠/⚠. Detecta inglés y español.
+- **Importador de builds de Mobalytics** — Pega una URL de `mobalytics.gg/poe-2/builds/…` y la app extrae la guía completa: overview, strengths/weaknesses, todas las variantes (Acts/Mapping/Endgame) con sus tabs, gear con mods, gemas + supports, resumen del árbol de pasivas con jewels y código PoB copiable. Builds agrupadas por clase con icono, refrescables con un clic.
 - **Currency Tracker** — Widget siempre visible con el valor actualizado de las divisas principales (Divine, Exalted, Annulment, Vaal). Incluye **alertas de precio** configurables: recibe un aviso visual cuando una divisa sube o baja del umbral que definas. Arrastrable a cualquier posición.
 - **Session Tracker** — Widget de sesión con cronómetro, contador de muertes (detectado automáticamente desde el log del juego) y zona actual. Arrastrable y colapsable. Reseteable con un clic.
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
@@ -30,6 +31,40 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 > **Modo Ctrl+D:** Pasa el cursor sobre el item en el juego y pulsa **Ctrl + D** — inyecta un Ctrl+C al juego y muestra el precio al instante.  
 > **Stash Pricer:** Al hacer Ctrl+C sobre cualquier item en el stash el overlay lo detecta automáticamente (monitorización del portapapeles cada 1.5 s) y lanza la búsqueda sin pulsar nada.  
 > Requiere **xdotool** (`sudo pacman -S xdotool`) para el modo Ctrl+D.
+
+---
+
+### Importador de Builds (Mobalytics)
+
+<p align="center">
+  <img src="screenshots/builds-importer.png" alt="Importador de builds de Mobalytics" width="780">
+  <br><em>Pega una URL, importa la guía entera dentro del overlay</em>
+</p>
+
+Accesible desde el icono **📘** del widget Currency Tracker. Pegas una URL del tipo `https://mobalytics.gg/poe-2/builds/…` y la app:
+
+1. Hace fetch del HTML con un script Python (`scripts/mob-extract.py`)
+2. Extrae el JSON embebido en `window.__PRELOADED_STATE__` de la página
+3. Convierte el árbol de bloques Lexical de Mobalytics en secciones renderizables
+4. Reescribe los iconos `.avif` → `.webp` para que Qt6 los muestre sin plugins extras
+
+**Lo que importa:**
+- **Overview** del build, **Strengths / Weaknesses**, **changelog** y notas del creador
+- **Tabs de variantes** (Act 1, Act 2, Mapping, Endgame, etc.) — click para cambiar entre ellas igual que en Mobalytics
+- **Gear** con icono, nombre, mods explícitos por slot (16 slots: weapons, armours, jewelry, flasks, charms)
+- **Skill Gems** con icono, nivel y supports asociados
+- **Passive Tree** — resumen con número de nodos + ascendancy + jewels listadas con icono. Botón **🌳 Ver árbol en Mobalytics** para abrir la versión interactiva.
+- **PoB code** copiable a un clic
+
+**Características del visor:**
+- Builds **agrupadas por clase** (Monk, Druid, Sorceress, Witch…) con icono y contador
+- **Ascendancy** mostrado en el subtítulo de cada build
+- **🔄 Refrescar** — re-importa la URL para coger los cambios del creador
+- **🗑 Borrar** por build (hover sobre la lista o botón en el header)
+- Ventana **arrastrable** (cabecera ⠿) y **redimensionable** (bordes y esquinas)
+- Persistencia local: builds, posición y tamaño se guardan entre sesiones
+
+> ⚠️ **Aviso:** el importador depende de la estructura interna de Mobalytics. Si cambian su esquema de datos puede dejar de funcionar hasta que se actualice el script. Va contra sus términos de servicio en sentido estricto — pensado para uso personal.
 
 ---
 
