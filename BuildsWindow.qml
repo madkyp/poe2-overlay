@@ -5,7 +5,6 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "js/State.js" as State
-import "js/MobalyticsImporter.js" as MobalyticsImporter
 
 PanelWindow {
     id: root
@@ -87,28 +86,33 @@ PanelWindow {
         }
     }
 
-    // ── HTML fetch via curl (avoids QML XHR User-Agent restriction) ──
+    // ── Python script does fetch + extract + flatten, emits slim JSON ──
+    // Done server-side because StdioCollector has buffer limits that
+    // truncate Mobalytics' 1.3MB raw HTML; the script's JSON output is ~11KB.
     Process {
         id: fetchProc
         stdout: StdioCollector { id: fetchOut }
+        stderr: StdioCollector { id: fetchErr }
         onRunningChanged: {
             if (!running) {
-                if (exitCode !== 0 || fetchOut.text.length < 1000) {
+                if (exitCode !== 0) {
                     root.importing = false
-                    root.importErr = "curl falló (exit=" + exitCode + ", " + fetchOut.text.length + " bytes)"
+                    root.importErr = fetchErr.text.trim() || "Script falló (exit=" + exitCode + ")"
                     return
                 }
-                MobalyticsImporter.parseHtml(fetchOut.text, root._pendingUrl, function(err, guide) {
-                    root.importing = false
-                    if (err) { root.importErr = err; return }
+                try {
+                    var guide = JSON.parse(fetchOut.text)
                     var arr = [guide]
-                    for (var i = 0; i < root.builds.length; i++)
-                        if (root.builds[i].id !== guide.id) arr.push(root.builds[i])
+                    for (var j = 0; j < root.builds.length; j++)
+                        if (root.builds[j].id !== guide.id) arr.push(root.builds[j])
                     root.builds = arr
                     root.selected = 0
                     root._saveBuilds()
                     urlInput.text = ""
-                })
+                } catch (e) {
+                    root.importErr = "JSON inválido: " + e.message
+                }
+                root.importing = false
             }
         }
     }
@@ -126,16 +130,17 @@ PanelWindow {
 
     function _import(url) {
         root.importErr = ""
-        var errMsg = MobalyticsImporter.validateUrl(url)
-        if (errMsg) { root.importErr = errMsg; return }
+        if (!url || url.indexOf("mobalytics.gg") === -1 || url.indexOf("/builds/") === -1) {
+            root.importErr = "URL debe ser mobalytics.gg/.../builds/…"
+            return
+        }
         if (fetchProc.running) return
+        if (root._homeDir === "") { root.importErr = "$HOME no resuelto aún"; return }
         root._pendingUrl = url
         root.importing = true
-        fetchProc.command = ["curl", "-sL",
-            "-A", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-            "-H", "Accept: text/html,application/xhtml+xml",
-            "-H", "Accept-Language: en-US,en;q=0.9",
-            "--compressed", "--max-time", "20", url]
+        fetchProc.command = ["python3",
+            root._homeDir + "/.config/quickshell/poe2/scripts/mob-extract.py",
+            url]
         fetchProc.running = true
     }
 
