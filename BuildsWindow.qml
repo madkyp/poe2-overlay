@@ -635,8 +635,6 @@ PanelWindow {
                                     Text {
                                         text: root.importing ? "⏳" : "🔄"
                                         color: "#7adda0"; font.pixelSize: 11
-                                        ToolTip.visible: refreshMouse.containsMouse
-                                        ToolTip.text:    "Volver a importar (refrescar)"
                                         MouseArea {
                                             id: refreshMouse
                                             anchors.fill: parent
