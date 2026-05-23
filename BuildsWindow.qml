@@ -565,6 +565,20 @@ PanelWindow {
                                         }
                                     }
                                     Text {
+                                        text: root.importing ? "⏳" : "🔄"
+                                        color: "#7adda0"; font.pixelSize: 11
+                                        ToolTip.visible: refreshMouse.containsMouse
+                                        ToolTip.text:    "Volver a importar (refrescar)"
+                                        MouseArea {
+                                            id: refreshMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            enabled: !root.importing
+                                            onClicked: if (detail.current && detail.current.url) root._import(detail.current.url)
+                                        }
+                                    }
+                                    Text {
                                         text: "🗑"
                                         color: "#9a5050"; font.pixelSize: 11
                                         MouseArea {
