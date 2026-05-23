@@ -323,6 +323,7 @@ def variant_passive_summary(variant):
         "ascendancyCount": len(ascend),
         "jewels":          jewels,
         "allocatedIds":    allocated_ids,
+        "ascendancyIds":   to_ints(ascend),
     }
 
 
