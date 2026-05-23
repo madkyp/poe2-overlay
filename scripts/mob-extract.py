@@ -240,6 +240,14 @@ def add_block(block, sections, ctx=None):
             })
 
 
+def _to_webp(url):
+    """Mobalytics' CDN serves the same asset under .webp; rewrite from .avif so
+    Qt6 (which lacks AVIF without an extra plugin) can render the icon."""
+    if url and url.lower().endswith(".avif"):
+        return url[: -len(".avif")] + ".webp"
+    return url or ""
+
+
 def variant_equipment(variant):
     items = []
     eq = variant.get("equipment") or {}
@@ -259,7 +267,7 @@ def variant_equipment(variant):
             "slot":     SLOT_LABELS.get(key, key.title()),
             "name":     c["name"],
             "isUnique": bool(c.get("isUnique")),
-            "iconUrl":  c.get("iconURL") or "",
+            "iconUrl":  _to_webp(c.get("iconURL")),
             "mods":     mods,
         })
     return items
@@ -290,7 +298,7 @@ def variant_passive_summary(variant):
             name = "Jewel"
         jewels.append({
             "name":     name,
-            "iconUrl":  j.get("iconURL") or "",
+            "iconUrl":  _to_webp(j.get("iconURL")),
             "isUnique": bool(j.get("isUnique")),
         })
     return {
@@ -315,7 +323,7 @@ def variant_skills(variant):
         ]
         groups.append({
             "main":     active.get("name") or slug_to_name(active.get("gemSlug") or ""),
-            "mainIcon": active.get("iconURL") or active.get("gemIconURL") or "",
+            "mainIcon": _to_webp(active.get("iconURL") or active.get("gemIconURL")),
             "supports": [s for s in supports if s],
             "level":    active.get("level") or 0,
         })
