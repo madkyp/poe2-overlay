@@ -86,22 +86,54 @@ PanelWindow {
         }
     }
 
-    // ── Python script does fetch + extract + flatten, emits slim JSON ──
-    // Done server-side because StdioCollector has buffer limits that
-    // truncate Mobalytics' 1.3MB raw HTML; the script's JSON output is ~11KB.
+    // ── Python script does fetch + extract + flatten ─────────────
+    // Stage 1: run the script, output goes to /tmp/poe2-mob-build.json.
+    // Stage 2: read /tmp/poe2-mob-build.json (or .err) back into QML.
     Process {
         id: fetchProc
         stdout: StdioCollector { id: fetchOut }
-        stderr: StdioCollector { id: fetchErr }
         onRunningChanged: {
             if (!running) {
-                if (exitCode !== 0) {
-                    root.importing = false
-                    root.importErr = fetchErr.text.trim() || "Script falló (exit=" + exitCode + ")"
-                    return
+                console.log("[BuildsWindow] fetchProc done, exitCode=", exitCode,
+                            "stdout:", fetchOut.text.trim())
+                // Parse "EXIT=N" from stdout to know real script exit
+                var m = fetchOut.text.match(/EXIT=(\d+)/)
+                var scriptExit = m ? parseInt(m[1], 10) : -1
+                if (scriptExit !== 0) {
+                    // Read error file
+                    readErrProc.command = ["sh", "-c", "cat /tmp/poe2-mob-build.err 2>/dev/null"]
+                    readErrProc._scriptExit = scriptExit
+                    readErrProc.running = true
+                } else {
+                    readOutProc.command = ["sh", "-c", "cat /tmp/poe2-mob-build.json"]
+                    readOutProc.running = true
                 }
+            }
+        }
+    }
+
+    Process {
+        id: readErrProc
+        property int _scriptExit: -1
+        stdout: StdioCollector { id: readErrOut }
+        onRunningChanged: {
+            if (!running) {
+                root.importing = false
+                root.importErr = (readErrOut.text.trim() || "Script falló") +
+                                 " (exit=" + readErrProc._scriptExit + ")"
+                console.log("[BuildsWindow] script error:", root.importErr)
+            }
+        }
+    }
+
+    Process {
+        id: readOutProc
+        stdout: StdioCollector { id: readOutOut }
+        onRunningChanged: {
+            if (!running) {
+                console.log("[BuildsWindow] script JSON size:", readOutOut.text.length)
                 try {
-                    var guide = JSON.parse(fetchOut.text)
+                    var guide = JSON.parse(readOutOut.text)
                     var arr = [guide]
                     for (var j = 0; j < root.builds.length; j++)
                         if (root.builds[j].id !== guide.id) arr.push(root.builds[j])
@@ -110,7 +142,8 @@ PanelWindow {
                     root._saveBuilds()
                     urlInput.text = ""
                 } catch (e) {
-                    root.importErr = "JSON inválido: " + e.message
+                    root.importErr = "JSON inválido: " + e.message + " (recibidos " + readOutOut.text.length + " bytes)"
+                    console.log("[BuildsWindow] JSON parse error:", root.importErr)
                 }
                 root.importing = false
             }
@@ -138,9 +171,18 @@ PanelWindow {
         if (root._homeDir === "") { root.importErr = "$HOME no resuelto aún"; return }
         root._pendingUrl = url
         root.importing = true
-        fetchProc.command = ["python3",
-            root._homeDir + "/.config/quickshell/poe2/scripts/mob-extract.py",
-            url]
+        // Run through sh so PATH lookup + redirects work; absolute paths
+        // for python3 and the script avoid PATH issues inside Quickshell.
+        // The script's JSON goes to /tmp/, then we cat it — keeps stdout
+        // small in case Quickshell's StdioCollector has surprises.
+        var script = root._homeDir + "/.config/quickshell/poe2/scripts/mob-extract.py"
+        var outFile = "/tmp/poe2-mob-build.json"
+        var errFile = "/tmp/poe2-mob-build.err"
+        console.log("[BuildsWindow] _import:", url)
+        console.log("[BuildsWindow] script:", script)
+        fetchProc.command = ["sh", "-c",
+            "/usr/bin/python3 \"" + script + "\" \"" + url + "\" > " + outFile +
+            " 2> " + errFile + "; echo EXIT=$?"]
         fetchProc.running = true
     }
 
