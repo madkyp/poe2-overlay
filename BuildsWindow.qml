@@ -18,12 +18,14 @@ PanelWindow {
     anchors.left: true
 
     color: "transparent"
-    implicitWidth:  isOpen ? 820 : 1
-    implicitHeight: isOpen ? 560 : 1
+    implicitWidth:  isOpen ? windowW : 1
+    implicitHeight: isOpen ? windowH : 1
 
     property bool   isOpen:      false
     property int    offsetX:     400
     property int    offsetY:     80
+    property real   windowW:     820
+    property real   windowH:     560
     property string _homeDir:    ""
     property var    builds:      []          // saved imported builds
     property int    selected:    -1
@@ -53,8 +55,36 @@ PanelWindow {
                 posLoadBuildsProc.command = ["sh", "-c",
                     "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-pos-builds\" 2>/dev/null"]
                 posLoadBuildsProc.running = true
+                sizeLoadBuildsProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-size-builds\" 2>/dev/null"]
+                sizeLoadBuildsProc.running = true
             }
         }
+    }
+
+    Process { id: sizeSaveBuildsProc }
+    Process {
+        id: sizeLoadBuildsProc
+        stdout: StdioCollector { id: sizeLoadBuildsOut }
+        onRunningChanged: {
+            if (!running) {
+                var txt = sizeLoadBuildsOut.text.trim()
+                if (txt && txt.indexOf("x") !== -1) {
+                    var parts = txt.split("x")
+                    var w = parseInt(parts[0], 10); var h = parseInt(parts[1], 10)
+                    if (!isNaN(w) && w >= 600 && w <= 1800) root.windowW = w
+                    if (!isNaN(h) && h >= 400 && h <= 1400) root.windowH = h
+                }
+            }
+        }
+    }
+
+    function _saveSize() {
+        if (_homeDir === "" || sizeSaveBuildsProc.running) return
+        sizeSaveBuildsProc.command = ["sh", "-c",
+            "printf '%sx%s' " + Math.round(windowW) + " " + Math.round(windowH) +
+            " > \"" + _homeDir + "/.config/quickshell/poe2/.saved-size-builds\""]
+        sizeSaveBuildsProc.running = true
     }
 
     Process {
@@ -205,12 +235,67 @@ PanelWindow {
 
     // ── UI ───────────────────────────────────────────────────────
     Rectangle {
+        id: panel
         visible: root.isOpen
         anchors.fill: parent
         color: "#1c1c1e"
         border.color: "#8B7355"
         border.width: 1
         radius: 8
+
+        // Resize handles
+        Item {
+            id: resizeRight
+            width: 6
+            anchors { top: parent.top; bottom: parent.bottom; bottomMargin: 16; right: parent.right }
+            property real pressLocalX: 0
+            property real startW: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeHorCursor
+                onPressed:        { resizeRight.pressLocalX = mapToItem(panel, mouseX, mouseY).x; resizeRight.startW = root.windowW }
+                onPositionChanged: { if (pressed) root.windowW = Math.max(600, Math.min(1800, resizeRight.startW + (mapToItem(panel, mouseX, mouseY).x - resizeRight.pressLocalX))) }
+                onReleased:        root._saveSize()
+            }
+        }
+        Item {
+            id: resizeBottom
+            height: 6
+            anchors { left: parent.left; right: parent.right; rightMargin: 16; bottom: parent.bottom }
+            property real pressLocalY: 0
+            property real startH: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeVerCursor
+                onPressed:        { resizeBottom.pressLocalY = mapToItem(panel, mouseX, mouseY).y; resizeBottom.startH = root.windowH }
+                onPositionChanged: { if (pressed) root.windowH = Math.max(400, Math.min(1400, resizeBottom.startH + (mapToItem(panel, mouseX, mouseY).y - resizeBottom.pressLocalY))) }
+                onReleased:        root._saveSize()
+            }
+        }
+        Item {
+            id: resizeCorner
+            width: 16; height: 16
+            anchors { right: parent.right; bottom: parent.bottom }
+            property real pressLocalX: 0; property real pressLocalY: 0
+            property real startW: 0;      property real startH: 0
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.SizeFDiagCursor
+                onPressed: {
+                    var pt = mapToItem(panel, mouseX, mouseY)
+                    resizeCorner.pressLocalX = pt.x; resizeCorner.pressLocalY = pt.y
+                    resizeCorner.startW = root.windowW;  resizeCorner.startH = root.windowH
+                }
+                onPositionChanged: {
+                    if (pressed) {
+                        var pt = mapToItem(panel, mouseX, mouseY)
+                        root.windowW = Math.max(600, Math.min(1800, resizeCorner.startW + (pt.x - resizeCorner.pressLocalX)))
+                        root.windowH = Math.max(400, Math.min(1400, resizeCorner.startH + (pt.y - resizeCorner.pressLocalY)))
+                    }
+                }
+                onReleased: root._saveSize()
+            }
+        }
 
         ColumnLayout {
             anchors { fill: parent; margins: 12 }
