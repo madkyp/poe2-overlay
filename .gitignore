@@ -6,5 +6,5 @@
 *.filter
 .neversink-version
 
-# User preferences (saved locally)
-.saved-league
+# User preferences and runtime state (saved locally)
+.saved-*

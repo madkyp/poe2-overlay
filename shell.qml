@@ -6,4 +6,5 @@ ShellRoot {
     SessionTracker {}
     BuildNotes {}
     EconomyWindow {}
+    BuildsWindow {}
 }

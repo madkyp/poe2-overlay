@@ -11,6 +11,17 @@ function setEconomyOpen(v) {
 function isEconomyOpen() { return _economyOpen }
 function addEconomyListener(fn) { _openListeners.push(fn) }
 
+// ── Builds window open/close ─────────────────────────────────
+var _buildsOpen = false
+var _buildsListeners = []
+
+function setBuildsOpen(v) {
+    _buildsOpen = (v === true)
+    for (var i = 0; i < _buildsListeners.length; i++) _buildsListeners[i](_buildsOpen)
+}
+function isBuildsOpen() { return _buildsOpen }
+function addBuildsOpenListener(fn) { _buildsListeners.push(fn) }
+
 // ── Currency rate cache ──────────────────────────────────────
 // entries: Array of { id, name, icon, chaosValue }
 var _entries = []
