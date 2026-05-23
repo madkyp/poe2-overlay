@@ -70,8 +70,9 @@ local out = {
     groups    = {},
     nodes     = {},
     constants = {
-        orbitRadii      = (tree.constants or {}).orbitRadii,
-        skillsPerOrbit  = (tree.constants or {}).skillsPerOrbit,
+        orbitRadii         = (tree.constants or {}).orbitRadii,
+        skillsPerOrbit     = (tree.constants or {}).skillsPerOrbit,
+        orbitAnglesByOrbit = (tree.constants or {}).orbitAnglesByOrbit,
     },
     classes   = {},
     min_x = (tree.min_x or 0), min_y = (tree.min_y or 0),
