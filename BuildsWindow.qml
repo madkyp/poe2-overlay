@@ -305,10 +305,15 @@ PanelWindow {
                     color: "#0d0f12"; border.color: "#2a2a2d"; border.width: 1; radius: 4
 
                     ScrollView {
+                        id: listScroll
                         anchors.fill: parent; anchors.margins: 4
                         clip: true
+                        contentWidth: availableWidth
+                        contentHeight: listCol.implicitHeight
+                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
                         ColumnLayout {
-                            width: parent.width
+                            id: listCol
+                            width: listScroll.availableWidth
                             spacing: 2
 
                             Text {
@@ -364,12 +369,16 @@ PanelWindow {
                     color: "#0d0f12"; border.color: "#2a2a2d"; border.width: 1; radius: 4
 
                     ScrollView {
+                        id: detailScroll
                         anchors.fill: parent; anchors.margins: 10
                         clip: true
+                        contentWidth: availableWidth
+                        contentHeight: detail.implicitHeight
+                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
 
                         ColumnLayout {
                             id: detail
-                            width: parent.width
+                            width: detailScroll.availableWidth
                             spacing: 10
 
                             property var current: (root.selected >= 0 && root.selected < root.builds.length)
