@@ -137,6 +137,41 @@ PanelWindow {
 
     property bool _saveQueued: false
 
+    // Passive tree data (loaded lazily from .cache/tree.json the first time
+    // any build's passive_summary becomes visible).
+    property var    _treeData:        null
+    property bool   _treeLoading:     false
+    property string _treeError:       ""
+
+    function _ensureTree() {
+        if (_treeData || _treeLoading || _homeDir === "") return
+        _treeLoading = true
+        treeFetchProc.command = ["sh", "-c",
+            "F=\"" + _homeDir + "/.config/quickshell/poe2/.cache/tree.json\"; " +
+            "if [ ! -f \"$F\" ]; then " +
+            "  /usr/bin/python3 \"" + _homeDir + "/.config/quickshell/poe2/scripts/fetch-tree.py\" >&2 || exit 1; " +
+            "fi; " +
+            "cat \"$F\""]
+        treeFetchProc.running = true
+    }
+
+    Process {
+        id: treeFetchProc
+        stdout: StdioCollector { id: treeFetchOut }
+        onRunningChanged: {
+            if (!running) {
+                root._treeLoading = false
+                var text = treeFetchOut.text
+                if (text.length < 1000) {
+                    root._treeError = "No se pudo cargar tree.json (¿python3 / lua / red OK?)"
+                    return
+                }
+                try { root._treeData = JSON.parse(text) }
+                catch (e) { root._treeError = "tree.json inválido: " + e.message }
+            }
+        }
+    }
+
     Process {
         id: posLoadBuildsProc
         stdout: StdioCollector { id: posLoadBuildsOut }
@@ -798,6 +833,34 @@ PanelWindow {
                                     ColumnLayout {
                                         visible: modelData.kind === "passive_summary"
                                         Layout.fillWidth: true; spacing: 4
+
+                                        // Kick off lazy load of tree data the first time we show
+                                        Component.onCompleted: root._ensureTree()
+
+                                        // The interactive tree render
+                                        PassiveTreeView {
+                                            Layout.fillWidth: true
+                                            Layout.preferredHeight: 360
+                                            treeData: root._treeData
+                                            allocatedNodeIds: {
+                                                if (!modelData.allocatedIds) return []
+                                                return modelData.allocatedIds
+                                            }
+                                        }
+
+                                        Text {
+                                            visible: root._treeLoading
+                                            text: "Cargando árbol de pasivas…"
+                                            color: "#7a6a50"; font.pixelSize: 10
+                                            Layout.fillWidth: true
+                                        }
+                                        Text {
+                                            visible: root._treeError !== ""
+                                            text: "⚠ " + root._treeError
+                                            color: "#d05050"; font.pixelSize: 10
+                                            wrapMode: Text.WordWrap
+                                            Layout.fillWidth: true
+                                        }
 
                                         RowLayout {
                                             Layout.fillWidth: true

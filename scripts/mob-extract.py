@@ -280,6 +280,21 @@ def variant_passive_summary(variant):
     jewels_raw = pt.get("jewels") or []
     if not main and not ascend and not jewels_raw:
         return None
+
+    # Strip the "node-" prefix and convert to integers for the renderer.
+    def to_ints(slugs):
+        out = []
+        for s in slugs:
+            if not isinstance(s, str):
+                continue
+            num = s.split("-")[-1]
+            try:
+                out.append(int(num))
+            except ValueError:
+                pass
+        return out
+
+    allocated_ids = to_ints(main) + to_ints(ascend)
     jewels = []
     for j in jewels_raw:
         if not isinstance(j, dict):
@@ -302,11 +317,12 @@ def variant_passive_summary(variant):
             "isUnique": bool(j.get("isUnique")),
         })
     return {
-        "kind":           "passive_summary",
-        "title":          "Passive Tree",
-        "mainCount":      len(main),
+        "kind":            "passive_summary",
+        "title":           "Passive Tree",
+        "mainCount":       len(main),
         "ascendancyCount": len(ascend),
-        "jewels":         jewels,
+        "jewels":          jewels,
+        "allocatedIds":    allocated_ids,
     }
 
 
