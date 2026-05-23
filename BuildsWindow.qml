@@ -102,6 +102,7 @@ PanelWindow {
 
     Process { id: bSaveProc }
     Process { id: posSaveBuildsProc }
+    Process { id: pobCopyProc }
 
     Process {
         id: posLoadBuildsProc
@@ -733,26 +734,64 @@ PanelWindow {
                             }
                             }
 
-                            // PoB code
+                            // PoB code — fixed-height scrollable box + Copy button
                             ColumnLayout {
-                                visible: !!detail.current && detail.current.pobCode
-                                Layout.fillWidth: true; spacing: 3
-                                Text {
-                                    text: "Path of Building code"
-                                    color: "#8ab4d4"; font.pixelSize: 12; font.bold: true
+                                visible: !!detail.current && !!detail.current.pobCode
+                                Layout.fillWidth: true
+                                Layout.topMargin: 8
+                                spacing: 3
+
+                                RowLayout {
+                                    Layout.fillWidth: true
+                                    Text {
+                                        text: "Path of Building code"
+                                        color: "#8ab4d4"; font.pixelSize: 12; font.bold: true
+                                        Layout.fillWidth: true
+                                    }
+                                    Rectangle {
+                                        width: 80; height: 22; radius: 3
+                                        color: "#1e4a3a"; border.color: "#3a7a5a"; border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "📋 Copiar"
+                                            color: "#7adda0"; font.pixelSize: 10; font.bold: true
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (detail.current && detail.current.pobCode) {
+                                                    pobCopyProc.command = ["sh", "-c",
+                                                        "printf '%s' '" +
+                                                        Qt.btoa(unescape(encodeURIComponent(detail.current.pobCode))) +
+                                                        "' | base64 -d | wl-copy"]
+                                                    pobCopyProc.running = true
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
+
                                 Rectangle {
                                     Layout.fillWidth: true
-                                    Layout.preferredHeight: pobText.implicitHeight + 12
+                                    Layout.preferredHeight: 80
                                     color: "#060e18"; border.color: "#2d4060"; border.width: 1; radius: 3
-                                    TextEdit {
-                                        id: pobText
-                                        anchors { fill: parent; margins: 6 }
-                                        text: detail.current ? detail.current.pobCode : ""
-                                        color: "#7a8aaa"; font.pixelSize: 9; font.family: "monospace"
-                                        wrapMode: TextEdit.WrapAnywhere
-                                        readOnly: true
-                                        selectByMouse: true
+                                    clip: true
+
+                                    ScrollView {
+                                        anchors.fill: parent
+                                        anchors.margins: 4
+                                        clip: true
+                                        ScrollBar.vertical.policy: ScrollBar.AsNeeded
+
+                                        TextEdit {
+                                            id: pobText
+                                            width: parent.width
+                                            text: detail.current ? (detail.current.pobCode || "") : ""
+                                            color: "#7a8aaa"; font.pixelSize: 9; font.family: "monospace"
+                                            wrapMode: TextEdit.WrapAnywhere
+                                            readOnly: true
+                                            selectByMouse: true
+                                        }
                                     }
                                 }
                             }
