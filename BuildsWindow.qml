@@ -425,8 +425,39 @@ PanelWindow {
                                 ColumnLayout {
                                     Layout.fillWidth: true; spacing: 4
 
+                                    // Variant tab header — visually distinct band
+                                    Rectangle {
+                                        visible: modelData.kind === "variant_header"
+                                        Layout.fillWidth: true
+                                        Layout.topMargin: 8
+                                        Layout.preferredHeight: vheaderCol.implicitHeight + 12
+                                        color: "#1e2a3a"
+                                        border.color: "#3a5a7a"; border.width: 1
+                                        radius: 4
+
+                                        ColumnLayout {
+                                            id: vheaderCol
+                                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
+                                            spacing: 3
+                                            Text {
+                                                text: "▣ " + (modelData.title || "")
+                                                color: "#7adde0"; font.pixelSize: 13; font.bold: true
+                                                wrapMode: Text.WordWrap
+                                                Layout.fillWidth: true
+                                            }
+                                            Text {
+                                                visible: !!modelData.body
+                                                text: modelData.body || ""
+                                                color: "#9aa8b8"; font.pixelSize: 10
+                                                wrapMode: Text.WordWrap
+                                                textFormat: Text.PlainText
+                                                Layout.fillWidth: true
+                                            }
+                                        }
+                                    }
+
                                     Text {
-                                        visible: !!modelData.title
+                                        visible: modelData.kind !== "variant_header" && !!modelData.title
                                         text: modelData.title || ""
                                         color: "#8ab4d4"; font.pixelSize: 12; font.bold: true
                                         wrapMode: Text.WordWrap

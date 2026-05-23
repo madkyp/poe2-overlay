@@ -154,7 +154,7 @@ def slug_to_name(slug):
     return s[:1].upper() + s[1:]
 
 
-def walk_content(by_id, root_id, sections, visited=None):
+def walk_content(by_id, root_id, sections, ctx, visited=None):
     if visited is None:
         visited = set()
     if root_id in visited:
@@ -163,9 +163,9 @@ def walk_content(by_id, root_id, sections, visited=None):
     block = by_id.get(root_id)
     if not block:
         return
-    add_block(block, sections)
+    add_block(block, sections, ctx)
     for cid in (block.get("data") or {}).get("childrenIds") or []:
-        walk_content(by_id, cid, sections, visited)
+        walk_content(by_id, cid, sections, ctx, visited)
 
 
 def content_index(content):
@@ -177,7 +177,9 @@ def content_index(content):
     return {}
 
 
-def add_block(block, sections):
+def add_block(block, sections, ctx=None):
+    """ctx provides `by_id` and `variants_by_id` so blocks that reference
+    other content (ContentVariants → child widgets) can resolve them."""
     t = block.get("__typename")
     d = block.get("data") or {}
     if t == "NgfDocumentCmWidgetRichTextSimplifiedV2":
@@ -202,6 +204,28 @@ def add_block(block, sections):
         body = lexical_to_text(desc)
         if body:
             sections.append({"kind": "text", "title": d.get("title") or "Skill notes", "body": body})
+    elif t == "NgfDocumentCmWidgetContentVariantsV1" and ctx is not None:
+        # Walk each variant tab: title + description + linked widgets + structured gear/skills
+        for v in d.get("childrenVariants") or []:
+            sections.append({
+                "kind":  "variant_header",
+                "title": v.get("title") or ("Variant " + str(v.get("id"))),
+                "body":  lexical_to_text((v.get("description") or {}).get("value")),
+            })
+            # Pull the buildVariant data matching this variant's id
+            bv = ctx["variants_by_id"].get(v.get("id")) or {}
+            # First emit linked widget descriptions, in childrenIds order
+            for cid in v.get("childrenIds") or []:
+                child = ctx["by_id"].get(cid)
+                if child:
+                    add_block(child, sections, ctx)
+            # Then emit the structured gear and skills from the variant
+            gear = variant_equipment(bv)
+            if gear:
+                sections.append({"kind": "equipment_real", "title": "Gear", "items": gear})
+            skills = variant_skills(bv)
+            if skills:
+                sections.append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
 
 
 def variant_equipment(variant):
@@ -271,19 +295,25 @@ def flatten(doc, source_url):
     }
 
     by_id = content_index(content)
+    ctx = {
+        "by_id":           by_id,
+        "variants_by_id":  {v.get("id"): v for v in variants if v.get("id") is not None},
+    }
     if "root" in by_id:
-        walk_content(by_id, "root", guide["sections"])
+        walk_content(by_id, "root", guide["sections"], ctx)
     else:
         for block in by_id.values():
-            add_block(block, guide["sections"])
+            add_block(block, guide["sections"], ctx)
 
-    gear = variant_equipment(variant)
-    if gear:
-        guide["sections"].append({"kind": "equipment_real", "title": "Gear", "items": gear})
-
-    skills = variant_skills(variant)
-    if skills:
-        guide["sections"].append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+    # Fallback: if no ContentVariants was found, emit the first variant's gear/skills
+    has_variant_section = any(s.get("kind") == "variant_header" for s in guide["sections"])
+    if not has_variant_section and variant:
+        gear = variant_equipment(variant)
+        if gear:
+            guide["sections"].append({"kind": "equipment_real", "title": "Gear", "items": gear})
+        skills = variant_skills(variant)
+        if skills:
+            guide["sections"].append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
 
     return guide
 
