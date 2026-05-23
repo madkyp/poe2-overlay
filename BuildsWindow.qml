@@ -243,12 +243,17 @@ PanelWindow {
         posSaveBuildsProc.running = true
     }
 
-    function _deleteSelected() {
-        if (selected < 0 || selected >= builds.length) return
+    function _deleteSelected() { _deleteAt(selected) }
+
+    function _deleteAt(idx) {
+        if (idx < 0 || idx >= builds.length) return
         var arr = []
-        for (var i = 0; i < builds.length; i++) if (i !== selected) arr.push(builds[i])
+        for (var i = 0; i < builds.length; i++) if (i !== idx) arr.push(builds[i])
         builds = arr
-        selected = arr.length > 0 ? 0 : -1
+        // Keep selection sensible after deletion
+        if (arr.length === 0) selected = -1
+        else if (selected === idx) selected = Math.min(idx, arr.length - 1)
+        else if (selected > idx)   selected = selected - 1
         _saveBuilds()
     }
 
@@ -435,31 +440,61 @@ PanelWindow {
                                     Layout.fillWidth: true
                                     Layout.preferredHeight: 42
                                     radius: 3
-                                    color: index === root.selected ? "#2a2a3a" : "transparent"
+                                    color: index === root.selected ? "#2a2a3a" : (rowMouse.containsMouse ? "#181820" : "transparent")
                                     border.color: index === root.selected ? "#5a5a7a" : "transparent"
                                     border.width: 1
 
-                                    ColumnLayout {
-                                        anchors { fill: parent; margins: 6 }
-                                        spacing: 1
-                                        Text {
-                                            text: modelData.name
-                                            color: "#c0b090"; font.pixelSize: 10; font.bold: true
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                        Text {
-                                            text: "by " + modelData.author
-                                            color: "#5a5a5a"; font.pixelSize: 9
-                                            elide: Text.ElideRight
-                                            Layout.fillWidth: true
-                                        }
-                                    }
-
+                                    // Row click → select. Hover so we can show the trash on hover.
                                     MouseArea {
+                                        id: rowMouse
                                         anchors.fill: parent
+                                        hoverEnabled: true
                                         cursorShape: Qt.PointingHandCursor
                                         onClicked: root.selected = index
+                                    }
+
+                                    RowLayout {
+                                        anchors { fill: parent; margins: 6 }
+                                        spacing: 4
+
+                                        ColumnLayout {
+                                            Layout.fillWidth: true
+                                            spacing: 1
+                                            Text {
+                                                text: modelData.name
+                                                color: "#c0b090"; font.pixelSize: 10; font.bold: true
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                            }
+                                            Text {
+                                                text: "by " + modelData.author
+                                                color: "#5a5a5a"; font.pixelSize: 9
+                                                elide: Text.ElideRight
+                                                Layout.fillWidth: true
+                                            }
+                                        }
+
+                                        // Per-row trash button
+                                        Rectangle {
+                                            visible: rowMouse.containsMouse || trashMouse.containsMouse
+                                            Layout.alignment: Qt.AlignVCenter
+                                            width: 22; height: 22; radius: 3
+                                            color: trashMouse.containsMouse ? "#3a0f0f" : "transparent"
+                                            border.color: trashMouse.containsMouse ? "#7a2020" : "transparent"
+                                            border.width: 1
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: "🗑"
+                                                color: "#d05050"; font.pixelSize: 11
+                                            }
+                                            MouseArea {
+                                                id: trashMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root._deleteAt(index)
+                                            }
+                                        }
                                     }
                                 }
                             }
