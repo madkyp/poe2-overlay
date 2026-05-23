@@ -27,9 +27,12 @@ PanelWindow {
     property string _homeDir:    ""
     property var    builds:      []          // saved imported builds
     property int    selected:    -1
+    property int    variantSel:  0           // active variant tab
     property bool   importing:   false
     property string importErr:   ""
     property string _pendingUrl: ""
+
+    onSelectedChanged: variantSel = 0
 
     Component.onCompleted: {
         State.addBuildsOpenListener(function(v) { root.isOpen = v })
@@ -371,6 +374,12 @@ PanelWindow {
 
                             property var current: (root.selected >= 0 && root.selected < root.builds.length)
                                                   ? root.builds[root.selected] : null
+                            property var activeVariant: {
+                                if (!current || !current.variants) return null
+                                var vs = current.variants
+                                if (root.variantSel < 0 || root.variantSel >= vs.length) return null
+                                return vs[root.variantSel]
+                            }
 
                             // Empty state
                             Text {
@@ -419,52 +428,20 @@ PanelWindow {
                                 Rectangle { Layout.fillWidth: true; height: 1; color: "#2a2a2d" }
                             }
 
-                            // Sections
-                            Repeater {
-                                model: detail.current ? detail.current.sections : []
+                            // Section delegate — reused for both top-level and variant sections
+                            Component {
+                                id: sectionDelegate
                                 ColumnLayout {
                                     Layout.fillWidth: true; spacing: 4
 
-                                    // Variant tab header — visually distinct band
-                                    Rectangle {
-                                        visible: modelData.kind === "variant_header"
-                                        Layout.fillWidth: true
-                                        Layout.topMargin: 8
-                                        Layout.preferredHeight: vheaderCol.implicitHeight + 12
-                                        color: "#1e2a3a"
-                                        border.color: "#3a5a7a"; border.width: 1
-                                        radius: 4
-
-                                        ColumnLayout {
-                                            id: vheaderCol
-                                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 6 }
-                                            spacing: 3
-                                            Text {
-                                                text: "▣ " + (modelData.title || "")
-                                                color: "#7adde0"; font.pixelSize: 13; font.bold: true
-                                                wrapMode: Text.WordWrap
-                                                Layout.fillWidth: true
-                                            }
-                                            Text {
-                                                visible: !!modelData.body
-                                                text: modelData.body || ""
-                                                color: "#9aa8b8"; font.pixelSize: 10
-                                                wrapMode: Text.WordWrap
-                                                textFormat: Text.PlainText
-                                                Layout.fillWidth: true
-                                            }
-                                        }
-                                    }
-
                                     Text {
-                                        visible: modelData.kind !== "variant_header" && !!modelData.title
+                                        visible: !!modelData.title
                                         text: modelData.title || ""
                                         color: "#8ab4d4"; font.pixelSize: 12; font.bold: true
                                         wrapMode: Text.WordWrap
                                         Layout.fillWidth: true
                                     }
 
-                                    // Text section
                                     Text {
                                         visible: modelData.kind === "text"
                                         text: modelData.body || ""
@@ -474,7 +451,6 @@ PanelWindow {
                                         Layout.fillWidth: true
                                     }
 
-                                    // Strengths/Weaknesses
                                     RowLayout {
                                         visible: modelData.kind === "strengths"
                                         Layout.fillWidth: true; spacing: 10
@@ -507,7 +483,6 @@ PanelWindow {
                                         }
                                     }
 
-                                    // Equipment (real gear from variant)
                                     ColumnLayout {
                                         visible: modelData.kind === "equipment_real"
                                         Layout.fillWidth: true; spacing: 4
@@ -556,7 +531,6 @@ PanelWindow {
                                         }
                                     }
 
-                                    // Skills (real gems from variant)
                                     ColumnLayout {
                                         visible: modelData.kind === "skills_real"
                                         Layout.fillWidth: true; spacing: 4
@@ -594,6 +568,75 @@ PanelWindow {
 
                                     Rectangle { Layout.fillWidth: true; height: 1; color: "#1a1a1d"; Layout.topMargin: 4 }
                                 }
+                            }
+
+                            // Top-level sections (overview, strengths/weaknesses)
+                            Repeater {
+                                model: detail.current ? (detail.current.sections || []) : []
+                                delegate: sectionDelegate
+                            }
+
+                            // ── Variant tabs ────────────────────────────
+                            Flow {
+                                visible: !!detail.current && (detail.current.variants || []).length > 0
+                                Layout.fillWidth: true
+                                Layout.topMargin: 8
+                                spacing: 4
+
+                                Repeater {
+                                    model: detail.current ? (detail.current.variants || []) : []
+
+                                    Rectangle {
+                                        property bool active: index === root.variantSel
+                                        height: 26
+                                        width: tabLabel.implicitWidth + 18
+                                        radius: 3
+                                        color: active ? "#2a3a4a" : "#161a20"
+                                        border.color: active ? "#7adde0" : "#2a3040"
+                                        border.width: 1
+
+                                        Text {
+                                            id: tabLabel
+                                            anchors.centerIn: parent
+                                            text: modelData.title || ("Variant " + index)
+                                            color: parent.active ? "#7adde0" : "#8a9aaa"
+                                            font.pixelSize: 10
+                                            font.bold: parent.active
+                                        }
+
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: root.variantSel = index
+                                        }
+
+                                        // Active-tab underline
+                                        Rectangle {
+                                            visible: parent.active
+                                            anchors { left: parent.left; right: parent.right; bottom: parent.bottom }
+                                            height: 2
+                                            color: "#d4a843"
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Variant description
+                            Text {
+                                visible: !!detail.activeVariant && !!detail.activeVariant.description
+                                text: detail.activeVariant ? detail.activeVariant.description : ""
+                                color: "#9aa8b8"; font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                                textFormat: Text.PlainText
+                                Layout.fillWidth: true
+                                Layout.topMargin: 4
+                            }
+
+                            // Selected variant's sections
+                            Repeater {
+                                model: detail.activeVariant ? (detail.activeVariant.sections || []) : []
+                                delegate: sectionDelegate
+                            }
                             }
 
                             // PoB code

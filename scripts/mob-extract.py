@@ -178,8 +178,9 @@ def content_index(content):
 
 
 def add_block(block, sections, ctx=None):
-    """ctx provides `by_id` and `variants_by_id` so blocks that reference
-    other content (ContentVariants → child widgets) can resolve them."""
+    """ctx provides `by_id`, `variants_by_id`, and `variants_out` (the
+    list to append variant tab entries to). General sections go in
+    `sections`; variant tabs are extracted as separate top-level entries."""
     t = block.get("__typename")
     d = block.get("data") or {}
     if t == "NgfDocumentCmWidgetRichTextSimplifiedV2":
@@ -205,27 +206,25 @@ def add_block(block, sections, ctx=None):
         if body:
             sections.append({"kind": "text", "title": d.get("title") or "Skill notes", "body": body})
     elif t == "NgfDocumentCmWidgetContentVariantsV1" and ctx is not None:
-        # Walk each variant tab: title + description + linked widgets + structured gear/skills
         for v in d.get("childrenVariants") or []:
-            sections.append({
-                "kind":  "variant_header",
-                "title": v.get("title") or ("Variant " + str(v.get("id"))),
-                "body":  lexical_to_text((v.get("description") or {}).get("value")),
-            })
-            # Pull the buildVariant data matching this variant's id
-            bv = ctx["variants_by_id"].get(v.get("id")) or {}
-            # First emit linked widget descriptions, in childrenIds order
+            vsec = []
             for cid in v.get("childrenIds") or []:
                 child = ctx["by_id"].get(cid)
                 if child:
-                    add_block(child, sections, ctx)
-            # Then emit the structured gear and skills from the variant
+                    add_block(child, vsec, ctx)
+            bv = ctx["variants_by_id"].get(v.get("id")) or {}
             gear = variant_equipment(bv)
             if gear:
-                sections.append({"kind": "equipment_real", "title": "Gear", "items": gear})
+                vsec.append({"kind": "equipment_real", "title": "Gear", "items": gear})
             skills = variant_skills(bv)
             if skills:
-                sections.append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+                vsec.append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+            ctx["variants_out"].append({
+                "id":          v.get("id"),
+                "title":       v.get("title") or ("Variant " + str(v.get("id"))),
+                "description": lexical_to_text((v.get("description") or {}).get("value")),
+                "sections":    vsec,
+            })
 
 
 def variant_equipment(variant):
@@ -292,12 +291,14 @@ def flatten(doc, source_url):
         "coverImage": d.get("backgroundImage") or "",
         "pobCode":    d.get("pobCode") or "",
         "sections":   [],
+        "variants":   [],
     }
 
     by_id = content_index(content)
     ctx = {
         "by_id":           by_id,
         "variants_by_id":  {v.get("id"): v for v in variants if v.get("id") is not None},
+        "variants_out":    guide["variants"],
     }
     if "root" in by_id:
         walk_content(by_id, "root", guide["sections"], ctx)
@@ -305,15 +306,23 @@ def flatten(doc, source_url):
         for block in by_id.values():
             add_block(block, guide["sections"], ctx)
 
-    # Fallback: if no ContentVariants was found, emit the first variant's gear/skills
-    has_variant_section = any(s.get("kind") == "variant_header" for s in guide["sections"])
-    if not has_variant_section and variant:
+    # Fallback: if no variant tabs were found, emit first variant's content
+    # as a synthetic single-tab so the UI still has gear/skills.
+    if not guide["variants"] and variant:
+        fallback = []
         gear = variant_equipment(variant)
         if gear:
-            guide["sections"].append({"kind": "equipment_real", "title": "Gear", "items": gear})
+            fallback.append({"kind": "equipment_real", "title": "Gear", "items": gear})
         skills = variant_skills(variant)
         if skills:
-            guide["sections"].append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+            fallback.append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+        if fallback:
+            guide["variants"].append({
+                "id": variant.get("id") or "default",
+                "title": "Default",
+                "description": "",
+                "sections": fallback,
+            })
 
     return guide
 
