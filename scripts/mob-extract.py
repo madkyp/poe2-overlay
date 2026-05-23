@@ -205,6 +205,16 @@ def add_block(block, sections, ctx=None):
         body = lexical_to_text(desc)
         if body:
             sections.append({"kind": "text", "title": d.get("title") or "Skill notes", "body": body})
+    elif t == "Poe2DocumentUgWidgetPassiveTreeV1":
+        desc = (d.get("descriptionPoe2PassiveTree") or {}).get("value")
+        body = lexical_to_text(desc)
+        if body:
+            sections.append({"kind": "text", "title": d.get("title") or "Passive tree", "body": body})
+    elif t == "Poe2DocumentUgWidgetAtlasTreeV1":
+        desc = (d.get("descriptionPoe2AtlasTree") or {}).get("value")
+        body = lexical_to_text(desc)
+        if body:
+            sections.append({"kind": "text", "title": d.get("title") or "Atlas tree", "body": body})
     elif t == "NgfDocumentCmWidgetContentVariantsV1" and ctx is not None:
         for v in d.get("childrenVariants") or []:
             vsec = []
@@ -219,6 +229,9 @@ def add_block(block, sections, ctx=None):
             skills = variant_skills(bv)
             if skills:
                 vsec.append({"kind": "skills_real", "title": "Skill Gems", "groups": skills})
+            tree = variant_passive_summary(bv)
+            if tree:
+                vsec.append(tree)
             ctx["variants_out"].append({
                 "id":          v.get("id"),
                 "title":       v.get("title") or ("Variant " + str(v.get("id"))),
@@ -250,6 +263,32 @@ def variant_equipment(variant):
             "mods":     mods,
         })
     return items
+
+
+def variant_passive_summary(variant):
+    pt = variant.get("passiveTree") or {}
+    main = ((pt.get("mainTree") or {}).get("selectedSlugs")) or []
+    ascend = ((pt.get("ascendancyTree") or {}).get("selectedSlugs")) or []
+    jewels_raw = pt.get("jewels") or []
+    if not main and not ascend and not jewels_raw:
+        return None
+    jewels = []
+    for j in jewels_raw:
+        if not isinstance(j, dict):
+            continue
+        name = (j.get("jewelSlug") or "").replace("jewel-", "").replace("_", " ").title()
+        jewels.append({
+            "name":     name or "Jewel",
+            "iconUrl":  j.get("iconURL") or "",
+            "isUnique": bool(j.get("isUnique")),
+        })
+    return {
+        "kind":           "passive_summary",
+        "title":          "Passive Tree",
+        "mainCount":      len(main),
+        "ascendancyCount": len(ascend),
+        "jewels":         jewels,
+    }
 
 
 def variant_skills(variant):
@@ -340,7 +379,9 @@ def main():
         state = extract_state(html)
         doc   = find_document(state)
         guide = flatten(doc, url)
-        sys.stdout.write(json.dumps(guide, ensure_ascii=False))
+        # ensure_ascii=True: escape non-ASCII as \uXXXX so Quickshell's
+        # StdioCollector doesn't misread UTF-8 bytes as Latin-1.
+        sys.stdout.write(json.dumps(guide, ensure_ascii=True))
         return 0
     except Exception as e:
         sys.stderr.write(f"{type(e).__name__}: {e}\n")

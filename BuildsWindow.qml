@@ -661,6 +661,54 @@ PanelWindow {
                                         }
                                     }
 
+                                    // Passive tree summary
+                                    ColumnLayout {
+                                        visible: modelData.kind === "passive_summary"
+                                        Layout.fillWidth: true; spacing: 4
+
+                                        Text {
+                                            text: "▣ " + (modelData.mainCount || 0) + " nodos principales" +
+                                                  (modelData.ascendancyCount ? "  ·  " + modelData.ascendancyCount + " ascendancy" : "") +
+                                                  (modelData.jewels && modelData.jewels.length ? "  ·  " + modelData.jewels.length + " jewels" : "")
+                                            color: "#9aa8b8"; font.pixelSize: 11
+                                            Layout.fillWidth: true
+                                        }
+
+                                        Flow {
+                                            visible: modelData.jewels && modelData.jewels.length > 0
+                                            Layout.fillWidth: true
+                                            spacing: 6
+                                            Repeater {
+                                                model: modelData.jewels || []
+                                                Rectangle {
+                                                    width: jewelRow.implicitWidth + 14
+                                                    height: 28
+                                                    radius: 3
+                                                    color: "#161a20"
+                                                    border.color: modelData.isUnique ? "#af6025" : "#2a3040"
+                                                    border.width: 1
+                                                    RowLayout {
+                                                        id: jewelRow
+                                                        anchors.centerIn: parent
+                                                        spacing: 4
+                                                        Image {
+                                                            visible: modelData.iconUrl !== ""
+                                                            source: modelData.iconUrl
+                                                            sourceSize.width: 20; sourceSize.height: 20
+                                                            width: 20; height: 20
+                                                            fillMode: Image.PreserveAspectFit
+                                                        }
+                                                        Text {
+                                                            text: modelData.name
+                                                            color: modelData.isUnique ? "#af6025" : "#9aa8b8"
+                                                            font.pixelSize: 9
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
                                     Rectangle { Layout.fillWidth: true; height: 1; color: "#1a1a1d"; Layout.topMargin: 4 }
                                 }
                             }
