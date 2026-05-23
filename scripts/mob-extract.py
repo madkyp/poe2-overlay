@@ -276,9 +276,20 @@ def variant_passive_summary(variant):
     for j in jewels_raw:
         if not isinstance(j, dict):
             continue
-        name = (j.get("jewelSlug") or "").replace("jewel-", "").replace("_", " ").title()
+        slug = j.get("jewelSlug") or ""
+        # Slug format e.g. "jewel-fouruniquejewel4-megalomaniac" or
+        # "jewel-jewelradiusint" (rare/magic placeholder).
+        s = re.sub(r"^jewel-", "", slug)
+        if j.get("isUnique"):
+            # Strip the variable "fouruniquejewelN" / "newuniqueX" type prefix
+            s = re.sub(r"^[a-z]+(unique)?jewel\d+-?", "", s)
+            name = s.replace("-", " ").title() or "Unique Jewel"
+        elif "radius" in s.lower():
+            name = "Jewel (radius)"
+        else:
+            name = "Jewel"
         jewels.append({
-            "name":     name or "Jewel",
+            "name":     name,
             "iconUrl":  j.get("iconURL") or "",
             "isUnique": bool(j.get("isUnique")),
         })

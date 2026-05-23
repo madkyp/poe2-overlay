@@ -100,9 +100,19 @@ PanelWindow {
         }
     }
 
-    Process { id: bSaveProc }
+    Process {
+        id: bSaveProc
+        onRunningChanged: {
+            if (!running && root._saveQueued) {
+                root._saveQueued = false
+                Qt.callLater(root._saveBuilds)
+            }
+        }
+    }
     Process { id: posSaveBuildsProc }
     Process { id: pobCopyProc }
+
+    property bool _saveQueued: false
 
     Process {
         id: posLoadBuildsProc
@@ -184,11 +194,19 @@ PanelWindow {
     function _b64encode(str) { return Qt.btoa(unescape(encodeURIComponent(str))) }
 
     function _saveBuilds() {
-        if (root._homeDir === "" || bSaveProc.running) return
+        if (root._homeDir === "") return
+        if (bSaveProc.running) { root._saveQueued = true; return }
+        var dst = root._homeDir + "/.config/quickshell/poe2/.saved-builds"
+        var tmp = "/tmp/poe2-saved-builds.b64"
         var b64 = _b64encode(JSON.stringify(root.builds))
+        // Write base64 to a temp file with printf, then decode to atomic temp,
+        // then rename. Splitting the pipeline avoids any ARG_MAX edge cases
+        // and gives us a non-corrupt file even if the process is interrupted.
         bSaveProc.command = ["sh", "-c",
-            "printf '%s' '" + b64 + "' | base64 -d > \"" +
-            root._homeDir + "/.config/quickshell/poe2/.saved-builds\""]
+            "printf '%s' '" + b64 + "' > \"" + tmp + "\" && " +
+            "base64 -d < \"" + tmp + "\" > \"" + dst + ".tmp\" && " +
+            "mv \"" + dst + ".tmp\" \"" + dst + "\" && " +
+            "rm -f \"" + tmp + "\""]
         bSaveProc.running = true
     }
 
