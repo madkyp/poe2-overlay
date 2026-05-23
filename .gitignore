@@ -8,3 +8,8 @@
 
 # User preferences and runtime state (saved locally)
 .saved-*
+
+# Local caches (tree data, scratch files) and Python bytecode
+.cache/
+**/__pycache__/
+*.pyc
