@@ -94,13 +94,10 @@ PanelWindow {
         stdout: StdioCollector { id: fetchOut }
         onRunningChanged: {
             if (!running) {
-                console.log("[BuildsWindow] fetchProc done, exitCode=", exitCode,
-                            "stdout:", fetchOut.text.trim())
-                // Parse "EXIT=N" from stdout to know real script exit
+                console.log("[BuildsWindow] fetchProc done, stdout:", fetchOut.text.trim())
                 var m = fetchOut.text.match(/EXIT=(\d+)/)
                 var scriptExit = m ? parseInt(m[1], 10) : -1
                 if (scriptExit !== 0) {
-                    // Read error file
                     readErrProc.command = ["sh", "-c", "cat /tmp/poe2-mob-build.err 2>/dev/null"]
                     readErrProc._scriptExit = scriptExit
                     readErrProc.running = true
