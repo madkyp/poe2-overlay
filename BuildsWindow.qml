@@ -12,8 +12,8 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.margins.left: isOpen ? 400 : 0
-    WlrLayershell.margins.top:  isOpen ? 80  : 0
+    WlrLayershell.margins.left: isOpen ? offsetX : 0
+    WlrLayershell.margins.top:  isOpen ? offsetY : 0
 
     anchors.top:  true
     anchors.left: true
@@ -22,18 +22,21 @@ PanelWindow {
     implicitWidth:  isOpen ? 820 : 1
     implicitHeight: isOpen ? 560 : 1
 
-    property bool   isOpen:    false
-    property string _homeDir:  ""
-    property var    builds:    []          // saved imported builds
-    property int    selected:  -1
-    property bool   importing: false
-    property string importErr: ""
+    property bool   isOpen:      false
+    property int    offsetX:     400
+    property int    offsetY:     80
+    property string _homeDir:    ""
+    property var    builds:      []          // saved imported builds
+    property int    selected:    -1
+    property bool   importing:   false
+    property string importErr:   ""
+    property string _pendingUrl: ""
 
     Component.onCompleted: {
         State.addBuildsOpenListener(function(v) { root.isOpen = v })
     }
 
-    // ── Load saved builds on startup ─────────────────────────────
+    // ── Load saved builds + position on startup ──────────────────
     Process {
         id: bHomeProc
         command: ["sh", "-c", "printf '%s' \"$HOME\""]
@@ -45,6 +48,9 @@ PanelWindow {
                 bLoadProc.command = ["sh", "-c",
                     "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-builds\" 2>/dev/null"]
                 bLoadProc.running = true
+                posLoadBuildsProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-pos-builds\" 2>/dev/null"]
+                posLoadBuildsProc.running = true
             }
         }
     }
@@ -63,6 +69,49 @@ PanelWindow {
     }
 
     Process { id: bSaveProc }
+    Process { id: posSaveBuildsProc }
+
+    Process {
+        id: posLoadBuildsProc
+        stdout: StdioCollector { id: posLoadBuildsOut }
+        onRunningChanged: {
+            if (!running) {
+                var txt = posLoadBuildsOut.text.trim()
+                if (txt && txt.indexOf(",") !== -1) {
+                    var parts = txt.split(",")
+                    var x = parseInt(parts[0], 10); var y = parseInt(parts[1], 10)
+                    if (!isNaN(x) && x >= 0) root.offsetX = x
+                    if (!isNaN(y) && y >= 0) root.offsetY = y
+                }
+            }
+        }
+    }
+
+    // ── HTML fetch via curl (avoids QML XHR User-Agent restriction) ──
+    Process {
+        id: fetchProc
+        stdout: StdioCollector { id: fetchOut }
+        onRunningChanged: {
+            if (!running) {
+                if (exitCode !== 0 || fetchOut.text.length < 1000) {
+                    root.importing = false
+                    root.importErr = "curl falló (exit=" + exitCode + ", " + fetchOut.text.length + " bytes)"
+                    return
+                }
+                MobalyticsImporter.parseHtml(fetchOut.text, root._pendingUrl, function(err, guide) {
+                    root.importing = false
+                    if (err) { root.importErr = err; return }
+                    var arr = [guide]
+                    for (var i = 0; i < root.builds.length; i++)
+                        if (root.builds[i].id !== guide.id) arr.push(root.builds[i])
+                    root.builds = arr
+                    root.selected = 0
+                    root._saveBuilds()
+                    urlInput.text = ""
+                })
+            }
+        }
+    }
 
     function _b64encode(str) { return Qt.btoa(unescape(encodeURIComponent(str))) }
 
@@ -77,20 +126,25 @@ PanelWindow {
 
     function _import(url) {
         root.importErr = ""
+        var errMsg = MobalyticsImporter.validateUrl(url)
+        if (errMsg) { root.importErr = errMsg; return }
+        if (fetchProc.running) return
+        root._pendingUrl = url
         root.importing = true
-        MobalyticsImporter.importBuild(url, function(err, guide) {
-            root.importing = false
-            if (err) { root.importErr = err; return }
-            // Replace if id exists, else prepend
-            var arr = []
-            arr.push(guide)
-            for (var i = 0; i < root.builds.length; i++)
-                if (root.builds[i].id !== guide.id) arr.push(root.builds[i])
-            root.builds = arr
-            root.selected = 0
-            root._saveBuilds()
-            urlInput.text = ""
-        })
+        fetchProc.command = ["curl", "-sL",
+            "-A", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+            "-H", "Accept: text/html,application/xhtml+xml",
+            "-H", "Accept-Language: en-US,en;q=0.9",
+            "--compressed", "--max-time", "20", url]
+        fetchProc.running = true
+    }
+
+    function _savePos() {
+        if (_homeDir === "" || posSaveBuildsProc.running) return
+        posSaveBuildsProc.command = ["sh", "-c",
+            "printf '%d,%d' " + Math.round(offsetX) + " " + Math.round(offsetY) +
+            " > \"" + _homeDir + "/.config/quickshell/poe2/.saved-pos-builds\""]
+        posSaveBuildsProc.running = true
     }
 
     function _deleteSelected() {
@@ -115,14 +169,24 @@ PanelWindow {
             anchors { fill: parent; margins: 12 }
             spacing: 8
 
-            // Header
+            // Header (drag handle)
             RowLayout {
                 Layout.fillWidth: true
                 spacing: 8
+
                 Text {
-                    text: "📘 Builds importadas (Mobalytics)"
+                    text: "⠿ 📘 Builds importadas (Mobalytics)"
                     color: "#d4a843"; font.pixelSize: 14; font.bold: true
                     Layout.fillWidth: true
+                    MouseArea {
+                        anchors.fill: parent
+                        property real mx: 0; property real my: 0
+                        property int  ox: 0; property int  oy: 0
+                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        onPressed:         { mx = mouseX; my = mouseY; ox = root.offsetX; oy = root.offsetY }
+                        onPositionChanged: { if (pressed) { root.offsetX = Math.max(0, ox + (mouseX - mx)); root.offsetY = Math.max(0, oy + (mouseY - my)) } }
+                        onReleased:        root._savePos()
+                    }
                 }
                 Text {
                     text: "✕"

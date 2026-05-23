@@ -26,26 +26,23 @@
 //     ]
 //   }
 
-function importBuild(url, cb) {
-    if (!url || url.indexOf("mobalytics.gg") === -1) {
-        cb("URL no válida (esperando mobalytics.gg/poe-2/builds/…)", null)
-        return
-    }
+// Validate the URL — actual fetching is done by the caller (via curl)
+// since QML's XMLHttpRequest can't set User-Agent (Mobalytics returns 403).
+function validateUrl(url) {
+    if (!url) return "URL vacía"
+    if (url.indexOf("mobalytics.gg") === -1) return "URL debe ser de mobalytics.gg"
+    if (url.indexOf("/builds/") === -1) return "URL debe ser una build (.../builds/…)"
+    return null
+}
 
-    var xhr = new XMLHttpRequest()
-    xhr.open("GET", url, true)
-    xhr.setRequestHeader("User-Agent", "Mozilla/5.0")
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState !== XMLHttpRequest.DONE) return
-        if (xhr.status !== 200) { cb("HTTP " + xhr.status, null); return }
-        try {
-            var guide = _parseHtml(xhr.responseText, url)
-            cb(null, guide)
-        } catch (e) {
-            cb("Error parseando: " + e.message, null)
-        }
+// Parse already-fetched HTML and return guide object via callback.
+function parseHtml(html, sourceUrl, cb) {
+    try {
+        var guide = _parseHtml(html, sourceUrl)
+        cb(null, guide)
+    } catch (e) {
+        cb("Error parseando: " + e.message, null)
     }
-    xhr.send()
 }
 
 function _parseHtml(html, sourceUrl) {
