@@ -684,12 +684,31 @@ PanelWindow {
                                         visible: modelData.kind === "passive_summary"
                                         Layout.fillWidth: true; spacing: 4
 
-                                        Text {
-                                            text: "▣ " + (modelData.mainCount || 0) + " nodos principales" +
-                                                  (modelData.ascendancyCount ? "  ·  " + modelData.ascendancyCount + " ascendancy" : "") +
-                                                  (modelData.jewels && modelData.jewels.length ? "  ·  " + modelData.jewels.length + " jewels" : "")
-                                            color: "#9aa8b8"; font.pixelSize: 11
+                                        RowLayout {
                                             Layout.fillWidth: true
+                                            spacing: 8
+                                            Text {
+                                                text: "▣ " + (modelData.mainCount || 0) + " nodos principales" +
+                                                      (modelData.ascendancyCount ? "  ·  " + modelData.ascendancyCount + " ascendancy" : "") +
+                                                      (modelData.jewels && modelData.jewels.length ? "  ·  " + modelData.jewels.length + " jewels" : "")
+                                                color: "#9aa8b8"; font.pixelSize: 11
+                                                Layout.fillWidth: true
+                                            }
+                                            Rectangle {
+                                                width: treeLinkText.implicitWidth + 14; height: 22; radius: 3
+                                                color: "#1a2535"; border.color: "#3a5060"; border.width: 1
+                                                Text {
+                                                    id: treeLinkText
+                                                    anchors.centerIn: parent
+                                                    text: "🌳 Ver árbol en Mobalytics"
+                                                    color: "#7adde0"; font.pixelSize: 10; font.bold: true
+                                                }
+                                                MouseArea {
+                                                    anchors.fill: parent
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onClicked: if (detail.current) Qt.openUrlExternally(detail.current.url)
+                                                }
+                                            }
                                         }
 
                                         Flow {
@@ -798,7 +817,6 @@ PanelWindow {
                                 model: detail.activeVariant ? (detail.activeVariant.sections || []) : []
                                 delegate: sectionDelegate
                             }
-                            }
 
                             // PoB code — fixed-height scrollable box + Copy button
                             ColumnLayout {
@@ -867,4 +885,4 @@ PanelWindow {
             }
         }
     }
-
+}
