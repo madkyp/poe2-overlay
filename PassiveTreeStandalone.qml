@@ -616,35 +616,54 @@ PanelWindow {
             }
 
             // ── Ascendancy nodes (on top of portrait) ─────────
-            // Draws the relocated ascendancy mini-tree on top of the
-            // character portrait so the icons sit over the artwork like
-            // a constellation, matching Mobalytics' layout.
+            // Larger frames around each node give the Mobalytics-style
+            // polished look (rather than just floating icons). Notables
+            // get a gold ring, keystones an outer halo, normals a thin
+            // steel ring.
             Item {
                 id: ascLayer
                 anchors.fill: parent
                 z: 3
                 Repeater {
                     model: nodesView.ascPosList
-                    Image {
-                        property real baseSize: modelData.kind === "keystone" ? 64
-                                              : modelData.kind === "notable"  ? 56
-                                              : modelData.kind === "jewel"    ? 44
-                                              : modelData.kind === "mastery"  ? 40
-                                              : 32
-                        property real renderSize: Math.max(8, baseSize * root.scale)
+                    Item {
+                        property real baseSize: modelData.kind === "keystone" ? 130
+                                              : modelData.kind === "notable"  ? 100
+                                              : modelData.kind === "jewel"    ? 90
+                                              : 60
+                        property real renderSize: Math.max(14, baseSize * root.scale)
                         width:  renderSize
                         height: renderSize
                         x: modelData.x * root.scale + root.panX - width / 2
                         y: modelData.y * root.scale + root.panY - height / 2
-                        sourceSize.width:  Math.round(baseSize)
-                        sourceSize.height: Math.round(baseSize)
-                        source: modelData.icon
-                        asynchronous: true
-                        cache: true
-                        fillMode: Image.PreserveAspectFit
-                        visible: renderSize > 3
+                        visible: renderSize > 5
                                  && (x + width)  > -10 && x < ascLayer.width  + 10
                                  && (y + height) > -10 && y < ascLayer.height + 10
+
+                        // Frame ring
+                        Rectangle {
+                            anchors.fill: parent
+                            radius: width / 2
+                            color: "#0c0e14"
+                            border.width: Math.max(1, renderSize / 18)
+                            border.color: modelData.kind === "keystone" ? "#d4a843"
+                                         : modelData.kind === "notable"  ? "#c5a070"
+                                         : modelData.kind === "jewel"    ? "#7adde0"
+                                                                         : "#6a7a90"
+                            opacity: 0.92
+                        }
+                        // Icon
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: Math.max(1, parent.renderSize * 0.08)
+                            source: modelData.icon
+                            sourceSize.width:  Math.round(parent.baseSize)
+                            sourceSize.height: Math.round(parent.baseSize)
+                            fillMode: Image.PreserveAspectFit
+                            asynchronous: true
+                            cache: true
+                            smooth: true
+                        }
                     }
                 }
             }
