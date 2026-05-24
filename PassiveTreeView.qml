@@ -153,22 +153,28 @@ Rectangle {
         _refit()
     }
 
-    property var _posList:    _buildPosList(false)
-    property var _ascPosList: _buildPosList(true)
-    function _buildPosList(wantAsc) {
+    // Property bindings so QML auto-recomputes when _nodePositions changes.
+    property var _posList: {
         var arr = []
-        if (!_nodePositions) return arr
-        for (var k in _nodePositions) {
-            var p = _nodePositions[k]
-            var isAsc = !!(p.a && p.a !== "")
-            if (isAsc !== wantAsc) continue
+        var src = _nodePositions
+        if (!src) return arr
+        for (var k in src) {
+            var p = src[k]
+            if (p.a && p.a !== "") continue
             arr.push(p)
         }
         return arr
     }
-    on_NodePositionsChanged: {
-        _posList    = _buildPosList(false)
-        _ascPosList = _buildPosList(true)
+    property var _ascPosList: {
+        var arr = []
+        var src = _nodePositions
+        if (!src) return arr
+        for (var k in src) {
+            var p = src[k]
+            if (!p.a || p.a === "") continue
+            arr.push(p)
+        }
+        return arr
     }
 
     function _refit() {
