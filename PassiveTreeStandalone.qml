@@ -388,6 +388,7 @@ PanelWindow {
                     posList = _buildPosList(false)
                     ascPosList = _buildPosList(true)
                     canvas.requestPaint()
+                    ascCanvas.requestPaint()
                 }
                 function _computePositions() {
                     if (!root.treeData) return {}
@@ -560,6 +561,54 @@ PanelWindow {
                 }
             }
 
+            // ── Ascendancy connections (above portrait) ───────
+            // Mirror the structure of the main connections canvas, but
+            // only draw edges where both endpoints are ascendancy nodes.
+            // Placed at z:2 so the lines sit on top of the portrait.
+            Canvas {
+                id: ascCanvas
+                anchors.fill: parent
+                renderStrategy: Canvas.Cooperative
+                renderTarget:   Canvas.Image
+                z: 2
+                Connections {
+                    target: nodesView
+                    function onAscPosListChanged() { ascCanvas.requestPaint() }
+                }
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    if (!root.treeData) return
+                    var positions = nodesView.positionsById
+                    if (!positions) return
+                    var s = root.scale, ox = root.panX, oy = root.panY
+                    var nodes = root.treeData.nodes
+                    var drawn = {}
+                    ctx.lineWidth   = Math.max(0.7, 7 * s)
+                    ctx.strokeStyle = "#8a9ab0"
+                    ctx.beginPath()
+                    for (var nid in nodes) {
+                        var n = nodes[nid]
+                        if (!n.ascendancyName || n.ascendancyName === "") continue
+                        if (n.ascendancyName !== root.selectedAscendancy) continue
+                        var pa = positions[nid]; if (!pa) continue
+                        var conns = n.connections || []
+                        for (var c = 0; c < conns.length; c++) {
+                            var oid = String(conns[c].id)
+                            var pb  = positions[oid]; if (!pb) continue
+                            var nOther = nodes[oid]
+                            if (!nOther || nOther.ascendancyName !== root.selectedAscendancy) continue
+                            var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
+                            if (drawn[key]) continue
+                            drawn[key] = true
+                            ctx.moveTo(pa.x * s + ox, pa.y * s + oy)
+                            ctx.lineTo(pb.x * s + ox, pb.y * s + oy)
+                        }
+                    }
+                    ctx.stroke()
+                }
+            }
+
             // ── Ascendancy nodes (on top of portrait) ─────────
             // Draws the relocated ascendancy mini-tree on top of the
             // character portrait so the icons sit over the artwork like
@@ -567,7 +616,7 @@ PanelWindow {
             Item {
                 id: ascLayer
                 anchors.fill: parent
-                z: 2
+                z: 3
                 Repeater {
                     model: nodesView.ascPosList
                     Image {
@@ -610,6 +659,7 @@ PanelWindow {
                         root.panY += (mouseY - lastY)
                         lastX = mouseX; lastY = mouseY
                         canvas.requestPaint()
+                        ascCanvas.requestPaint()
                         root._hoverId = ""
                     } else {
                         root._updateHover(mouseX, mouseY)
@@ -625,6 +675,7 @@ PanelWindow {
                     root.panX = wheel.x - tx * newScale
                     root.panY = wheel.y - ty * newScale
                     canvas.requestPaint()
+                    ascCanvas.requestPaint()
                     root._updateHover(wheel.x, wheel.y)
                 }
             }
