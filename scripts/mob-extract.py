@@ -273,6 +273,79 @@ def variant_equipment(variant):
     return items
 
 
+import os.path
+
+_TREE_CACHE_PATH = os.path.expanduser("~/.config/quickshell/poe2/.cache/tree.json")
+_TREE_DATA = None
+
+
+def _load_tree_once():
+    """Lazily load the cached PoB tree.json. Returns None if the cache
+    isn't built yet (in which case we skip connectivity filtering and
+    fall back to the raw combined list)."""
+    global _TREE_DATA
+    if _TREE_DATA is not None:
+        return _TREE_DATA if _TREE_DATA else None
+    try:
+        with open(_TREE_CACHE_PATH, encoding="utf-8") as f:
+            _TREE_DATA = json.load(f)
+        return _TREE_DATA
+    except (FileNotFoundError, json.JSONDecodeError):
+        _TREE_DATA = {}   # sentinel so we don't retry every call
+        return None
+
+
+def _filter_connected(allocated, anchor_ids):
+    """Return only the allocated IDs reachable from any anchor_id through
+    nodes also present in `allocated` (using PoB tree connections, treated
+    as undirected). Falls back to the unfiltered list if the cache is
+    missing or the resulting filter would yield zero nodes (defensive)."""
+    tree = _load_tree_once()
+    if not tree:
+        return list(allocated)
+    nodes = tree.get("nodes") or {}
+    alloc_set = set(allocated)
+    if not anchor_ids:
+        return list(allocated)
+    # Build undirected adjacency restricted to allocated nodes
+    adj = {nid: set() for nid in alloc_set}
+    for nid in alloc_set:
+        n = nodes.get(str(nid))
+        if not n:
+            continue
+        for c in n.get("connections") or []:
+            oid = c.get("id")
+            if oid in alloc_set:
+                adj[nid].add(oid)
+                adj[oid].add(nid)
+    # Also walk every node in the tree to catch asymmetric edges (PoB stores
+    # each edge once — the source could be either endpoint).
+    for nid_str, n in nodes.items():
+        try:
+            nid = int(nid_str)
+        except ValueError:
+            continue
+        if nid not in alloc_set:
+            continue
+        for c in n.get("connections") or []:
+            oid = c.get("id")
+            if oid in alloc_set:
+                adj[nid].add(oid)
+                adj[oid].add(nid)
+    # BFS from any anchor
+    seen = set()
+    stack = [a for a in anchor_ids if a in alloc_set]
+    while stack:
+        x = stack.pop()
+        if x in seen:
+            continue
+        seen.add(x)
+        stack.extend(adj.get(x, set()) - seen)
+    if not seen:
+        return list(allocated)
+    return [a for a in allocated if a in seen]
+
+
 def variant_passive_summary(variant):
     pt = variant.get("passiveTree") or {}
     main = ((pt.get("mainTree") or {}).get("selectedSlugs")) or []
@@ -307,7 +380,15 @@ def variant_passive_summary(variant):
             except ValueError:
                 pass
 
-    allocated_ids = to_ints(main) + attr_ids
+    # Combine and dedupe: mainTree explicit picks + attribute travel nodes
+    combined = list(dict.fromkeys(to_ints(main) + attr_ids))
+
+    # Filter to the connected component containing the mainTree picks.
+    # Mobalytics builds sometimes carry attributeNodes for future variants
+    # (or leftover state) that aren't reachable from the build's actual
+    # path — those show up as orphan highlighted "+5 Attribute" nodes
+    # floating far from the rest of the tree. We drop them.
+    allocated_ids = _filter_connected(combined, set(to_ints(main)))
     jewels = []
     for j in jewels_raw:
         if not isinstance(j, dict):
