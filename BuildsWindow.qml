@@ -110,6 +110,49 @@ PanelWindow {
         sizeSaveBuildsProc.running = true
     }
 
+    // ── Save/load encoding helpers ─────────────────────────────
+    // Old saved-builds files were written with the JS strings containing
+    // mojibake (UTF-8 bytes interpreted as Latin-1 by Quickshell's
+    // StdioCollector at import time). We can recover the original Unicode
+    // by reversing that misinterpretation: take each char's Latin-1 byte
+    // value and decode the byte sequence as UTF-8.
+    property int _mojibakeFixCount: 0
+    function _fixMojibakeString(s) {
+        if (!s) return s
+        var hasHigh = false
+        for (var i = 0; i < s.length; i++) {
+            var c = s.charCodeAt(i)
+            if (c >= 0x80 && c < 0x100) { hasHigh = true; break }
+            if (c >= 0x100) return s  // proper Unicode already, leave alone
+        }
+        if (!hasHigh) return s
+        try {
+            var fixed = decodeURIComponent(escape(s))
+            if (fixed !== s) _mojibakeFixCount++
+            return fixed
+        } catch (e) { return s }
+    }
+    function _fixMojibakeDeep(obj) {
+        if (obj === null || obj === undefined) return obj
+        if (typeof obj === "string") return _fixMojibakeString(obj)
+        if (Array.isArray(obj)) {
+            for (var i = 0; i < obj.length; i++) obj[i] = _fixMojibakeDeep(obj[i])
+            return obj
+        }
+        if (typeof obj === "object") {
+            for (var k in obj) obj[k] = _fixMojibakeDeep(obj[k])
+            return obj
+        }
+        return obj
+    }
+    // ASCII-only JSON so the saved file isn't subject to encoding
+    // misinterpretation when read back.
+    function _jsonAscii(obj) {
+        return JSON.stringify(obj).replace(/[\u0080-\uFFFF]/g, function(c) {
+            return "\\u" + ("0000" + c.charCodeAt(0).toString(16)).slice(-4)
+        })
+    }
+
     Process {
         id: bLoadProc
         stdout: StdioCollector { id: bLoadOut }
@@ -117,7 +160,15 @@ PanelWindow {
             if (!running) {
                 var txt = bLoadOut.text.trim()
                 if (txt) {
-                    try { root.builds = JSON.parse(txt) } catch (e) { root.builds = [] }
+                    try {
+                        root._mojibakeFixCount = 0
+                        var parsed = JSON.parse(txt)
+                        root.builds = root._fixMojibakeDeep(parsed)
+                        // If any mojibake was fixed in memory, rewrite the
+                        // file in ASCII-only form so the issue doesn't come
+                        // back next startup.
+                        if (root._mojibakeFixCount > 0) Qt.callLater(root._saveBuilds)
+                    } catch (e) { root.builds = [] }
                 }
             }
         }
@@ -256,7 +307,8 @@ PanelWindow {
         if (bSaveProc.running) { root._saveQueued = true; return }
         var dst = root._homeDir + "/.config/quickshell/poe2/.saved-builds"
         var tmp = "/tmp/poe2-saved-builds.b64"
-        var b64 = _b64encode(JSON.stringify(root.builds))
+        // ASCII-escaped JSON so reads via StdioCollector can't mojibake it
+        var b64 = _b64encode(_jsonAscii(root.builds))
         // Write base64 to a temp file with printf, then decode to atomic temp,
         // then rename. Splitting the pipeline avoids any ARG_MAX edge cases
         // and gives us a non-corrupt file even if the process is interrupted.
