@@ -188,12 +188,11 @@ Rectangle {
             n++
         }
         if (n === 0) return
-        // Include origin so the portrait + ascendancy stay in view too
-        if (minX > -800) minX = -800
-        if (minY > -800) minY = -800
-        if (maxX <  800) maxX =  800
-        if (maxY <  800) maxY =  800
-        var padding = 1200
+        // Tight padding so the allocated path fills the viewport. Don't
+        // include world origin — for endgame variants with 100+ picks the
+        // path is already huge; the portrait will be off-centre but the
+        // user can pan to it if needed.
+        var padding = 500
         minX -= padding; maxX += padding
         minY -= padding; maxY += padding
         var w = maxX - minX, h = maxY - minY
@@ -246,7 +245,9 @@ Rectangle {
             }
             ctx.stroke()
 
-            ctx.lineWidth   = Math.max(1.5, 10 * s)
+            // Gold path: thicker minimum so it stays visible when the
+            // build has so many nodes that auto-fit zooms quite far out.
+            ctx.lineWidth   = Math.max(2.5, 12 * s)
             ctx.strokeStyle = "#d4a843"
             ctx.beginPath()
             for (var e = 0; e < allocEdges.length; e++) {
