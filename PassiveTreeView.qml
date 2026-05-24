@@ -53,6 +53,10 @@ Rectangle {
         var arr = allocatedNodeIds || []
         for (var i = 0; i < arr.length; i++) s[String(arr[i])] = true
         _allocatedSet = s
+        // Variants have very different allocation counts. Always refit so the
+        // viewport tracks the new variant's bounds instead of staying zoomed
+        // on the previously-visible build.
+        _refit()
         canvas.requestPaint()
     }
 
@@ -301,26 +305,7 @@ Rectangle {
         }
     }
 
-    // ── Class portrait at the allocated centroid ───────────────
-    Rectangle {
-        visible: !!classIcon && (allocatedNodeIds || []).length > 0
-        width:  Math.max(28, Math.min(80, 1200 * scale))
-        height: width
-        radius: width / 2
-        color: "#1c1c2a"
-        border.color: "#d4a843"
-        border.width: Math.max(1, 2 * scale * 20)
-        x: _centroidX * scale + offsetX - width / 2
-        y: _centroidY * scale + offsetY - height / 2
-        z: 5
-        Image {
-            anchors { fill: parent; margins: 4 }
-            source: classIcon
-            fillMode: Image.PreserveAspectCrop
-            // Soft circular clip via a mask is non-trivial in QML; the rounded
-            // parent already trims the visual to a circle on the border.
-        }
-    }
+    // (Class portrait now drawn inside the ascendancy inset below.)
 
     // ── Mouse interaction: pan, zoom, hover ────────────────────
     MouseArea {
@@ -443,13 +428,17 @@ Rectangle {
 
     // ── Ascendancy inset ──────────────────────────────────────
     // Filters all ascendancy nodes by the build's ascendancyName, recenters
-    // around their bounding box, and renders the small circular tree in the
-    // bottom-left corner where the main tree usually leaves space.
+    // around their bounding box, and renders the small circular tree at the
+    // actual centre of the passive tree (world coord 0,0 — where the class
+    // starts converge). Scales with the tree zoom, clamped so it stays usable.
     Rectangle {
         id: ascInset
         visible: !!root.treeData && !!root.ascendancyName && _ascCount > 0
-        anchors { left: parent.left; bottom: parent.bottom; margins: 8 }
-        width: 320; height: 320; radius: 160
+        x: root.offsetX - width / 2
+        y: root.offsetY - height / 2
+        width: Math.max(160, Math.min(360, 5000 * root.scale))
+        height: width
+        radius: width / 2
         color: "#0c0e14"
         border.color: "#5a4a30"; border.width: 1
         z: 6
