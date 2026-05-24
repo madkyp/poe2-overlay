@@ -50,6 +50,31 @@ PanelWindow {
     property real   _hoverScreenX: 0
     property real   _hoverScreenY: 0
 
+    // Class/ascendancy selection
+    property string selectedClass:      "Monk"
+    property string selectedAscendancy: "Invoker"
+
+    function _ascendanciesFor(cls) {
+        if (!treeData || !treeData.classes) return []
+        for (var k in treeData.classes) {
+            if (treeData.classes[k].name === cls)
+                return (treeData.classes[k].ascendancies || []).map(function(a) { return a.name })
+        }
+        return []
+    }
+    function _classNames() {
+        if (!treeData || !treeData.classes) return []
+        var out = []
+        for (var k in treeData.classes) out.push(treeData.classes[k].name)
+        return out.sort()
+    }
+    function _portraitUrl(cls, asc) {
+        if (!cls || !asc) return ""
+        var c = cls.toLowerCase().replace(/\s+/g, "-")
+        var a = asc.toLowerCase().replace(/\s+/g, "-")
+        return "https://cdn.mobalytics.gg/assets/poe-2/images/game/classes/header/" + c + "-" + a + ".jpg"
+    }
+
     Component.onCompleted: {
         State.addPassiveStandaloneListener(function(v) {
             root.isOpen = v
@@ -171,6 +196,44 @@ PanelWindow {
                     color: "#5a5a5a"; font.pixelSize: 10
                 }
 
+                ComboBox {
+                    id: classCombo
+                    Layout.preferredWidth: 130
+                    Layout.preferredHeight: 24
+                    flat: false
+                    model: root._classNames()
+                    onActivated: {
+                        root.selectedClass = currentText
+                        var ascs = root._ascendanciesFor(currentText)
+                        if (ascs.length > 0) root.selectedAscendancy = ascs[0]
+                        ascCombo.model = ascs
+                        nodesView.recompute()
+                    }
+                    Component.onCompleted: {
+                        var names = root._classNames()
+                        if (names.indexOf(root.selectedClass) === -1 && names.length > 0)
+                            root.selectedClass = names[0]
+                        currentIndex = Math.max(0, names.indexOf(root.selectedClass))
+                    }
+                }
+
+                ComboBox {
+                    id: ascCombo
+                    Layout.preferredWidth: 170
+                    Layout.preferredHeight: 24
+                    flat: false
+                    model: root._ascendanciesFor(root.selectedClass)
+                    onActivated: {
+                        root.selectedAscendancy = currentText
+                        nodesView.recompute()
+                        canvas.requestPaint()
+                    }
+                    Component.onCompleted: {
+                        var ascs = root._ascendanciesFor(root.selectedClass)
+                        currentIndex = Math.max(0, ascs.indexOf(root.selectedAscendancy))
+                    }
+                }
+
                 Rectangle {
                     width: 28; height: 22; radius: 3
                     color: "#161a20"; border.color: "#2a3040"; border.width: 1
@@ -242,6 +305,11 @@ PanelWindow {
 
                 // Pre-compute node positions: { id: {x, y, icon, kind} }
                 property var positionsById: _computePositions()
+                function recompute() {
+                    positionsById = _computePositions()
+                    posList = _buildPosList()
+                    canvas.requestPaint()
+                }
                 function _computePositions() {
                     if (!root.treeData) return {}
                     var radii    = root.treeData.constants.orbitRadii         || []
@@ -256,9 +324,12 @@ PanelWindow {
                     var out = {}
                     var groups = root.treeData.groups
                     var nodes  = root.treeData.nodes
+                    var selectedAsc = root.selectedAscendancy
                     for (var nid in nodes) {
                         var n = nodes[nid]
-                        if (n.ascendancyName && n.ascendancyName !== "") continue
+                        var ascName = n.ascendancyName || ""
+                        // Include: main-tree nodes (no ascendancy) AND the selected ascendancy's nodes
+                        if (ascName !== "" && ascName !== selectedAsc) continue
                         if ((n.connections || []).length === 0 && n.name === "Attribute") continue
                         if (n.group === undefined || n.group === null) continue
                         var g = groups[String(n.group)]; if (!g) continue
@@ -272,25 +343,27 @@ PanelWindow {
                             kind: n.isKeystone ? "keystone" :
                                   n.isNotable  ? "notable"  :
                                   n.isJewelSocket ? "jewel" :
-                                  n.isMastery ? "mastery" : "normal"
+                                  n.isMastery ? "mastery" : "normal",
+                            asc:  ascName
                         }
                     }
                     return out
                 }
 
-                // When tree data loads, recompute
+                // When tree data loads, recompute everything
                 Connections {
                     target: root
-                    function onTreeDataChanged() { nodesView.positionsById = nodesView._computePositions() }
+                    function onTreeDataChanged() { nodesView.recompute() }
                 }
 
                 // Build an array model from positionsById (Repeater takes arrays/JS)
-                property var posList: {
+                property var posList: _buildPosList()
+                function _buildPosList() {
                     var arr = []
                     if (!positionsById) return arr
                     for (var k in positionsById) {
                         var p = positionsById[k]
-                        arr.push({ id: k, x: p.x, y: p.y, icon: p.icon, kind: p.kind })
+                        arr.push({ id: k, x: p.x, y: p.y, icon: p.icon, kind: p.kind, asc: p.asc || "" })
                     }
                     return arr
                 }
@@ -320,6 +393,33 @@ PanelWindow {
                                  && (x + width)  > -10 && x < viewport.width  + 10
                                  && (y + height) > -10 && y < viewport.height + 10
                     }
+                }
+            }
+
+            // ── Class portrait at tree origin ─────────────────
+            // Mobalytics anchors the character portrait at the centre of
+            // the tree (world 0,0) — we mirror that. The image scales with
+            // the zoom so it feels integrated with the surrounding nodes.
+            Rectangle {
+                id: portrait
+                visible: !!root.selectedClass && !!root.selectedAscendancy && image.status === Image.Ready
+                x: root.panX - width  / 2
+                y: root.panY - height / 2
+                width:  Math.max(140, Math.min(560, 8000 * root.scale))
+                height: width
+                radius: width / 2
+                color: "#0a0c12"
+                border.color: "#6a5a3a"
+                border.width: 2
+                clip: true
+                Image {
+                    id: image
+                    anchors.fill: parent
+                    anchors.margins: 4
+                    source: root._portraitUrl(root.selectedClass, root.selectedAscendancy)
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: true
                 }
             }
 
