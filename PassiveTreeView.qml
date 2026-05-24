@@ -98,17 +98,14 @@ Rectangle {
         var nodes  = treeData.nodes
         var out = {}
         var ascNatural = []
-        var allocSet = _allocatedSet || {}
         for (var nid in nodes) {
             var n = nodes[nid]
             var ascName = n.ascendancyName || ""
             if (ascName !== "" && ascName !== ascendancyName) continue
-            // Skip standalone class-start Attribute stubs UNLESS the build
-            // actually allocated them — in PoE2 a few of those nodes act
-            // as implicit bridges between clusters even though PoB stores
-            // them with empty `connections`, and dropping them creates
-            // visible gaps in the gold path.
-            if ((n.connections || []).length === 0 && n.name === "Attribute" && !allocSet[nid]) continue
+            // Don't filter 0-connection Attribute nodes any more — some of
+            // them are referenced as targets by other nodes' connections
+            // and act as implicit bridges in the actual game tree. Skipping
+            // them broke the gold path on builds that allocate them.
             if (n.group === undefined || n.group === null) continue
             var g = groups[String(n.group)]; if (!g) continue
             var orbit = n.orbit || 0, idx = n.orbitIndex || 0
@@ -234,10 +231,6 @@ Rectangle {
 
             var allocEdges = []
             var drawn = {}
-            // PoB connections are stored once per pair but the direction
-            // varies. To make sure we catch every edge, walk both endpoints:
-            // for each allocated node, also walk through all tree nodes to
-            // find anyone listing it as a target.
             ctx.lineWidth   = Math.max(0.4, 5 * s)
             ctx.strokeStyle = "#3a4a60"
             ctx.beginPath()
@@ -260,9 +253,6 @@ Rectangle {
                 }
             }
             ctx.stroke()
-            console.log("[PassiveTreeView] gold edges:", allocEdges.length,
-                        "alloc nodes:", Object.keys(alloc).length,
-                        "positions:", Object.keys(pos).length)
 
             // Gold path: thicker minimum so it stays visible when the
             // build has so many nodes that auto-fit zooms quite far out.
