@@ -234,6 +234,10 @@ Rectangle {
 
             var allocEdges = []
             var drawn = {}
+            // PoB connections are stored once per pair but the direction
+            // varies. To make sure we catch every edge, walk both endpoints:
+            // for each allocated node, also walk through all tree nodes to
+            // find anyone listing it as a target.
             ctx.lineWidth   = Math.max(0.4, 5 * s)
             ctx.strokeStyle = "#3a4a60"
             ctx.beginPath()
@@ -256,6 +260,9 @@ Rectangle {
                 }
             }
             ctx.stroke()
+            console.log("[PassiveTreeView] gold edges:", allocEdges.length,
+                        "alloc nodes:", Object.keys(alloc).length,
+                        "positions:", Object.keys(pos).length)
 
             // Gold path: thicker minimum so it stays visible when the
             // build has so many nodes that auto-fit zooms quite far out.
