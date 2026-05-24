@@ -4,6 +4,7 @@ import Quickshell.Wayland
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import "js/State.js" as State
 
 // Standalone fullscreen-ish viewer for the PoE2 passive tree.
@@ -198,39 +199,115 @@ PanelWindow {
 
                 ComboBox {
                     id: classCombo
-                    Layout.preferredWidth: 130
-                    Layout.preferredHeight: 24
-                    flat: false
+                    Layout.preferredWidth: 140
+                    Layout.preferredHeight: 26
                     model: root._classNames()
+                    currentIndex: {
+                        var names = model || []
+                        var i = names.indexOf(root.selectedClass)
+                        return i >= 0 ? i : 0
+                    }
                     onActivated: {
                         root.selectedClass = currentText
                         var ascs = root._ascendanciesFor(currentText)
-                        if (ascs.length > 0) root.selectedAscendancy = ascs[0]
                         ascCombo.model = ascs
+                        ascCombo.currentIndex = 0
+                        root.selectedAscendancy = ascs.length > 0 ? ascs[0] : ""
                         nodesView.recompute()
                     }
-                    Component.onCompleted: {
-                        var names = root._classNames()
-                        if (names.indexOf(root.selectedClass) === -1 && names.length > 0)
-                            root.selectedClass = names[0]
-                        currentIndex = Math.max(0, names.indexOf(root.selectedClass))
+
+                    background: Rectangle {
+                        color: "#1a1d24"; border.color: "#3a3a45"; border.width: 1; radius: 3
+                    }
+                    contentItem: Text {
+                        leftPadding: 8; rightPadding: classCombo.indicator.width + 4
+                        text: classCombo.displayText
+                        color: "#d4a843"
+                        font.pixelSize: 11; font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
+                    popup: Popup {
+                        y: classCombo.height + 2
+                        width: classCombo.width
+                        implicitHeight: contentItem.implicitHeight
+                        padding: 1
+                        contentItem: ListView {
+                            clip: true
+                            implicitHeight: contentHeight
+                            model: classCombo.popup.visible ? classCombo.delegateModel : null
+                            currentIndex: classCombo.highlightedIndex
+                        }
+                        background: Rectangle { color: "#0d0f15"; border.color: "#3a3a45"; border.width: 1; radius: 3 }
+                    }
+                    delegate: ItemDelegate {
+                        width: classCombo.width
+                        height: 24
+                        contentItem: Text {
+                            text: modelData
+                            color: classCombo.highlightedIndex === index ? "#ffe080" : "#c0b090"
+                            font.pixelSize: 11
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 8
+                        }
+                        background: Rectangle {
+                            color: classCombo.highlightedIndex === index ? "#2a2530" : "transparent"
+                        }
                     }
                 }
 
                 ComboBox {
                     id: ascCombo
-                    Layout.preferredWidth: 170
-                    Layout.preferredHeight: 24
-                    flat: false
+                    Layout.preferredWidth: 180
+                    Layout.preferredHeight: 26
                     model: root._ascendanciesFor(root.selectedClass)
+                    currentIndex: {
+                        var ascs = model || []
+                        var i = ascs.indexOf(root.selectedAscendancy)
+                        return i >= 0 ? i : 0
+                    }
                     onActivated: {
                         root.selectedAscendancy = currentText
                         nodesView.recompute()
-                        canvas.requestPaint()
                     }
-                    Component.onCompleted: {
-                        var ascs = root._ascendanciesFor(root.selectedClass)
-                        currentIndex = Math.max(0, ascs.indexOf(root.selectedAscendancy))
+
+                    background: Rectangle {
+                        color: "#1a1d24"; border.color: "#3a3a45"; border.width: 1; radius: 3
+                    }
+                    contentItem: Text {
+                        leftPadding: 8; rightPadding: ascCombo.indicator.width + 4
+                        text: ascCombo.displayText
+                        color: "#7adde0"
+                        font.pixelSize: 11; font.bold: true
+                        verticalAlignment: Text.AlignVCenter
+                        elide: Text.ElideRight
+                    }
+                    popup: Popup {
+                        y: ascCombo.height + 2
+                        width: ascCombo.width
+                        implicitHeight: contentItem.implicitHeight
+                        padding: 1
+                        contentItem: ListView {
+                            clip: true
+                            implicitHeight: contentHeight
+                            model: ascCombo.popup.visible ? ascCombo.delegateModel : null
+                            currentIndex: ascCombo.highlightedIndex
+                        }
+                        background: Rectangle { color: "#0d0f15"; border.color: "#3a3a45"; border.width: 1; radius: 3 }
+                    }
+                    delegate: ItemDelegate {
+                        width: ascCombo.width
+                        height: 24
+                        contentItem: Text {
+                            text: modelData
+                            color: ascCombo.highlightedIndex === index ? "#c0f5f8" : "#9aa8b8"
+                            font.pixelSize: 11
+                            verticalAlignment: Text.AlignVCenter
+                            leftPadding: 8
+                        }
+                        background: Rectangle {
+                            color: ascCombo.highlightedIndex === index ? "#1e2a3a" : "transparent"
+                        }
                     }
                 }
 
@@ -397,29 +474,50 @@ PanelWindow {
             }
 
             // ── Class portrait at tree origin ─────────────────
-            // Mobalytics anchors the character portrait at the centre of
-            // the tree (world 0,0) — we mirror that. The image scales with
-            // the zoom so it feels integrated with the surrounding nodes.
-            Rectangle {
+            // Sized to fit comfortably inside the inner class-start ring
+            // (~1400 tree units), so it doesn't cover the actual passive
+            // nodes. True circular clipping via OpacityMask.
+            Item {
                 id: portrait
-                visible: !!root.selectedClass && !!root.selectedAscendancy && image.status === Image.Ready
+                visible: !!root.selectedClass && !!root.selectedAscendancy && portraitImg.status === Image.Ready
                 x: root.panX - width  / 2
                 y: root.panY - height / 2
-                width:  Math.max(140, Math.min(560, 8000 * root.scale))
+                width:  Math.max(80, Math.min(360, 2400 * root.scale))
                 height: width
-                radius: width / 2
-                color: "#0a0c12"
-                border.color: "#6a5a3a"
-                border.width: 2
-                clip: true
+                z: -1
+
                 Image {
-                    id: image
+                    id: portraitImg
                     anchors.fill: parent
-                    anchors.margins: 4
                     source: root._portraitUrl(root.selectedClass, root.selectedAscendancy)
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: true
+                    layer.enabled: true
+                    layer.effect: MultiEffect {
+                        maskEnabled: true
+                        maskSource: portraitMask
+                        maskThresholdMin: 0.5
+                    }
+                }
+                Item {
+                    id: portraitMask
+                    anchors.fill: portrait
+                    visible: false
+                    layer.enabled: true
+                    Rectangle {
+                        anchors.fill: parent
+                        radius: width / 2
+                        color: "white"
+                    }
+                }
+                Rectangle {
+                    // Gold ring border
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "transparent"
+                    border.color: "#8b7355"
+                    border.width: Math.max(1, 3 * root.scale * 20)
                 }
             }
 
