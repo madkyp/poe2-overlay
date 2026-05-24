@@ -431,11 +431,13 @@ PanelWindow {
                         }
                     }
 
-                    // ─── Pass 2: centre the ascendancy cluster on the
-                    // portrait (origin). Mobalytics overlays its ascendancy
-                    // mini-tree on top of the character portrait; the nodes
-                    // are drawn after the portrait (lower z on portrait),
-                    // so the icons sit visually on top of the artwork.
+                    // ─── Pass 2: fit ascendancy cluster inside portrait
+                    // Computes the natural bounding box of the selected
+                    // ascendancy and scales it uniformly to a fixed target
+                    // diameter (≈ 65% of the portrait), preserving the
+                    // cluster's natural shape regardless of which class is
+                    // selected (Invoker's tall layout, Pathfinder's square,
+                    // etc. all end up similar visual size).
                     if (ascNatural.length > 0) {
                         var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9
                         for (var i = 0; i < ascNatural.length; i++) {
@@ -447,19 +449,16 @@ PanelWindow {
                         }
                         var cx = (minX + maxX) / 2
                         var cy = (minY + maxY) / 2
-                        // Modest scale so the cluster occupies ~30-40% of the
-                        // portrait — matching Mobalytics' visual weight.
-                        var ascZoom = 1.5
-                        // Shift the cluster slightly up-right, so it floats
-                        // around the character's upper torso instead of
-                        // covering the centre.
-                        var ascOffsetX = 700
-                        var ascOffsetY = -600
+                        var spanX = Math.max(1, maxX - minX)
+                        var spanY = Math.max(1, maxY - minY)
+                        // Target diameter ≈ portrait * 0.65 = 4800*0.65 ≈ 3100 tree units.
+                        var targetDiameter = 3100
+                        var ascZoom = targetDiameter / Math.max(spanX, spanY)
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
                             out[ap.nid] = {
-                                x:    (ap.rx - cx) * ascZoom + ascOffsetX,
-                                y:    (ap.ry - cy) * ascZoom + ascOffsetY,
+                                x:    (ap.rx - cx) * ascZoom,
+                                y:    (ap.ry - cy) * ascZoom,
                                 icon: ap.icon,
                                 kind: ap.kind,
                                 asc:  ap.asc
