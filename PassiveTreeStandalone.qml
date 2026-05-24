@@ -646,22 +646,31 @@ PanelWindow {
                                  && (x + width)  > -10 && x < ascLayer.width  + 10
                                  && (y + height) > -10 && y < ascLayer.height + 10
 
-                        // Frame ring
+                        // Outer frame ring — dark fill with a coloured border
                         Rectangle {
                             anchors.fill: parent
                             radius: width / 2
-                            color: "#0c0e14"
-                            border.width: Math.max(1, renderSize / 18)
-                            border.color: modelData.kind === "keystone" ? "#d4a843"
-                                         : modelData.kind === "notable"  ? "#c5a070"
+                            color: "#1a1c24"
+                            border.width: Math.max(1.5, parent.renderSize / 14)
+                            border.color: modelData.kind === "keystone" ? "#ffd060"
+                                         : modelData.kind === "notable"  ? "#d4a843"
                                          : modelData.kind === "jewel"    ? "#7adde0"
-                                                                         : "#6a7a90"
-                            opacity: 0.92
+                                                                         : "#8a96b0"
                         }
-                        // Icon
+                        // Inner subtle highlight, gives the frame depth
+                        Rectangle {
+                            anchors.fill: parent
+                            anchors.margins: Math.max(1, parent.renderSize / 14)
+                            radius: width / 2
+                            color: "transparent"
+                            border.color: "#3a3a45"
+                            border.width: 1
+                        }
+                        // Icon — pulled in so its square corners stay inside the
+                        // circular frame, making the ring clearly visible.
                         Image {
                             anchors.fill: parent
-                            anchors.margins: Math.max(1, parent.renderSize * 0.08)
+                            anchors.margins: Math.max(2, parent.renderSize * 0.18)
                             source: modelData.icon
                             sourceSize.width:  Math.round(parent.baseSize)
                             sourceSize.height: Math.round(parent.baseSize)
