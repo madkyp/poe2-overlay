@@ -385,7 +385,8 @@ PanelWindow {
                 property var positionsById: _computePositions()
                 function recompute() {
                     positionsById = _computePositions()
-                    posList = _buildPosList()
+                    posList = _buildPosList(false)
+                    ascPosList = _buildPosList(true)
                     canvas.requestPaint()
                 }
                 function _computePositions() {
@@ -467,13 +468,18 @@ PanelWindow {
                     function onTreeDataChanged() { nodesView.recompute() }
                 }
 
-                // Build an array model from positionsById (Repeater takes arrays/JS)
-                property var posList: _buildPosList()
-                function _buildPosList() {
+                // Two separate lists: main tree (renders BEHIND the portrait)
+                // and ascendancy (renders ON TOP of the portrait). This
+                // matches Mobalytics' layered presentation.
+                property var posList:    _buildPosList(false)
+                property var ascPosList: _buildPosList(true)
+                function _buildPosList(wantAsc) {
                     var arr = []
                     if (!positionsById) return arr
                     for (var k in positionsById) {
                         var p = positionsById[k]
+                        var isAsc = !!(p.asc && p.asc !== "")
+                        if (isAsc !== wantAsc) continue
                         arr.push({ id: k, x: p.x, y: p.y, icon: p.icon, kind: p.kind, asc: p.asc || "" })
                     }
                     return arr
@@ -482,7 +488,6 @@ PanelWindow {
                 Repeater {
                     model: nodesView.posList
                     Image {
-                        // Tile size scales with zoom. Notables get a bit bigger.
                         property real baseSize: modelData.kind === "keystone" ? 64
                                               : modelData.kind === "notable"  ? 56
                                               : modelData.kind === "jewel"    ? 44
@@ -499,7 +504,6 @@ PanelWindow {
                         asynchronous: true
                         cache: true
                         fillMode: Image.PreserveAspectFit
-                        // Visibility culling — only show nodes inside viewport
                         visible: renderSize > 3
                                  && (x + width)  > -10 && x < viewport.width  + 10
                                  && (y + height) > -10 && y < viewport.height + 10
@@ -508,20 +512,18 @@ PanelWindow {
             }
 
             // ── Class portrait at tree origin ─────────────────
-            // Sized to fit comfortably inside the inner class-start ring
-            // (~1400 tree units), so it doesn't cover the actual passive
-            // nodes. True circular clipping via OpacityMask.
+            // Sits ON TOP of the main passive tree (z=1, above nodes
+            // layer at z=0) so the dense class-start nodes underneath
+            // get visually hidden behind the artwork — matching how
+            // Mobalytics frames the centre of the tree.
             Item {
                 id: portrait
                 visible: !!root.selectedClass && !!root.selectedAscendancy && portraitImg.status === Image.Ready
                 x: root.panX - width  / 2
                 y: root.panY - height / 2
-                // Portrait sized to enclose the relocated ascendancy
-                // cluster (~4500 tree units after 3× scale of the ~1500
-                // natural span).
                 width:  Math.max(140, Math.min(540, 4800 * root.scale))
                 height: width
-                z: -1
+                z: 1
 
                 Image {
                     id: portraitImg
@@ -555,6 +557,40 @@ PanelWindow {
                     color: "transparent"
                     border.color: "#8b7355"
                     border.width: Math.max(1, 3 * root.scale * 20)
+                }
+            }
+
+            // ── Ascendancy nodes (on top of portrait) ─────────
+            // Draws the relocated ascendancy mini-tree on top of the
+            // character portrait so the icons sit over the artwork like
+            // a constellation, matching Mobalytics' layout.
+            Item {
+                id: ascLayer
+                anchors.fill: parent
+                z: 2
+                Repeater {
+                    model: nodesView.ascPosList
+                    Image {
+                        property real baseSize: modelData.kind === "keystone" ? 64
+                                              : modelData.kind === "notable"  ? 56
+                                              : modelData.kind === "jewel"    ? 44
+                                              : modelData.kind === "mastery"  ? 40
+                                              : 32
+                        property real renderSize: Math.max(8, baseSize * root.scale)
+                        width:  renderSize
+                        height: renderSize
+                        x: modelData.x * root.scale + root.panX - width / 2
+                        y: modelData.y * root.scale + root.panY - height / 2
+                        sourceSize.width:  Math.round(baseSize)
+                        sourceSize.height: Math.round(baseSize)
+                        source: modelData.icon
+                        asynchronous: true
+                        cache: true
+                        fillMode: Image.PreserveAspectFit
+                        visible: renderSize > 3
+                                 && (x + width)  > -10 && x < ascLayer.width  + 10
+                                 && (y + height) > -10 && y < ascLayer.height + 10
+                    }
                 }
             }
 
