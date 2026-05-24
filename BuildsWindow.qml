@@ -843,7 +843,9 @@ PanelWindow {
                                             Layout.preferredHeight: 420
                                             treeData: root._treeData
                                             classIcon: detail.current ? (detail.current.classIcon || "") : ""
+                                            ascendancyName: detail.current ? (detail.current.ascendancy || "") : ""
                                             allocatedNodeIds: modelData.allocatedIds || []
+                                            ascendancyIds:    modelData.ascendancyIds || []
                                         }
 
                                         Text {

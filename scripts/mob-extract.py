@@ -294,7 +294,20 @@ def variant_passive_summary(variant):
                 pass
         return out
 
-    allocated_ids = to_ints(main) + to_ints(ascend)
+    # attributeNodes are the auto-allocated str/dex/int starting nodes the
+    # player gets for free near the class start. They're part of the actual
+    # path and must be included so the line drawing doesn't gap.
+    attr_nodes = pt.get("attributeNodes") or []
+    attr_ids = []
+    for a in attr_nodes:
+        if isinstance(a, dict):
+            ns = a.get("nodeSlug") or ""
+            try:
+                attr_ids.append(int(ns.split("-")[-1]))
+            except ValueError:
+                pass
+
+    allocated_ids = to_ints(main) + attr_ids
     jewels = []
     for j in jewels_raw:
         if not isinstance(j, dict):

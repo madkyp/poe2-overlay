@@ -4,9 +4,12 @@ import QtQuick.Layouts
 
 // Renders the PoE2 passive tree using PoB Community tree data.
 // Required properties:
-//   treeData         : object loaded from .cache/tree.json
-//   allocatedNodeIds : array of int — main tree allocations
-//   classIcon        : optional URL of the character class icon to place at the centroid
+//   treeData          : object loaded from .cache/tree.json
+//   allocatedNodeIds  : array of int — main tree allocations
+//   ascendancyIds     : array of int — ascendancy node allocations
+//   ascendancyName    : string — which ascendancy (e.g., "Invoker") to render the
+//                       small inset for. If empty no inset is drawn.
+//   classIcon         : optional URL of the character class icon at the centroid
 
 Rectangle {
     id: root
@@ -16,9 +19,11 @@ Rectangle {
     radius: 4
     clip: true
 
-    property var    treeData:         null
-    property var    allocatedNodeIds: []
-    property string classIcon:        ""
+    property var    treeData:          null
+    property var    allocatedNodeIds:  []
+    property var    ascendancyIds:     []
+    property string ascendancyName:    ""
+    property string classIcon:         ""
 
     // View transform
     property real   scale:    0.05
@@ -177,7 +182,11 @@ Rectangle {
             var s = root.scale, ox = root.offsetX, oy = root.offsetY
 
             // ── Connections — dim batch, then bright on top ────
+            // PoB stores edges asymmetrically (only one direction), so we
+            // can't dedupe by id ordering — just draw every connection from
+            // every node. Overlapping draws are invisible anyway.
             var allocEdges = []
+            var drawn = {}
             ctx.lineWidth   = Math.max(0.3, 4 * s)
             ctx.strokeStyle = "#181822"
             ctx.beginPath()
@@ -192,7 +201,10 @@ Rectangle {
                     if (!pb) continue
                     var nOther = nodes[oid]
                     if (nOther && nOther.ascendancyName) continue
-                    if (parseInt(nid) > parseInt(oid)) continue
+                    // canonical key for de-dup without losing asymmetric edges
+                    var ka = parseInt(nid) < parseInt(oid) ? nid + "_" + oid : oid + "_" + nid
+                    if (drawn[ka]) continue
+                    drawn[ka] = true
                     if (allocated[nid] && allocated[oid]) { allocEdges.push([pa, pb]); continue }
                     ctx.moveTo(pa.x * s + ox, pa.y * s + oy)
                     ctx.lineTo(pb.x * s + ox, pb.y * s + oy)
@@ -426,6 +438,172 @@ Rectangle {
             color: "#161a20"; border.color: "#2a3040"; border.width: 1
             Text { anchors.centerIn: parent; text: "Fit"; color: "#7adde0"; font.pixelSize: 10 }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root._refit() }
+        }
+    }
+
+    // ── Ascendancy inset ──────────────────────────────────────
+    // Filters all ascendancy nodes by the build's ascendancyName, recenters
+    // their group around (0,0), and renders the small circular tree in the
+    // bottom-right corner.
+    Rectangle {
+        id: ascInset
+        visible: !!root.treeData && !!root.ascendancyName && _ascCount > 0
+        anchors { right: parent.right; bottom: parent.bottom; margins: 8 }
+        width: 200; height: 200; radius: 100
+        color: "#0c0e14"
+        border.color: "#5a4a30"; border.width: 1
+        z: 6
+
+        property var  _ascPositions: ({})
+        property real _ascCenterX:   0
+        property real _ascCenterY:   0
+        property real _ascRadius:    1
+        property int  _ascCount:     0
+
+        // Per-ascendancy allocated set (string ids)
+        property var  _ascAllocSet:  ({})
+
+        onVisibleChanged: if (visible) _rebuild()
+
+        Connections {
+            target: root
+            function onTreeDataChanged()      { ascInset._rebuild() }
+            function onAscendancyNameChanged(){ ascInset._rebuild() }
+            function onAscendancyIdsChanged() { ascInset._rebuildAlloc(); ascCanvas.requestPaint() }
+        }
+
+        function _rebuildAlloc() {
+            var s = {}, arr = root.ascendancyIds || []
+            for (var i = 0; i < arr.length; i++) s[String(arr[i])] = true
+            _ascAllocSet = s
+        }
+
+        function _rebuild() {
+            _rebuildAlloc()
+            if (!root.treeData || !root.ascendancyName) { _ascCount = 0; return }
+            var radii    = root.treeData.constants.orbitRadii         || []
+            var perOrb   = root.treeData.constants.skillsPerOrbit     || []
+            var angTable = root.treeData.constants.orbitAnglesByOrbit || []
+            var nodes    = root.treeData.nodes
+            var groups   = root.treeData.groups
+            var positions = {}
+            var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9, count = 0
+            function angleFor(orbit, idx) {
+                var per = angTable[orbit]
+                if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
+                var slots = perOrb[orbit] || 1
+                return (idx / slots) * 2 * Math.PI - Math.PI / 2
+            }
+            for (var nid in nodes) {
+                var n = nodes[nid]
+                if (n.ascendancyName !== root.ascendancyName) continue
+                var g = groups[String(n.group)]
+                if (!g) continue
+                var orbit = n.orbit || 0, idx = n.orbitIndex || 0
+                var r = radii[orbit] || 0
+                var a = angleFor(orbit, idx)
+                var px = g.x + r * Math.cos(a)
+                var py = g.y + r * Math.sin(a)
+                positions[nid] = {
+                    x: px, y: py,
+                    k: n.isKeystone ? "keystone" :
+                       n.isNotable ? "notable" :
+                       n.isJewelSocket ? "jewel" :
+                       n.isMastery ? "mastery" : "normal"
+                }
+                if (px < minX) minX = px
+                if (px > maxX) maxX = px
+                if (py < minY) minY = py
+                if (py > maxY) maxY = py
+                count++
+            }
+            _ascPositions = positions
+            _ascCount     = count
+            if (count > 0) {
+                _ascCenterX = (minX + maxX) / 2
+                _ascCenterY = (minY + maxY) / 2
+                _ascRadius  = Math.max(maxX - minX, maxY - minY) / 2 + 50
+            }
+            ascCanvas.requestPaint()
+        }
+
+        Canvas {
+            id: ascCanvas
+            anchors.fill: parent
+            renderStrategy: Canvas.Cooperative
+            onPaint: {
+                var ctx = getContext("2d")
+                ctx.clearRect(0, 0, width, height)
+                if (ascInset._ascCount === 0) return
+                var pos = ascInset._ascPositions
+                var alloc = ascInset._ascAllocSet
+                var nodes = root.treeData.nodes
+                var s  = (Math.min(width, height) - 24) / (2 * ascInset._ascRadius)
+                var cx = width  / 2 - ascInset._ascCenterX * s
+                var cy = height / 2 - ascInset._ascCenterY * s
+
+                // Edges
+                var allocEdges = []
+                var drawn = {}
+                ctx.lineWidth   = 1.2
+                ctx.strokeStyle = "#2a2530"
+                ctx.beginPath()
+                for (var nid in nodes) {
+                    if (!pos[nid]) continue
+                    var pa = pos[nid]
+                    var conns = nodes[nid].connections || []
+                    for (var c = 0; c < conns.length; c++) {
+                        var oid = String(conns[c].id)
+                        var pb  = pos[oid]
+                        if (!pb) continue
+                        var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
+                        if (drawn[key]) continue
+                        drawn[key] = true
+                        if (alloc[nid] && alloc[oid]) { allocEdges.push([pa, pb]); continue }
+                        ctx.moveTo(pa.x*s+cx, pa.y*s+cy)
+                        ctx.lineTo(pb.x*s+cx, pb.y*s+cy)
+                    }
+                }
+                ctx.stroke()
+                ctx.lineWidth   = 2.5
+                ctx.strokeStyle = "#d4a843"
+                ctx.beginPath()
+                for (var e = 0; e < allocEdges.length; e++) {
+                    var ea = allocEdges[e][0], eb = allocEdges[e][1]
+                    ctx.moveTo(ea.x*s+cx, ea.y*s+cy)
+                    ctx.lineTo(eb.x*s+cx, eb.y*s+cy)
+                }
+                ctx.stroke()
+
+                // Nodes
+                for (var nid2 in pos) {
+                    var p = pos[nid2]
+                    var isAlloc = !!alloc[nid2]
+                    var x = p.x*s+cx, y = p.y*s+cy
+                    var rad = p.k === "keystone" ? 6 : p.k === "notable" ? 5 : p.k === "jewel" ? 4 : 2.5
+                    if (isAlloc) {
+                        ctx.fillStyle   = p.k === "keystone" ? "#ffd060"
+                                        : p.k === "jewel"    ? "#7adde0"
+                                                             : "#d4a843"
+                        ctx.strokeStyle = "#ffe080"
+                        ctx.lineWidth   = 1
+                    } else {
+                        ctx.fillStyle   = "#1c1c25"
+                        ctx.strokeStyle = "#2a2530"
+                        ctx.lineWidth   = 0.5
+                    }
+                    ctx.beginPath()
+                    ctx.arc(x, y, rad, 0, 2*Math.PI)
+                    ctx.fill()
+                    ctx.stroke()
+                }
+            }
+        }
+
+        Text {
+            anchors { left: parent.left; top: parent.top; margins: 6 }
+            text: root.ascendancyName
+            color: "#d4a843"; font.pixelSize: 9; font.bold: true
         }
     }
 }
