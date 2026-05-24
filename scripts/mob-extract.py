@@ -380,15 +380,12 @@ def variant_passive_summary(variant):
             except ValueError:
                 pass
 
-    # Combine and dedupe: mainTree explicit picks + attribute travel nodes
-    combined = list(dict.fromkeys(to_ints(main) + attr_ids))
-
-    # Filter to the connected component containing the mainTree picks.
-    # Mobalytics builds sometimes carry attributeNodes for future variants
-    # (or leftover state) that aren't reachable from the build's actual
-    # path — those show up as orphan highlighted "+5 Attribute" nodes
-    # floating far from the rest of the tree. We drop them.
-    allocated_ids = _filter_connected(combined, set(to_ints(main)))
+    # Mobalytics only visually highlights mainTree (explicit picks).
+    # attributeNodes are auto-allocated +5 stat nodes that satisfy
+    # attribute requirements on the path — they're saved in the build
+    # data but Mobalytics doesn't draw them as part of the allocated
+    # tree. We follow that convention.
+    allocated_ids = list(dict.fromkeys(to_ints(main)))
     jewels = []
     for j in jewels_raw:
         if not isinstance(j, dict):

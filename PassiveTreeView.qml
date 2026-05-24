@@ -431,18 +431,14 @@ Rectangle {
     }
 
     // ── Ascendancy inset ──────────────────────────────────────
-    // Filters all ascendancy nodes by the build's ascendancyName, recenters
-    // around their bounding box, and renders the small circular tree at the
-    // actual centre of the passive tree (world coord 0,0 — where the class
-    // starts converge). Scales with the tree zoom, clamped so it stays usable.
+    // Always-visible inset pinned to the bottom-right of the panel so the
+    // user can see their ascendancy tree regardless of pan/zoom on the
+    // main view.
     Rectangle {
         id: ascInset
         visible: !!root.treeData && !!root.ascendancyName && _ascCount > 0
-        x: root.offsetX - width / 2
-        y: root.offsetY - height / 2
-        width: Math.max(160, Math.min(360, 5000 * root.scale))
-        height: width
-        radius: width / 2
+        anchors { right: parent.right; bottom: parent.bottom; margins: 10 }
+        width: 240; height: 240; radius: 120
         color: "#0c0e14"
         border.color: "#5a4a30"; border.width: 1
         z: 6
