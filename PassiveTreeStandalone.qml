@@ -497,11 +497,11 @@ PanelWindow {
                 Repeater {
                     model: nodesView.posList
                     Image {
-                        property real baseSize: modelData.kind === "keystone" ? 64
-                                              : modelData.kind === "notable"  ? 56
-                                              : modelData.kind === "jewel"    ? 44
-                                              : modelData.kind === "mastery"  ? 40
-                                              : 32
+                        property real baseSize: modelData.kind === "keystone" ? 200
+                                              : modelData.kind === "notable"  ? 160
+                                              : modelData.kind === "jewel"    ? 130
+                                              : modelData.kind === "mastery"  ? 110
+                                              : 80
                         property real renderSize: Math.max(6, baseSize * root.scale)
                         width:  renderSize
                         height: renderSize
@@ -633,11 +633,11 @@ PanelWindow {
                 Repeater {
                     model: nodesView.ascPosList
                     Item {
-                        property real baseSize: modelData.kind === "keystone" ? 90
-                                              : modelData.kind === "notable"  ? 70
-                                              : modelData.kind === "jewel"    ? 64
-                                              : 44
-                        property real renderSize: Math.max(10, baseSize * root.scale)
+                        property real baseSize: modelData.kind === "keystone" ? 220
+                                              : modelData.kind === "notable"  ? 180
+                                              : modelData.kind === "jewel"    ? 160
+                                              : 120
+                        property real renderSize: Math.max(12, baseSize * root.scale)
                         width:  renderSize
                         height: renderSize
                         x: modelData.x * root.scale + root.panX - width / 2
