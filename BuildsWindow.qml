@@ -840,11 +840,11 @@ PanelWindow {
                                         // The interactive tree render
                                         PassiveTreeView {
                                             Layout.fillWidth: true
-                                            Layout.preferredHeight: 420
+                                            Layout.preferredHeight: 460
                                             treeData: root._treeData
-                                            classIcon: detail.current ? (detail.current.classIcon || "") : ""
+                                            charClass:      detail.current ? (detail.current.charClass  || "") : ""
                                             ascendancyName: detail.current ? (detail.current.ascendancy || "") : ""
-                                            allocatedNodeIds: modelData.allocatedIds || []
+                                            allocatedNodeIds: modelData.allocatedIds  || []
                                             ascendancyIds:    modelData.ascendancyIds || []
                                         }
 

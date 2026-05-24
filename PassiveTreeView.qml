@@ -1,20 +1,19 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 
-// Renders the PoE2 passive tree using PoB Community tree data.
+// Renders the PoE2 passive tree for a build guide, with the build's
+// allocated nodes highlighted gold and the ascendancy overlaid on a
+// character portrait at the centre — same visual style as the
+// standalone tree viewer.
+//
 // Required properties:
 //   treeData          : object loaded from .cache/tree.json
 //   allocatedNodeIds  : array of int — main tree allocations
-//   ascendancyIds     : array of int — ascendancy node allocations
-//   ascendancyName    : string — which ascendancy (e.g., "Invoker") to render the
-//                       small inset for. If empty no inset is drawn.
-//   classIcon         : optional URL of the character class icon at the centroid
-//
-// Renders each passive node as the actual PoE2 game icon (sourced from
-// Mobalytics' public CDN, which mirrors GGG's asset paths). Connections
-// stay on Canvas (batched) — allocated nodes/edges glow gold, the rest
-// fade to ~25% opacity so the build's path stands out.
+//   ascendancyIds     : array of int — ascendancy allocations
+//   ascendancyName    : string — e.g. "Invoker"
+//   charClass         : string — e.g. "Monk" (used for portrait URL)
 
 Rectangle {
     id: root
@@ -28,49 +27,56 @@ Rectangle {
     property var    allocatedNodeIds:  []
     property var    ascendancyIds:     []
     property string ascendancyName:    ""
-    property string classIcon:         ""
+    property string charClass:         ""
 
     // View transform
     property real   scale:    0.05
     property real   offsetX:  0
     property real   offsetY:  0
-    property real   minScale: 0.01
+    property real   minScale: 0.015
     property real   maxScale: 0.6
 
-    // Lookups (rebuilt when data/alloc changes)
-    property var    _allocatedSet:   ({})
-    property var    _nodePositions:  ({})
-    property real   _centroidX:      0
-    property real   _centroidY:      0
+    // Lookups
+    property var    _allocatedSet:    ({})
+    property var    _ascAllocSet:     ({})
+    property var    _nodePositions:   ({})
 
     // Hover state
-    property string _hoverId:    ""
+    property string _hoverId:      ""
     property real   _hoverScreenX: 0
     property real   _hoverScreenY: 0
 
     onAllocatedNodeIdsChanged: _rebuildAllocatedSet()
+    onAscendancyIdsChanged:    _rebuildAllocatedSet()
+    onAscendancyNameChanged:   _rebuildPositions()
     onTreeDataChanged:         _rebuildPositions()
     onWidthChanged:            _refit()
     onHeightChanged:           _refit()
 
-    // Map PoB icon paths to Mobalytics CDN WebP URLs.
-    //   "Art/2DArt/SkillIcons/passives/X.dds" → ".../X.webp"
     function _iconUrl(icon) {
         if (!icon || icon.length < 5) return ""
         return "https://cdn.mobalytics.gg/assets/poe-2/images/game/" +
                icon.replace(/\.dds$/i, ".webp")
     }
 
+    function _portraitUrl() {
+        if (!charClass || !ascendancyName) return ""
+        var c = charClass.toLowerCase().replace(/\s+/g, "-")
+        var a = ascendancyName.toLowerCase().replace(/\s+/g, "-")
+        return "https://cdn.mobalytics.gg/assets/poe-2/images/game/classes/header/" + c + "-" + a + ".jpg"
+    }
+
     function _rebuildAllocatedSet() {
-        var s = {}
+        var s = {}, sa = {}
         var arr = allocatedNodeIds || []
         for (var i = 0; i < arr.length; i++) s[String(arr[i])] = true
+        var arr2 = ascendancyIds || []
+        for (var j = 0; j < arr2.length; j++) sa[String(arr2[j])] = true
         _allocatedSet = s
-        // Variants have very different allocation counts. Always refit so the
-        // viewport tracks the new variant's bounds instead of staying zoomed
-        // on the previously-visible build.
+        _ascAllocSet  = sa
         _refit()
         canvas.requestPaint()
+        ascCanvas.requestPaint()
     }
 
     function _rebuildPositions() {
@@ -81,9 +87,6 @@ Rectangle {
         var radii    = treeData.constants.orbitRadii         || []
         var perOrb   = treeData.constants.skillsPerOrbit     || []
         var angTable = treeData.constants.orbitAnglesByOrbit || []
-        var groups = treeData.groups
-        var nodes  = treeData.nodes
-
         function angleFor(orbit, idx) {
             var per = angTable[orbit]
             if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
@@ -91,56 +94,90 @@ Rectangle {
             return (idx / slots) * 2 * Math.PI - Math.PI / 2
         }
 
+        var groups = treeData.groups
+        var nodes  = treeData.nodes
         var out = {}
+        var ascNatural = []
         for (var nid in nodes) {
             var n = nodes[nid]
+            var ascName = n.ascendancyName || ""
+            if (ascName !== "" && ascName !== ascendancyName) continue
+            if ((n.connections || []).length === 0 && n.name === "Attribute") continue
             if (n.group === undefined || n.group === null) continue
-            // Skip PoE2's class-start stat nodes — they have no connections
-            // and are not part of the visual passive tree (just stat boosts
-            // applied to the character).
-            var connCount = (n.connections || []).length
-            if (connCount === 0 && n.name === "Attribute") continue
-            var g = groups[String(n.group)]
-            if (!g) continue
-            var orbit = n.orbit || 0
-            var idx   = n.orbitIndex || 0
-            var r     = radii[orbit] || 0
-            var angle = angleFor(orbit, idx)
-            out[nid] = {
-                id: nid,
-                x:  g.x + r * Math.cos(angle),
-                y:  g.y + r * Math.sin(angle),
-                icon: _iconUrl(n.icon),
-                k:  n.isKeystone ? "keystone" :
-                    n.isNotable ? "notable"  :
-                    n.isJewelSocket ? "jewel" :
-                    n.isMastery ? "mastery" : "normal",
-                a:  n.ascendancyName || ""
+            var g = groups[String(n.group)]; if (!g) continue
+            var orbit = n.orbit || 0, idx = n.orbitIndex || 0
+            var r = radii[orbit] || 0
+            var a = angleFor(orbit, idx)
+            var rx = g.x + r * Math.cos(a)
+            var ry = g.y + r * Math.sin(a)
+            var kind = n.isKeystone ? "keystone" :
+                       n.isNotable  ? "notable"  :
+                       n.isJewelSocket ? "jewel" :
+                       n.isMastery ? "mastery" : "normal"
+            if (ascName === "") {
+                out[nid] = { id: nid, x: rx, y: ry, icon: _iconUrl(n.icon), k: kind, a: "" }
+            } else {
+                ascNatural.push({ nid: nid, rx: rx, ry: ry, icon: _iconUrl(n.icon), k: kind, a: ascName })
+            }
+        }
+
+        // Relocate ascendancy cluster onto the portrait, same logic as
+        // standalone: fit inside ~45% of the portrait diameter, centred on
+        // origin.
+        if (ascNatural.length > 0) {
+            var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9
+            for (var k1 = 0; k1 < ascNatural.length; k1++) {
+                var p = ascNatural[k1]
+                if (p.rx < minX) minX = p.rx
+                if (p.rx > maxX) maxX = p.rx
+                if (p.ry < minY) minY = p.ry
+                if (p.ry > maxY) maxY = p.ry
+            }
+            var cx = (minX + maxX) / 2
+            var cy = (minY + maxY) / 2
+            var spanX = Math.max(1, maxX - minX)
+            var spanY = Math.max(1, maxY - minY)
+            var targetSide = 2200
+            var ascZoom = targetSide / Math.max(spanX, spanY)
+            for (var k2 = 0; k2 < ascNatural.length; k2++) {
+                var ap = ascNatural[k2]
+                out[ap.nid] = {
+                    id: ap.nid,
+                    x:  (ap.rx - cx) * ascZoom,
+                    y:  (ap.ry - cy) * ascZoom,
+                    icon: ap.icon, k: ap.k, a: ap.a
+                }
             }
         }
         _nodePositions = out
         _refit()
     }
 
-    // Stable array view of positions for Repeater
-    property var _posList: {
+    property var _posList:    _buildPosList(false)
+    property var _ascPosList: _buildPosList(true)
+    function _buildPosList(wantAsc) {
         var arr = []
         if (!_nodePositions) return arr
         for (var k in _nodePositions) {
             var p = _nodePositions[k]
-            if (p.a && p.a !== "") continue   // ascendancy nodes live in the inset
+            var isAsc = !!(p.a && p.a !== "")
+            if (isAsc !== wantAsc) continue
             arr.push(p)
         }
         return arr
     }
+    on_NodePositionsChanged: {
+        _posList    = _buildPosList(false)
+        _ascPosList = _buildPosList(true)
+    }
 
     function _refit() {
-        if (!treeData || !_nodePositions) return
+        if (!treeData) return
         var ids = allocatedNodeIds && allocatedNodeIds.length > 0
                   ? allocatedNodeIds
-                  : Object.keys(_nodePositions)
+                  : Object.keys(_nodePositions || {})
         if (!ids.length || width <= 0 || height <= 0) return
-        var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9, n = 0, sx = 0, sy = 0
+        var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9, n = 0
         for (var i = 0; i < ids.length; i++) {
             var p = _nodePositions[String(ids[i])]
             if (!p) continue
@@ -148,102 +185,61 @@ Rectangle {
             if (p.x > maxX) maxX = p.x
             if (p.y < minY) minY = p.y
             if (p.y > maxY) maxY = p.y
-            sx += p.x; sy += p.y; n++
+            n++
         }
         if (n === 0) return
-        _centroidX = sx / n
-        _centroidY = sy / n
-        // Include origin (class start neighborhood) for context
-        if (minX > 0) minX = -200
-        if (minY > 0) minY = -200
-        if (maxX < 0) maxX = 200
-        if (maxY < 0) maxY = 200
+        // Include origin so the portrait + ascendancy stay in view too
+        if (minX > -800) minX = -800
+        if (minY > -800) minY = -800
+        if (maxX <  800) maxX =  800
+        if (maxY <  800) maxY =  800
         var padding = 1200
         minX -= padding; maxX += padding
         minY -= padding; maxY += padding
         var w = maxX - minX, h = maxY - minY
-        if (w <= 0 || h <= 0) return
-        var fx = width  / w
-        var fy = height / h
+        var fx = width / w, fy = height / h
         scale = Math.max(minScale, Math.min(maxScale, Math.min(fx, fy)))
-        var cx = (minX + maxX) / 2
-        var cy = (minY + maxY) / 2
-        offsetX = width  / 2 - cx * scale
-        offsetY = height / 2 - cy * scale
+        var ccx = (minX + maxX) / 2, ccy = (minY + maxY) / 2
+        offsetX = width  / 2 - ccx * scale
+        offsetY = height / 2 - ccy * scale
         canvas.requestPaint()
+        ascCanvas.requestPaint()
     }
 
-    // ── Tree-coord polygon helpers (drawn on the 2D context) ────
-    function _drawStar(ctx, x, y, rOuter, rInner, points) {
-        ctx.beginPath()
-        for (var k = 0; k < points * 2; k++) {
-            var ang = -Math.PI / 2 + k * Math.PI / points
-            var r   = (k % 2 === 0) ? rOuter : rInner
-            var px  = x + r * Math.cos(ang)
-            var py  = y + r * Math.sin(ang)
-            if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
-        }
-        ctx.closePath()
-    }
-    function _drawDiamond(ctx, x, y, rad) {
-        ctx.beginPath()
-        ctx.moveTo(x, y - rad)
-        ctx.lineTo(x + rad, y); ctx.lineTo(x, y + rad); ctx.lineTo(x - rad, y)
-        ctx.closePath()
-    }
-    function _drawHex(ctx, x, y, rad) {
-        ctx.beginPath()
-        for (var i = 0; i < 6; i++) {
-            var ang = -Math.PI / 2 + i * Math.PI / 3
-            var px  = x + rad * Math.cos(ang)
-            var py  = y + rad * Math.sin(ang)
-            if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py)
-        }
-        ctx.closePath()
-    }
-
+    // ── Main-tree connections (background canvas) ──────────────
     Canvas {
         id: canvas
         anchors.fill: parent
         renderStrategy: Canvas.Cooperative
         renderTarget:   Canvas.Image
-
         onPaint: {
             var ctx = getContext("2d")
             ctx.clearRect(0, 0, width, height)
             if (!root.treeData) return
-            var positions = root._nodePositions
-            var allocated = root._allocatedSet
+            var pos = root._nodePositions
+            var alloc = root._allocatedSet
             var nodes = root.treeData.nodes
             var s = root.scale, ox = root.offsetX, oy = root.offsetY
 
-            // ── Connections — dim batch, then bright on top ────
-            // PoB stores edges asymmetrically (only one direction), so we
-            // can't dedupe by id ordering — just draw every connection from
-            // every node. Overlapping draws are invisible anyway.
             var allocEdges = []
             var drawn = {}
-            // Dim steely-blue background lines so the tree's shape stays
-            // legible without competing with the allocated gold path.
             ctx.lineWidth   = Math.max(0.4, 5 * s)
             ctx.strokeStyle = "#3a4a60"
             ctx.beginPath()
             for (var nid in nodes) {
-                var n  = nodes[nid]
-                var pa = positions[nid]
-                if (!pa || (n.ascendancyName && n.ascendancyName !== "")) continue
+                var n = nodes[nid]
+                if (n.ascendancyName && n.ascendancyName !== "") continue
+                var pa = pos[nid]; if (!pa) continue
                 var conns = n.connections || []
                 for (var c = 0; c < conns.length; c++) {
                     var oid = String(conns[c].id)
-                    var pb  = positions[oid]
-                    if (!pb) continue
+                    var pb = pos[oid]; if (!pb) continue
                     var nOther = nodes[oid]
                     if (nOther && nOther.ascendancyName) continue
-                    // canonical key for de-dup without losing asymmetric edges
-                    var ka = parseInt(nid) < parseInt(oid) ? nid + "_" + oid : oid + "_" + nid
-                    if (drawn[ka]) continue
-                    drawn[ka] = true
-                    if (allocated[nid] && allocated[oid]) { allocEdges.push([pa, pb]); continue }
+                    var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
+                    if (drawn[key]) continue
+                    drawn[key] = true
+                    if (alloc[nid] && alloc[oid]) { allocEdges.push([pa, pb]); continue }
                     ctx.moveTo(pa.x * s + ox, pa.y * s + oy)
                     ctx.lineTo(pb.x * s + ox, pb.y * s + oy)
                 }
@@ -262,7 +258,7 @@ Rectangle {
         }
     }
 
-    // ── Nodes layer (real PoE2 icons via WebP CDN) ─────────────
+    // ── Main-tree nodes (icons + allocation halo) ──────────────
     Item {
         id: nodesLayer
         anchors.fill: parent
@@ -270,27 +266,25 @@ Rectangle {
             model: root._posList
             Item {
                 property bool isAlloc: !!root._allocatedSet[modelData.id]
-                property real baseSize: modelData.k === "keystone" ? 64
-                                      : modelData.k === "notable"  ? 52
-                                      : modelData.k === "jewel"    ? 44
-                                      : modelData.k === "mastery"  ? 36
-                                      : 28
-                property real renderSize: Math.max(4, baseSize * root.scale)
+                property real baseSize: modelData.k === "keystone" ? 200
+                                      : modelData.k === "notable"  ? 160
+                                      : modelData.k === "jewel"    ? 130
+                                      : modelData.k === "mastery"  ? 110
+                                      : 80
+                property real renderSize: Math.max(6, baseSize * root.scale)
                 width:  renderSize * (isAlloc ? 1.15 : 1)
                 height: width
                 x: modelData.x * root.scale + root.offsetX - width / 2
                 y: modelData.y * root.scale + root.offsetY - height / 2
-                opacity: isAlloc ? 1.0 : 0.28
+                opacity: isAlloc ? 1.0 : 0.32
                 visible: renderSize > 2.5
                          && (x + width)  > -8 && x < nodesLayer.width  + 8
                          && (y + height) > -8 && y < nodesLayer.height + 8
 
-                // Gold glow halo behind allocated icons
                 Rectangle {
                     visible: parent.isAlloc
                     anchors.centerIn: parent
-                    width:  parent.width  * 1.6
-                    height: parent.height * 1.6
+                    width: parent.width * 1.6; height: width
                     radius: width / 2
                     color: "transparent"
                     border.color: "#d4a843"
@@ -311,9 +305,156 @@ Rectangle {
         }
     }
 
-    // (Class portrait now drawn inside the ascendancy inset below.)
+    // ── Class portrait at origin (covers class-start area) ─────
+    Item {
+        id: portrait
+        visible: !!_portraitUrl() && portraitImg.status === Image.Ready
+        x: root.offsetX - width  / 2
+        y: root.offsetY - height / 2
+        width:  4800 * root.scale
+        height: width
+        z: 1
 
-    // ── Mouse interaction: pan, zoom, hover ────────────────────
+        Image {
+            id: portraitImg
+            anchors.fill: parent
+            source: root._portraitUrl()
+            fillMode: Image.PreserveAspectCrop
+            asynchronous: true
+            cache: true
+            layer.enabled: true
+            layer.effect: MultiEffect {
+                maskEnabled: true
+                maskSource: portraitMask
+                maskThresholdMin: 0.5
+            }
+        }
+        Item {
+            id: portraitMask
+            anchors.fill: portrait
+            visible: false
+            layer.enabled: true
+            Rectangle { anchors.fill: parent; radius: width / 2; color: "white" }
+        }
+        Rectangle {
+            anchors.fill: parent
+            radius: width / 2
+            color: "transparent"
+            border.color: "#8b7355"
+            border.width: Math.max(1, 3 * root.scale * 20)
+        }
+    }
+
+    // ── Ascendancy connection lines (above portrait) ──────────
+    Canvas {
+        id: ascCanvas
+        anchors.fill: parent
+        renderStrategy: Canvas.Cooperative
+        renderTarget:   Canvas.Image
+        z: 2
+        onPaint: {
+            var ctx = getContext("2d")
+            ctx.clearRect(0, 0, width, height)
+            if (!root.treeData || !root.ascendancyName) return
+            var pos = root._nodePositions
+            var alloc = root._ascAllocSet
+            var nodes = root.treeData.nodes
+            var s = root.scale, ox = root.offsetX, oy = root.offsetY
+            var allocEdges = []
+            var drawn = {}
+            ctx.lineWidth   = Math.max(0.7, 7 * s)
+            ctx.strokeStyle = "#8a9ab0"
+            ctx.beginPath()
+            for (var nid in nodes) {
+                var n = nodes[nid]
+                if (!n.ascendancyName || n.ascendancyName !== root.ascendancyName) continue
+                var pa = pos[nid]; if (!pa) continue
+                var conns = n.connections || []
+                for (var c = 0; c < conns.length; c++) {
+                    var oid = String(conns[c].id)
+                    var pb = pos[oid]; if (!pb) continue
+                    var nOther = nodes[oid]
+                    if (!nOther || nOther.ascendancyName !== root.ascendancyName) continue
+                    var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
+                    if (drawn[key]) continue
+                    drawn[key] = true
+                    if (alloc[nid] && alloc[oid]) { allocEdges.push([pa, pb]); continue }
+                    ctx.moveTo(pa.x * s + ox, pa.y * s + oy)
+                    ctx.lineTo(pb.x * s + ox, pb.y * s + oy)
+                }
+            }
+            ctx.stroke()
+            // Allocated ascendancy edges in gold
+            ctx.lineWidth   = Math.max(1.5, 9 * s)
+            ctx.strokeStyle = "#d4a843"
+            ctx.beginPath()
+            for (var e = 0; e < allocEdges.length; e++) {
+                var ea = allocEdges[e][0], eb = allocEdges[e][1]
+                ctx.moveTo(ea.x * s + ox, ea.y * s + oy)
+                ctx.lineTo(eb.x * s + ox, eb.y * s + oy)
+            }
+            ctx.stroke()
+        }
+    }
+
+    // ── Ascendancy framed nodes on top of portrait ────────────
+    Item {
+        id: ascLayer
+        anchors.fill: parent
+        z: 3
+        Repeater {
+            model: root._ascPosList
+            Item {
+                property bool isAlloc: !!root._ascAllocSet[modelData.id]
+                property real baseSize: modelData.k === "keystone" ? 220
+                                      : modelData.k === "notable"  ? 180
+                                      : modelData.k === "jewel"    ? 160
+                                      : 120
+                property real renderSize: Math.max(12, baseSize * root.scale)
+                width:  renderSize * (isAlloc ? 1.1 : 1)
+                height: width
+                x: modelData.x * root.scale + root.offsetX - width / 2
+                y: modelData.y * root.scale + root.offsetY - height / 2
+                opacity: isAlloc ? 1.0 : 0.55
+                visible: renderSize > 5
+                         && (x + width)  > -10 && x < ascLayer.width  + 10
+                         && (y + height) > -10 && y < ascLayer.height + 10
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: width / 2
+                    color: "#1a1c24"
+                    border.width: Math.max(1.5, parent.renderSize / 14)
+                    border.color: parent.isAlloc ? "#ffd060"
+                                : modelData.k === "keystone" ? "#ffd060"
+                                : modelData.k === "notable"  ? "#d4a843"
+                                : modelData.k === "jewel"    ? "#7adde0"
+                                                             : "#8a96b0"
+                }
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: Math.max(1, parent.renderSize / 14)
+                    radius: width / 2
+                    color: "transparent"
+                    border.color: "#3a3a45"
+                    border.width: 1
+                }
+                Image {
+                    anchors.fill: parent
+                    anchors.margins: Math.max(2, parent.renderSize * 0.18)
+                    source: modelData.icon
+                    sourceSize.width:  Math.round(parent.baseSize)
+                    sourceSize.height: Math.round(parent.baseSize)
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    cache: true
+                    smooth: true
+                }
+            }
+        }
+    }
+
+    // ── Pan + zoom + hover ────────────────────────────────────
     MouseArea {
         id: viewMouse
         anchors.fill: parent
@@ -329,6 +470,7 @@ Rectangle {
                 root.offsetY += (mouseY - lastY)
                 lastX = mouseX; lastY = mouseY
                 canvas.requestPaint()
+                ascCanvas.requestPaint()
                 root._hoverId = ""
             } else {
                 root._updateHover(mouseX, mouseY)
@@ -344,23 +486,21 @@ Rectangle {
             root.offsetX = wheel.x - tx * newScale
             root.offsetY = wheel.y - ty * newScale
             canvas.requestPaint()
+            ascCanvas.requestPaint()
             root._updateHover(wheel.x, wheel.y)
         }
     }
 
     function _updateHover(mx, my) {
         if (!_nodePositions) return
-        // Convert mouse to tree coords
         var tx = (mx - offsetX) / scale
         var ty = (my - offsetY) / scale
         var bestId = "", bestDist = 1e9
-        // Generous hit radius scaled with current zoom
         var hitR = 80 / Math.max(0.02, scale)
         for (var nid in _nodePositions) {
             var p = _nodePositions[nid]
-            if (p.a && p.a !== "") continue
             var dx = p.x - tx, dy = p.y - ty
-            var d  = dx * dx + dy * dy
+            var d = dx * dx + dy * dy
             if (d < hitR * hitR && d < bestDist) { bestDist = d; bestId = nid }
         }
         _hoverId = bestId
@@ -370,7 +510,7 @@ Rectangle {
         }
     }
 
-    // ── Hover tooltip ──────────────────────────────────────────
+    // ── Hover tooltip ─────────────────────────────────────────
     Rectangle {
         id: tip
         visible: root._hoverId !== "" && !!root.treeData
@@ -379,14 +519,12 @@ Rectangle {
         z: 10
         color: "#0c0e14"
         border.color: "#5a6a80"; border.width: 1; radius: 4
-        // Position above-right of the node, clipped to the viewport.
-        property real targetX: root._hoverScreenX + 12
+        property real targetX: root._hoverScreenX + 14
         property real targetY: root._hoverScreenY - implicitHeight - 8
-        x: Math.max(4, Math.min(root.width - implicitWidth - 4, targetX))
+        x: Math.max(4, Math.min(root.width  - implicitWidth  - 4, targetX))
         y: Math.max(4, Math.min(root.height - implicitHeight - 4, targetY < 4 ? root._hoverScreenY + 14 : targetY))
         implicitWidth:  tipCol.implicitWidth  + 14
         implicitHeight: tipCol.implicitHeight + 10
-
         ColumnLayout {
             id: tipCol
             x: 7; y: 5
@@ -408,193 +546,18 @@ Rectangle {
                     Layout.maximumWidth: 280
                 }
             }
-            Text {
-                visible: tip.n && (tip.n.isKeystone || tip.n.isNotable || tip.n.isJewelSocket || tip.n.isMastery)
-                text: tip.n && tip.n.isKeystone ? "Keystone" :
-                      tip.n && tip.n.isNotable  ? "Notable"  :
-                      tip.n && tip.n.isJewelSocket ? "Jewel Socket" :
-                      tip.n && tip.n.isMastery  ? "Mastery"  : ""
-                color: "#5a6a80"; font.pixelSize: 8; font.italic: true
-            }
         }
     }
 
-    // ── Controls overlay (Fit) ─────────────────────────────────
+    // ── Fit button ────────────────────────────────────────────
     Row {
         anchors { right: parent.right; top: parent.top; margins: 6 }
-        spacing: 4
-        z: 6
+        spacing: 4; z: 6
         Rectangle {
             width: 50; height: 22; radius: 3
             color: "#161a20"; border.color: "#2a3040"; border.width: 1
             Text { anchors.centerIn: parent; text: "Fit"; color: "#7adde0"; font.pixelSize: 10 }
             MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: root._refit() }
-        }
-    }
-
-    // ── Ascendancy inset ──────────────────────────────────────
-    // Always-visible inset pinned to the bottom-right of the panel so the
-    // user can see their ascendancy tree regardless of pan/zoom on the
-    // main view.
-    Rectangle {
-        id: ascInset
-        visible: !!root.treeData && !!root.ascendancyName && _ascCount > 0
-        anchors { right: parent.right; bottom: parent.bottom; margins: 10 }
-        width: 240; height: 240; radius: 120
-        color: "#0c0e14"
-        border.color: "#5a4a30"; border.width: 1
-        z: 6
-
-        property var  _ascPositions: ({})
-        property real _ascCenterX:   0
-        property real _ascCenterY:   0
-        property real _ascRadius:    1
-        property int  _ascCount:     0
-
-        // Per-ascendancy allocated set (string ids)
-        property var  _ascAllocSet:  ({})
-
-        onVisibleChanged: if (visible) _rebuild()
-
-        Connections {
-            target: root
-            function onTreeDataChanged()      { ascInset._rebuild() }
-            function onAscendancyNameChanged(){ ascInset._rebuild() }
-            function onAscendancyIdsChanged() { ascInset._rebuildAlloc(); ascCanvas.requestPaint() }
-        }
-
-        function _rebuildAlloc() {
-            var s = {}, arr = root.ascendancyIds || []
-            for (var i = 0; i < arr.length; i++) s[String(arr[i])] = true
-            _ascAllocSet = s
-        }
-
-        function _rebuild() {
-            _rebuildAlloc()
-            if (!root.treeData || !root.ascendancyName) { _ascCount = 0; return }
-            var radii    = root.treeData.constants.orbitRadii         || []
-            var perOrb   = root.treeData.constants.skillsPerOrbit     || []
-            var angTable = root.treeData.constants.orbitAnglesByOrbit || []
-            var nodes    = root.treeData.nodes
-            var groups   = root.treeData.groups
-            var positions = {}
-            var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9, count = 0
-            function angleFor(orbit, idx) {
-                var per = angTable[orbit]
-                if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
-                var slots = perOrb[orbit] || 1
-                return (idx / slots) * 2 * Math.PI - Math.PI / 2
-            }
-            for (var nid in nodes) {
-                var n = nodes[nid]
-                if (n.ascendancyName !== root.ascendancyName) continue
-                var g = groups[String(n.group)]
-                if (!g) continue
-                var orbit = n.orbit || 0, idx = n.orbitIndex || 0
-                var r = radii[orbit] || 0
-                var a = angleFor(orbit, idx)
-                var px = g.x + r * Math.cos(a)
-                var py = g.y + r * Math.sin(a)
-                positions[nid] = {
-                    x: px, y: py,
-                    k: n.isKeystone ? "keystone" :
-                       n.isNotable ? "notable" :
-                       n.isJewelSocket ? "jewel" :
-                       n.isMastery ? "mastery" : "normal"
-                }
-                if (px < minX) minX = px
-                if (px > maxX) maxX = px
-                if (py < minY) minY = py
-                if (py > maxY) maxY = py
-                count++
-            }
-            _ascPositions = positions
-            _ascCount     = count
-            if (count > 0) {
-                _ascCenterX = (minX + maxX) / 2
-                _ascCenterY = (minY + maxY) / 2
-                _ascRadius  = Math.max(maxX - minX, maxY - minY) / 2 + 50
-            }
-            ascCanvas.requestPaint()
-        }
-
-        Canvas {
-            id: ascCanvas
-            anchors.fill: parent
-            renderStrategy: Canvas.Cooperative
-            onPaint: {
-                var ctx = getContext("2d")
-                ctx.clearRect(0, 0, width, height)
-                if (ascInset._ascCount === 0) return
-                var pos = ascInset._ascPositions
-                var alloc = ascInset._ascAllocSet
-                var nodes = root.treeData.nodes
-                var s  = (Math.min(width, height) - 24) / (2 * ascInset._ascRadius)
-                var cx = width  / 2 - ascInset._ascCenterX * s
-                var cy = height / 2 - ascInset._ascCenterY * s
-
-                // Edges
-                var allocEdges = []
-                var drawn = {}
-                ctx.lineWidth   = 1.2
-                ctx.strokeStyle = "#2a2530"
-                ctx.beginPath()
-                for (var nid in nodes) {
-                    if (!pos[nid]) continue
-                    var pa = pos[nid]
-                    var conns = nodes[nid].connections || []
-                    for (var c = 0; c < conns.length; c++) {
-                        var oid = String(conns[c].id)
-                        var pb  = pos[oid]
-                        if (!pb) continue
-                        var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
-                        if (drawn[key]) continue
-                        drawn[key] = true
-                        if (alloc[nid] && alloc[oid]) { allocEdges.push([pa, pb]); continue }
-                        ctx.moveTo(pa.x*s+cx, pa.y*s+cy)
-                        ctx.lineTo(pb.x*s+cx, pb.y*s+cy)
-                    }
-                }
-                ctx.stroke()
-                ctx.lineWidth   = 2.5
-                ctx.strokeStyle = "#d4a843"
-                ctx.beginPath()
-                for (var e = 0; e < allocEdges.length; e++) {
-                    var ea = allocEdges[e][0], eb = allocEdges[e][1]
-                    ctx.moveTo(ea.x*s+cx, ea.y*s+cy)
-                    ctx.lineTo(eb.x*s+cx, eb.y*s+cy)
-                }
-                ctx.stroke()
-
-                // Nodes
-                for (var nid2 in pos) {
-                    var p = pos[nid2]
-                    var isAlloc = !!alloc[nid2]
-                    var x = p.x*s+cx, y = p.y*s+cy
-                    var rad = p.k === "keystone" ? 6 : p.k === "notable" ? 5 : p.k === "jewel" ? 4 : 2.5
-                    if (isAlloc) {
-                        ctx.fillStyle   = p.k === "keystone" ? "#ffd060"
-                                        : p.k === "jewel"    ? "#7adde0"
-                                                             : "#d4a843"
-                        ctx.strokeStyle = "#ffe080"
-                        ctx.lineWidth   = 1
-                    } else {
-                        ctx.fillStyle   = "#1c1c25"
-                        ctx.strokeStyle = "#2a2530"
-                        ctx.lineWidth   = 0.5
-                    }
-                    ctx.beginPath()
-                    ctx.arc(x, y, rad, 0, 2*Math.PI)
-                    ctx.fill()
-                    ctx.stroke()
-                }
-            }
-        }
-
-        Text {
-            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10 }
-            text: root.ascendancyName
-            color: "#d4a843"; font.pixelSize: 12; font.bold: true
         }
     }
 }
