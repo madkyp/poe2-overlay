@@ -53,7 +53,7 @@ Accesible desde el icono **📘** del widget Currency Tracker. Pegas una URL del
 - **Tabs de variantes** (Act 1, Act 2, Mapping, Endgame, etc.) — click para cambiar entre ellas igual que en Mobalytics
 - **Gear** con icono, nombre, mods explícitos por slot (16 slots: weapons, armours, jewelry, flasks, charms)
 - **Skill Gems** con icono, nivel y supports asociados
-- **Passive Tree** — resumen con número de nodos + ascendancy + jewels listadas con icono. Botón **🌳 Ver árbol en Mobalytics** para abrir la versión interactiva.
+- **Passive Tree** — árbol completo de PoE2 renderizado dentro de la app (ver imagen abajo): camino dorado de allocations con halo, retrato de la clase en el centro, ascendancy superpuesta en frame circular sobre el retrato. Iconos reales del juego.
 - **PoB code** copiable a un clic
 
 **Características del visor:**
@@ -65,6 +65,20 @@ Accesible desde el icono **📘** del widget Currency Tracker. Pegas una URL del
 - Persistencia local: builds, posición y tamaño se guardan entre sesiones
 
 > ⚠️ **Aviso:** el importador depende de la estructura interna de Mobalytics. Si cambian su esquema de datos puede dejar de funcionar hasta que se actualice el script. Va contra sus términos de servicio en sentido estricto — pensado para uso personal.
+
+<p align="center">
+  <img src="screenshots/builds-passive-tree.png" alt="Árbol de pasivas renderizado dentro de la build" width="900">
+  <br><em>Árbol de pasivas dentro de cada build — camino dorado de allocations, retrato de clase en el centro, ascendancy superpuesta</em>
+</p>
+
+**Sobre el árbol de pasivas:**
+- Datos del árbol vienen de [PathOfBuilding Community](https://github.com/PathOfBuildingCommunity/PathOfBuilding-PoE2) (descarga y conversión one-shot vía `scripts/fetch-tree.py` + `scripts/tree-lua-to-json.lua` — se cachea localmente)
+- Iconos individuales de cada nodo se descargan desde la CDN de Mobalytics (que sirve los mismos paths de assets del juego en formato WebP)
+- **Pan** con click izquierdo + arrastrar, **Zoom** con la rueda centrada en el cursor, botón **Fit** para reencuadrar
+- Hover sobre cualquier nodo → tooltip con nombre, stats y tipo (Notable / Keystone / Jewel Socket / Mastery)
+- Cambiar entre variantes de la build (tabs superiores) reencuadra automáticamente al camino de esa variante
+
+También hay un **🌲 visor standalone** del árbol (icono al lado de 📘 en el Currency Tracker) — explorador del árbol entero sin allocations, con selector de clase y ascendancy para ver cualquier combinación de la 8 clases × ascendancies.
 
 ---
 
