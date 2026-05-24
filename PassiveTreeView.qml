@@ -46,7 +46,7 @@ Rectangle {
     property real   _hoverScreenX: 0
     property real   _hoverScreenY: 0
 
-    onAllocatedNodeIdsChanged: _rebuildAllocatedSet()
+    onAllocatedNodeIdsChanged: { _rebuildAllocatedSet(); _rebuildPositions() }
     onAscendancyIdsChanged:    _rebuildAllocatedSet()
     onAscendancyNameChanged:   _rebuildPositions()
     onTreeDataChanged:         _rebuildPositions()
@@ -98,11 +98,17 @@ Rectangle {
         var nodes  = treeData.nodes
         var out = {}
         var ascNatural = []
+        var allocSet = _allocatedSet || {}
         for (var nid in nodes) {
             var n = nodes[nid]
             var ascName = n.ascendancyName || ""
             if (ascName !== "" && ascName !== ascendancyName) continue
-            if ((n.connections || []).length === 0 && n.name === "Attribute") continue
+            // Skip standalone class-start Attribute stubs UNLESS the build
+            // actually allocated them — in PoE2 a few of those nodes act
+            // as implicit bridges between clusters even though PoB stores
+            // them with empty `connections`, and dropping them creates
+            // visible gaps in the gold path.
+            if ((n.connections || []).length === 0 && n.name === "Attribute" && !allocSet[nid]) continue
             if (n.group === undefined || n.group === null) continue
             var g = groups[String(n.group)]; if (!g) continue
             var orbit = n.orbit || 0, idx = n.orbitIndex || 0
