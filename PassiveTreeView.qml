@@ -10,6 +10,11 @@ import QtQuick.Layouts
 //   ascendancyName    : string — which ascendancy (e.g., "Invoker") to render the
 //                       small inset for. If empty no inset is drawn.
 //   classIcon         : optional URL of the character class icon at the centroid
+//
+// Renders each passive node as the actual PoE2 game icon (sourced from
+// Mobalytics' public CDN, which mirrors GGG's asset paths). Connections
+// stay on Canvas (batched) — allocated nodes/edges glow gold, the rest
+// fade to ~25% opacity so the build's path stands out.
 
 Rectangle {
     id: root
@@ -47,6 +52,14 @@ Rectangle {
     onTreeDataChanged:         _rebuildPositions()
     onWidthChanged:            _refit()
     onHeightChanged:           _refit()
+
+    // Map PoB icon paths to Mobalytics CDN WebP URLs.
+    //   "Art/2DArt/SkillIcons/passives/X.dds" → ".../X.webp"
+    function _iconUrl(icon) {
+        if (!icon || icon.length < 5) return ""
+        return "https://cdn.mobalytics.gg/assets/poe-2/images/game/" +
+               icon.replace(/\.dds$/i, ".webp")
+    }
 
     function _rebuildAllocatedSet() {
         var s = {}
@@ -94,8 +107,10 @@ Rectangle {
             var r     = radii[orbit] || 0
             var angle = angleFor(orbit, idx)
             out[nid] = {
+                id: nid,
                 x:  g.x + r * Math.cos(angle),
                 y:  g.y + r * Math.sin(angle),
+                icon: _iconUrl(n.icon),
                 k:  n.isKeystone ? "keystone" :
                     n.isNotable ? "notable"  :
                     n.isJewelSocket ? "jewel" :
@@ -105,6 +120,18 @@ Rectangle {
         }
         _nodePositions = out
         _refit()
+    }
+
+    // Stable array view of positions for Repeater
+    property var _posList: {
+        var arr = []
+        if (!_nodePositions) return arr
+        for (var k in _nodePositions) {
+            var p = _nodePositions[k]
+            if (p.a && p.a !== "") continue   // ascendancy nodes live in the inset
+            arr.push(p)
+        }
+        return arr
     }
 
     function _refit() {
@@ -230,82 +257,54 @@ Rectangle {
                 ctx.lineTo(eb.x * s + ox, eb.y * s + oy)
             }
             ctx.stroke()
+        }
+    }
 
-            // ── Pass 1: unallocated, dim, shape-by-kind ────────
-            for (var nid2 in positions) {
-                var p = positions[nid2]
-                if (p.a && p.a !== "") continue
-                if (allocated[nid2]) continue
-                var x = p.x * s + ox
-                var y = p.y * s + oy
-                if (x < -10 || x > width + 10 || y < -10 || y > height + 10) continue
-                ctx.fillStyle = "#1c1c25"
-                if (p.k === "notable") {
-                    root._drawStar(ctx, x, y, Math.max(2, 10 * s), Math.max(1, 5 * s), 5)
-                    ctx.fill()
-                } else if (p.k === "keystone") {
-                    root._drawHex(ctx, x, y, Math.max(3, 14 * s))
-                    ctx.fill()
-                } else if (p.k === "jewel") {
-                    root._drawDiamond(ctx, x, y, Math.max(2.5, 10 * s))
-                    ctx.fill()
-                } else if (p.k === "mastery") {
-                    ctx.beginPath()
-                    ctx.arc(x, y, Math.max(1.5, 7 * s), 0, 2 * Math.PI)
-                    ctx.fill()
-                } else {
-                    ctx.beginPath()
-                    ctx.arc(x, y, Math.max(0.8, 4 * s), 0, 2 * Math.PI)
-                    ctx.fill()
-                }
-            }
+    // ── Nodes layer (real PoE2 icons via WebP CDN) ─────────────
+    Item {
+        id: nodesLayer
+        anchors.fill: parent
+        Repeater {
+            model: root._posList
+            Item {
+                property bool isAlloc: !!root._allocatedSet[modelData.id]
+                property real baseSize: modelData.k === "keystone" ? 64
+                                      : modelData.k === "notable"  ? 52
+                                      : modelData.k === "jewel"    ? 44
+                                      : modelData.k === "mastery"  ? 36
+                                      : 28
+                property real renderSize: Math.max(4, baseSize * root.scale)
+                width:  renderSize * (isAlloc ? 1.15 : 1)
+                height: width
+                x: modelData.x * root.scale + root.offsetX - width / 2
+                y: modelData.y * root.scale + root.offsetY - height / 2
+                opacity: isAlloc ? 1.0 : 0.28
+                visible: renderSize > 2.5
+                         && (x + width)  > -8 && x < nodesLayer.width  + 8
+                         && (y + height) > -8 && y < nodesLayer.height + 8
 
-            // ── Pass 2: allocated, glowing, shape-by-kind ──────
-            for (var nid3 in positions) {
-                var pp = positions[nid3]
-                if (pp.a && pp.a !== "") continue
-                if (!allocated[nid3]) continue
-                var xx = pp.x * s + ox
-                var yy = pp.y * s + oy
-                if (xx < -40 || xx > width + 40 || yy < -40 || yy > height + 40) continue
-
-                var arad, afill, astroke
-                if (pp.k === "keystone") {
-                    arad = Math.max(6, 30 * s); afill = "#ffd060"; astroke = "#fff5a0"
-                } else if (pp.k === "notable") {
-                    arad = Math.max(5, 22 * s); afill = "#d4a843"; astroke = "#ffe080"
-                } else if (pp.k === "jewel") {
-                    arad = Math.max(4, 18 * s); afill = "#7adde0"; astroke = "#c0f5f8"
-                } else if (pp.k === "mastery") {
-                    arad = Math.max(3, 14 * s); afill = "#e08545"; astroke = "#ffbf80"
-                } else {
-                    arad = Math.max(2.5, 12 * s); afill = "#d4a843"; astroke = "#ffe080"
+                // Gold glow halo behind allocated icons
+                Rectangle {
+                    visible: parent.isAlloc
+                    anchors.centerIn: parent
+                    width:  parent.width  * 1.6
+                    height: parent.height * 1.6
+                    radius: width / 2
+                    color: "transparent"
+                    border.color: "#d4a843"
+                    border.width: Math.max(1, parent.renderSize / 14)
+                    opacity: 0.45
                 }
-                // Outer glow
-                var grad = ctx.createRadialGradient(xx, yy, 0, xx, yy, arad * 2.2)
-                grad.addColorStop(0,   afill)
-                grad.addColorStop(0.45, afill)
-                grad.addColorStop(1,   "transparent")
-                ctx.fillStyle = grad
-                ctx.beginPath()
-                ctx.arc(xx, yy, arad * 2.2, 0, 2 * Math.PI)
-                ctx.fill()
-                // Shape
-                ctx.fillStyle   = afill
-                ctx.strokeStyle = astroke
-                ctx.lineWidth   = Math.max(0.8, 3 * s)
-                if (pp.k === "notable") {
-                    root._drawStar(ctx, xx, yy, arad, arad * 0.5, 5)
-                } else if (pp.k === "keystone") {
-                    root._drawHex(ctx, xx, yy, arad)
-                } else if (pp.k === "jewel") {
-                    root._drawDiamond(ctx, xx, yy, arad)
-                } else {
-                    ctx.beginPath()
-                    ctx.arc(xx, yy, arad, 0, 2 * Math.PI)
+                Image {
+                    anchors.fill: parent
+                    source: modelData.icon
+                    sourceSize.width:  Math.round(parent.baseSize)
+                    sourceSize.height: Math.round(parent.baseSize)
+                    fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    cache: true
+                    smooth: true
                 }
-                ctx.fill()
-                ctx.stroke()
             }
         }
     }
