@@ -443,13 +443,13 @@ Rectangle {
 
     // ── Ascendancy inset ──────────────────────────────────────
     // Filters all ascendancy nodes by the build's ascendancyName, recenters
-    // their group around (0,0), and renders the small circular tree in the
-    // bottom-right corner.
+    // around their bounding box, and renders the small circular tree in the
+    // bottom-left corner where the main tree usually leaves space.
     Rectangle {
         id: ascInset
         visible: !!root.treeData && !!root.ascendancyName && _ascCount > 0
-        anchors { right: parent.right; bottom: parent.bottom; margins: 8 }
-        width: 200; height: 200; radius: 100
+        anchors { left: parent.left; bottom: parent.bottom; margins: 8 }
+        width: 320; height: 320; radius: 160
         color: "#0c0e14"
         border.color: "#5a4a30"; border.width: 1
         z: 6
@@ -601,9 +601,9 @@ Rectangle {
         }
 
         Text {
-            anchors { left: parent.left; top: parent.top; margins: 6 }
+            anchors { horizontalCenter: parent.horizontalCenter; top: parent.top; topMargin: 10 }
             text: root.ascendancyName
-            color: "#d4a843"; font.pixelSize: 9; font.bold: true
+            color: "#d4a843"; font.pixelSize: 12; font.bold: true
         }
     }
 }
