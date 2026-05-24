@@ -429,11 +429,11 @@ PanelWindow {
                         }
                     }
 
-                    // ─── Pass 2: relocate + scale up the ascendancy cluster
-                    // beside the portrait. The natural cluster spans only
-                    // ~1500 tree units which is tiny next to the main tree;
-                    // we scale it 3× to roughly match the portrait size, and
-                    // shift it just to the right of the portrait.
+                    // ─── Pass 2: centre the ascendancy cluster on the
+                    // portrait (origin). Mobalytics overlays its ascendancy
+                    // mini-tree on top of the character portrait; the nodes
+                    // are drawn after the portrait (lower z on portrait),
+                    // so the icons sit visually on top of the artwork.
                     if (ascNatural.length > 0) {
                         var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9
                         for (var i = 0; i < ascNatural.length; i++) {
@@ -446,13 +446,12 @@ PanelWindow {
                         var cx = (minX + maxX) / 2
                         var cy = (minY + maxY) / 2
                         var ascZoom = 3.0
-                        var targetX = 3200    // just right of portrait edge
-                        var targetY = 0
+                        // Centre on origin (portrait center)
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
                             out[ap.nid] = {
-                                x:    (ap.rx - cx) * ascZoom + targetX,
-                                y:    (ap.ry - cy) * ascZoom + targetY,
+                                x:    (ap.rx - cx) * ascZoom,
+                                y:    (ap.ry - cy) * ascZoom,
                                 icon: ap.icon,
                                 kind: ap.kind,
                                 asc:  ap.asc
@@ -517,7 +516,10 @@ PanelWindow {
                 visible: !!root.selectedClass && !!root.selectedAscendancy && portraitImg.status === Image.Ready
                 x: root.panX - width  / 2
                 y: root.panY - height / 2
-                width:  Math.max(80, Math.min(360, 2400 * root.scale))
+                // Portrait sized to enclose the relocated ascendancy
+                // cluster (~4500 tree units after 3× scale of the ~1500
+                // natural span).
+                width:  Math.max(140, Math.min(540, 4800 * root.scale))
                 height: width
                 z: -1
 
