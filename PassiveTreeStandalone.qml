@@ -451,9 +451,12 @@ PanelWindow {
                         var cy = (minY + maxY) / 2
                         var spanX = Math.max(1, maxX - minX)
                         var spanY = Math.max(1, maxY - minY)
-                        // Target diameter ≈ portrait * 0.65 = 4800*0.65 ≈ 3100 tree units.
-                        var targetDiameter = 3100
-                        var ascZoom = targetDiameter / Math.max(spanX, spanY)
+                        // Fit into a square region inside the portrait (~45%
+                        // of the portrait diameter). Uniform scale on the
+                        // larger of the two spans keeps the natural cluster
+                        // shape but guarantees neither axis pokes out.
+                        var targetSide = 2200
+                        var ascZoom = targetSide / Math.max(spanX, spanY)
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
                             out[ap.nid] = {
@@ -626,11 +629,11 @@ PanelWindow {
                 Repeater {
                     model: nodesView.ascPosList
                     Item {
-                        property real baseSize: modelData.kind === "keystone" ? 130
-                                              : modelData.kind === "notable"  ? 100
-                                              : modelData.kind === "jewel"    ? 90
-                                              : 60
-                        property real renderSize: Math.max(14, baseSize * root.scale)
+                        property real baseSize: modelData.kind === "keystone" ? 90
+                                              : modelData.kind === "notable"  ? 70
+                                              : modelData.kind === "jewel"    ? 64
+                                              : 44
+                        property real renderSize: Math.max(10, baseSize * root.scale)
                         width:  renderSize
                         height: renderSize
                         x: modelData.x * root.scale + root.panX - width / 2
