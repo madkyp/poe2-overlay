@@ -447,13 +447,19 @@ PanelWindow {
                         }
                         var cx = (minX + maxX) / 2
                         var cy = (minY + maxY) / 2
-                        var ascZoom = 3.0
-                        // Centre on origin (portrait center)
+                        // Modest scale so the cluster occupies ~30-40% of the
+                        // portrait — matching Mobalytics' visual weight.
+                        var ascZoom = 1.5
+                        // Shift the cluster slightly up-right, so it floats
+                        // around the character's upper torso instead of
+                        // covering the centre.
+                        var ascOffsetX = 700
+                        var ascOffsetY = -600
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
                             out[ap.nid] = {
-                                x:    (ap.rx - cx) * ascZoom,
-                                y:    (ap.ry - cy) * ascZoom,
+                                x:    (ap.rx - cx) * ascZoom + ascOffsetX,
+                                y:    (ap.ry - cy) * ascZoom + ascOffsetY,
                                 icon: ap.icon,
                                 kind: ap.kind,
                                 asc:  ap.asc
