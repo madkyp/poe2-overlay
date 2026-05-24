@@ -1,0 +1,337 @@
+import Quickshell
+import Quickshell.Io
+import Quickshell.Wayland
+import QtQuick
+import QtQuick.Controls
+import QtQuick.Layouts
+import "js/State.js" as State
+
+// Standalone fullscreen-ish viewer for the PoE2 passive tree.
+// Uses real passive icons from Mobalytics' public CDN (which mirrors
+// PoE2 game assets under the same path scheme PoB uses):
+//   Art/2DArt/SkillIcons/passives/<x>.dds  →  cdn.mobalytics.gg/.../<x>.webp
+//
+// V1: renders all nodes; connections drawn with Canvas; pan/zoom only.
+// No build-specific allocation highlighting yet — that's the next step
+// once the visuals are validated.
+
+PanelWindow {
+    id: root
+
+    WlrLayershell.layer: WlrLayer.Overlay
+    WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
+    WlrLayershell.margins.left: isOpen ? offsetX : 0
+    WlrLayershell.margins.top:  isOpen ? offsetY : 0
+
+    anchors.top:  true
+    anchors.left: true
+
+    color: "transparent"
+    implicitWidth:  isOpen ? windowW : 1
+    implicitHeight: isOpen ? windowH : 1
+
+    property bool   isOpen:     false
+    property int    offsetX:    200
+    property int    offsetY:    50
+    property real   windowW:    1100
+    property real   windowH:    800
+    property var    treeData:   null
+
+    // View transform (much smaller initial scale than PassiveTreeView since
+    // the panel is bigger and we want to see most of the tree)
+    property real   scale:    0.05
+    property real   panX:     0
+    property real   panY:     0
+    property real   minScale: 0.015
+    property real   maxScale: 0.4
+
+    Component.onCompleted: {
+        State.addPassiveStandaloneListener(function(v) {
+            root.isOpen = v
+            if (v && !root.treeData) root._loadTree()
+        })
+    }
+
+    function _iconUrl(icon) {
+        // PoB stores icon as e.g. "Art/2DArt/SkillIcons/passives/Harrier.dds"
+        if (!icon || icon.length < 5) return ""
+        return "https://cdn.mobalytics.gg/assets/poe-2/images/game/" +
+               icon.replace(/\.dds$/i, ".webp")
+    }
+
+    function _centreTree() {
+        if (!treeData) return
+        panX = windowW / 2
+        panY = windowH / 2
+    }
+
+    // Load tree.json from cache
+    Process {
+        id: loadProc
+        stdout: StdioCollector { id: loadOut }
+        property bool _ran: false
+        onRunningChanged: {
+            if (!running && _ran) {
+                try {
+                    root.treeData = JSON.parse(loadOut.text)
+                    root._centreTree()
+                    canvas.requestPaint()
+                } catch (e) {
+                    console.log("[PassiveTreeStandalone] parse error:", e.message)
+                }
+            }
+        }
+    }
+
+    function _loadTree() {
+        homeResolver.running = true
+    }
+
+    Process {
+        id: homeResolver
+        command: ["sh", "-c", "printf '%s' \"$HOME\""]
+        stdout: StdioCollector { id: homeOut }
+        onRunningChanged: {
+            if (!running) {
+                var home = homeOut.text.trim()
+                loadProc._ran = true
+                loadProc.command = ["sh", "-c",
+                    "F=\"" + home + "/.config/quickshell/poe2/.cache/tree.json\"; " +
+                    "if [ ! -f \"$F\" ]; then " +
+                    "/usr/bin/python3 \"" + home + "/.config/quickshell/poe2/scripts/fetch-tree.py\" >&2; " +
+                    "fi; cat \"$F\""]
+                loadProc.running = true
+            }
+        }
+    }
+
+    Rectangle {
+        id: panel
+        visible: root.isOpen
+        anchors.fill: parent
+        color: "#080a0f"
+        border.color: "#8B7355"
+        border.width: 1
+        radius: 8
+
+        // ── Header bar ────────────────────────────────────────
+        Rectangle {
+            id: header
+            anchors { left: parent.left; right: parent.right; top: parent.top }
+            height: 36
+            color: "#1c1c1e"
+            radius: 8
+
+            RowLayout {
+                anchors { fill: parent; leftMargin: 12; rightMargin: 12 }
+                spacing: 10
+
+                Text {
+                    text: "⠿  🌲  PoE2 Passive Tree"
+                    color: "#d4a843"; font.pixelSize: 13; font.bold: true
+                    Layout.fillWidth: true
+                    MouseArea {
+                        anchors.fill: parent
+                        property real mx: 0; property real my: 0
+                        property int  ox: 0; property int  oy: 0
+                        cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                        onPressed:         { mx = mouseX; my = mouseY; ox = root.offsetX; oy = root.offsetY }
+                        onPositionChanged: { if (pressed) { root.offsetX = Math.max(0, ox + (mouseX - mx)); root.offsetY = Math.max(0, oy + (mouseY - my)) } }
+                    }
+                }
+
+                Text {
+                    text: "Zoom: " + Math.round(root.scale * 1000) / 10 + "%"
+                    color: "#5a5a5a"; font.pixelSize: 10
+                }
+
+                Rectangle {
+                    width: 28; height: 22; radius: 3
+                    color: "#161a20"; border.color: "#2a3040"; border.width: 1
+                    Text { anchors.centerIn: parent; text: "Fit"; color: "#7adde0"; font.pixelSize: 9 }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: { root.scale = 0.05; root._centreTree(); canvas.requestPaint() } }
+                }
+
+                Text {
+                    text: "✕"
+                    color: "#9a6a50"; font.pixelSize: 14
+                    MouseArea {
+                        anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                        onClicked: State.setPassiveStandaloneOpen(false)
+                    }
+                }
+            }
+        }
+
+        // ── Tree viewport ─────────────────────────────────────
+        Item {
+            id: viewport
+            anchors { left: parent.left; right: parent.right; top: header.bottom; bottom: parent.bottom }
+            clip: true
+
+            // Connections layer (dim grey, on Canvas for batching)
+            Canvas {
+                id: canvas
+                anchors.fill: parent
+                renderStrategy: Canvas.Cooperative
+                renderTarget:   Canvas.Image
+                onPaint: {
+                    var ctx = getContext("2d")
+                    ctx.clearRect(0, 0, width, height)
+                    if (!root.treeData || !root.treeData.nodes) return
+                    var positions = nodesView.positionsById
+                    if (!positions) return
+                    var s = root.scale, ox = root.panX, oy = root.panY
+                    var nodes = root.treeData.nodes
+                    var drawn = {}
+                    ctx.lineWidth   = Math.max(0.3, 4 * s)
+                    ctx.strokeStyle = "#2a2530"
+                    ctx.beginPath()
+                    for (var nid in nodes) {
+                        var n  = nodes[nid]
+                        var pa = positions[nid]
+                        if (!pa || (n.ascendancyName && n.ascendancyName !== "")) continue
+                        var conns = n.connections || []
+                        for (var c = 0; c < conns.length; c++) {
+                            var oid = String(conns[c].id)
+                            var pb  = positions[oid]
+                            if (!pb) continue
+                            var nOther = nodes[oid]
+                            if (nOther && nOther.ascendancyName) continue
+                            var key = parseInt(nid) < parseInt(oid) ? nid+"_"+oid : oid+"_"+nid
+                            if (drawn[key]) continue
+                            drawn[key] = true
+                            ctx.moveTo(pa.x * s + ox, pa.y * s + oy)
+                            ctx.lineTo(pb.x * s + ox, pb.y * s + oy)
+                        }
+                    }
+                    ctx.stroke()
+                }
+            }
+
+            // Icons layer (Repeater of Images)
+            Item {
+                id: nodesView
+                anchors.fill: parent
+
+                // Pre-compute node positions: { id: {x, y, icon, kind} }
+                property var positionsById: _computePositions()
+                function _computePositions() {
+                    if (!root.treeData) return {}
+                    var radii    = root.treeData.constants.orbitRadii         || []
+                    var perOrb   = root.treeData.constants.skillsPerOrbit     || []
+                    var angTable = root.treeData.constants.orbitAnglesByOrbit || []
+                    function angleFor(orbit, idx) {
+                        var per = angTable[orbit]
+                        if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
+                        var slots = perOrb[orbit] || 1
+                        return (idx / slots) * 2 * Math.PI - Math.PI / 2
+                    }
+                    var out = {}
+                    var groups = root.treeData.groups
+                    var nodes  = root.treeData.nodes
+                    for (var nid in nodes) {
+                        var n = nodes[nid]
+                        if (n.ascendancyName && n.ascendancyName !== "") continue
+                        if ((n.connections || []).length === 0 && n.name === "Attribute") continue
+                        if (n.group === undefined || n.group === null) continue
+                        var g = groups[String(n.group)]; if (!g) continue
+                        var orbit = n.orbit || 0, idx = n.orbitIndex || 0
+                        var r = radii[orbit] || 0
+                        var a = angleFor(orbit, idx)
+                        out[nid] = {
+                            x:    g.x + r * Math.cos(a),
+                            y:    g.y + r * Math.sin(a),
+                            icon: root._iconUrl(n.icon),
+                            kind: n.isKeystone ? "keystone" :
+                                  n.isNotable  ? "notable"  :
+                                  n.isJewelSocket ? "jewel" :
+                                  n.isMastery ? "mastery" : "normal"
+                        }
+                    }
+                    return out
+                }
+
+                // When tree data loads, recompute
+                Connections {
+                    target: root
+                    function onTreeDataChanged() { nodesView.positionsById = nodesView._computePositions() }
+                }
+
+                // Build an array model from positionsById (Repeater takes arrays/JS)
+                property var posList: {
+                    var arr = []
+                    if (!positionsById) return arr
+                    for (var k in positionsById) {
+                        var p = positionsById[k]
+                        arr.push({ id: k, x: p.x, y: p.y, icon: p.icon, kind: p.kind })
+                    }
+                    return arr
+                }
+
+                Repeater {
+                    model: nodesView.posList
+                    Image {
+                        // Tile size scales with zoom. Notables get a bit bigger.
+                        property real baseSize: modelData.kind === "keystone" ? 64
+                                              : modelData.kind === "notable"  ? 56
+                                              : modelData.kind === "jewel"    ? 44
+                                              : modelData.kind === "mastery"  ? 40
+                                              : 32
+                        property real renderSize: Math.max(6, baseSize * root.scale)
+                        width:  renderSize
+                        height: renderSize
+                        x: modelData.x * root.scale + root.panX - width / 2
+                        y: modelData.y * root.scale + root.panY - height / 2
+                        sourceSize.width:  Math.round(baseSize)
+                        sourceSize.height: Math.round(baseSize)
+                        source: modelData.icon
+                        asynchronous: true
+                        cache: true
+                        fillMode: Image.PreserveAspectFit
+                        // Visibility culling — only show nodes inside viewport
+                        visible: renderSize > 3
+                                 && (x + width)  > -10 && x < viewport.width  + 10
+                                 && (y + height) > -10 && y < viewport.height + 10
+                    }
+                }
+            }
+
+            // ── Pan + zoom ────────────────────────────────────
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                acceptedButtons: Qt.LeftButton
+                property real lastX: 0
+                property real lastY: 0
+                onPressed:         { lastX = mouseX; lastY = mouseY }
+                onPositionChanged: {
+                    if (pressed) {
+                        root.panX += (mouseX - lastX)
+                        root.panY += (mouseY - lastY)
+                        lastX = mouseX; lastY = mouseY
+                        canvas.requestPaint()
+                    }
+                }
+                onWheel: function(wheel) {
+                    var factor = wheel.angleDelta.y > 0 ? 1.15 : 1 / 1.15
+                    var newScale = Math.max(root.minScale, Math.min(root.maxScale, root.scale * factor))
+                    var tx = (wheel.x - root.panX) / root.scale
+                    var ty = (wheel.y - root.panY) / root.scale
+                    root.scale = newScale
+                    root.panX = wheel.x - tx * newScale
+                    root.panY = wheel.y - ty * newScale
+                    canvas.requestPaint()
+                }
+            }
+
+            // Loading state
+            Text {
+                visible: !root.treeData
+                anchors.centerIn: parent
+                text: "Cargando árbol…"
+                color: "#7a6a50"; font.pixelSize: 12
+            }
+        }
+    }
+}

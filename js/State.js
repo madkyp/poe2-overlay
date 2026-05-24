@@ -22,6 +22,17 @@ function setBuildsOpen(v) {
 function isBuildsOpen() { return _buildsOpen }
 function addBuildsOpenListener(fn) { _buildsListeners.push(fn) }
 
+// ── Standalone passive tree viewer open/close ────────────────
+var _passiveStandaloneOpen = false
+var _passiveStandaloneListeners = []
+
+function setPassiveStandaloneOpen(v) {
+    _passiveStandaloneOpen = (v === true)
+    for (var i = 0; i < _passiveStandaloneListeners.length; i++) _passiveStandaloneListeners[i](_passiveStandaloneOpen)
+}
+function isPassiveStandaloneOpen() { return _passiveStandaloneOpen }
+function addPassiveStandaloneListener(fn) { _passiveStandaloneListeners.push(fn) }
+
 // ── Currency rate cache ──────────────────────────────────────
 // entries: Array of { id, name, icon, chaosValue }
 var _entries = []

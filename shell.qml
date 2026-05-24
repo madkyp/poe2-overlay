@@ -7,4 +7,5 @@ ShellRoot {
     BuildNotes {}
     EconomyWindow {}
     BuildsWindow {}
+    PassiveTreeStandalone {}
 }

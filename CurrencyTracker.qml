@@ -204,6 +204,10 @@ PanelWindow {
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: State.setBuildsOpen(true) }
                 }
                 Text {
+                    text: "🌲"; color: "#8B7355"; font.pixelSize: 10; rightPadding: 4
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: State.setPassiveStandaloneOpen(true) }
+                }
+                Text {
                     text: State.isFetching() ? "..." : "↺"; color: "#7a6a50"; font.pixelSize: 11
                     MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor }
                 }
