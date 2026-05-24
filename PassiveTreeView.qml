@@ -82,6 +82,11 @@ Rectangle {
         for (var nid in nodes) {
             var n = nodes[nid]
             if (n.group === undefined || n.group === null) continue
+            // Skip PoE2's class-start stat nodes — they have no connections
+            // and are not part of the visual passive tree (just stat boosts
+            // applied to the character).
+            var connCount = (n.connections || []).length
+            if (connCount === 0 && n.name === "Attribute") continue
             var g = groups[String(n.group)]
             if (!g) continue
             var orbit = n.orbit || 0
