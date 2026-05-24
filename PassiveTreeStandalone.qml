@@ -530,7 +530,11 @@ PanelWindow {
                 visible: !!root.selectedClass && !!root.selectedAscendancy && portraitImg.status === Image.Ready
                 x: root.panX - width  / 2
                 y: root.panY - height / 2
-                width:  Math.max(140, Math.min(540, 4800 * root.scale))
+                // Portrait scales linearly with the world (4800 tree-units
+                // wide) so it stays locked to the same area as the
+                // ascendancy cluster on top — no clamping, since clamping
+                // would desynchronise the two when the user zooms.
+                width:  4800 * root.scale
                 height: width
                 z: 1
 
