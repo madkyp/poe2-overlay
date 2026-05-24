@@ -398,14 +398,16 @@ PanelWindow {
                         var slots = perOrb[orbit] || 1
                         return (idx / slots) * 2 * Math.PI - Math.PI / 2
                     }
-                    var out = {}
                     var groups = root.treeData.groups
                     var nodes  = root.treeData.nodes
                     var selectedAsc = root.selectedAscendancy
+
+                    // ─── Pass 1: main-tree positions
+                    var out = {}
+                    var ascNatural = []   // [{ nid, rx, ry, icon, kind }] in original coords
                     for (var nid in nodes) {
                         var n = nodes[nid]
                         var ascName = n.ascendancyName || ""
-                        // Include: main-tree nodes (no ascendancy) AND the selected ascendancy's nodes
                         if (ascName !== "" && ascName !== selectedAsc) continue
                         if ((n.connections || []).length === 0 && n.name === "Attribute") continue
                         if (n.group === undefined || n.group === null) continue
@@ -413,15 +415,47 @@ PanelWindow {
                         var orbit = n.orbit || 0, idx = n.orbitIndex || 0
                         var r = radii[orbit] || 0
                         var a = angleFor(orbit, idx)
-                        out[nid] = {
-                            x:    g.x + r * Math.cos(a),
-                            y:    g.y + r * Math.sin(a),
-                            icon: root._iconUrl(n.icon),
-                            kind: n.isKeystone ? "keystone" :
-                                  n.isNotable  ? "notable"  :
-                                  n.isJewelSocket ? "jewel" :
-                                  n.isMastery ? "mastery" : "normal",
-                            asc:  ascName
+                        var rx = g.x + r * Math.cos(a)
+                        var ry = g.y + r * Math.sin(a)
+                        var kind = n.isKeystone ? "keystone" :
+                                   n.isNotable  ? "notable"  :
+                                   n.isJewelSocket ? "jewel" :
+                                   n.isMastery ? "mastery" : "normal"
+                        if (ascName === "") {
+                            out[nid] = { x: rx, y: ry, icon: root._iconUrl(n.icon), kind: kind, asc: "" }
+                        } else {
+                            ascNatural.push({ nid: nid, rx: rx, ry: ry, icon: root._iconUrl(n.icon), kind: kind, asc: ascName })
+                        }
+                    }
+
+                    // ─── Pass 2: relocate ascendancy beside the portrait
+                    // Mobalytics anchors the ascendancy mini-tree just to the
+                    // right of the class portrait. We do the same by
+                    // recentering its bounding box and offsetting by ~portrait
+                    // radius + margin in the +X direction.
+                    if (ascNatural.length > 0) {
+                        var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9
+                        for (var i = 0; i < ascNatural.length; i++) {
+                            var p = ascNatural[i]
+                            if (p.rx < minX) minX = p.rx
+                            if (p.rx > maxX) maxX = p.rx
+                            if (p.ry < minY) minY = p.ry
+                            if (p.ry > maxY) maxY = p.ry
+                        }
+                        var cx = (minX + maxX) / 2
+                        var cy = (minY + maxY) / 2
+                        // Target centre: ~2000 units to the right of origin (just outside the portrait)
+                        var targetX = 2300
+                        var targetY = 0
+                        for (var j = 0; j < ascNatural.length; j++) {
+                            var ap = ascNatural[j]
+                            out[ap.nid] = {
+                                x:    ap.rx - cx + targetX,
+                                y:    ap.ry - cy + targetY,
+                                icon: ap.icon,
+                                kind: ap.kind,
+                                asc:  ap.asc
+                            }
                         }
                     }
                     return out
