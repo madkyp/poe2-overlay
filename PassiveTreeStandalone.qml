@@ -350,8 +350,9 @@ PanelWindow {
                     var s = root.scale, ox = root.panX, oy = root.panY
                     var nodes = root.treeData.nodes
                     var drawn = {}
-                    ctx.lineWidth   = Math.max(0.3, 4 * s)
-                    ctx.strokeStyle = "#2a2530"
+                    // Brighter steely-blue lines so the tree structure pops
+                    ctx.lineWidth   = Math.max(0.5, 6 * s)
+                    ctx.strokeStyle = "#5a708a"
                     ctx.beginPath()
                     for (var nid in nodes) {
                         var n  = nodes[nid]
@@ -428,11 +429,11 @@ PanelWindow {
                         }
                     }
 
-                    // ─── Pass 2: relocate ascendancy beside the portrait
-                    // Mobalytics anchors the ascendancy mini-tree just to the
-                    // right of the class portrait. We do the same by
-                    // recentering its bounding box and offsetting by ~portrait
-                    // radius + margin in the +X direction.
+                    // ─── Pass 2: relocate + scale up the ascendancy cluster
+                    // beside the portrait. The natural cluster spans only
+                    // ~1500 tree units which is tiny next to the main tree;
+                    // we scale it 3× to roughly match the portrait size, and
+                    // shift it just to the right of the portrait.
                     if (ascNatural.length > 0) {
                         var minX =  1e9, minY =  1e9, maxX = -1e9, maxY = -1e9
                         for (var i = 0; i < ascNatural.length; i++) {
@@ -444,14 +445,14 @@ PanelWindow {
                         }
                         var cx = (minX + maxX) / 2
                         var cy = (minY + maxY) / 2
-                        // Target centre: ~2000 units to the right of origin (just outside the portrait)
-                        var targetX = 2300
+                        var ascZoom = 3.0
+                        var targetX = 3200    // just right of portrait edge
                         var targetY = 0
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
                             out[ap.nid] = {
-                                x:    ap.rx - cx + targetX,
-                                y:    ap.ry - cy + targetY,
+                                x:    (ap.rx - cx) * ascZoom + targetX,
+                                y:    (ap.ry - cy) * ascZoom + targetY,
                                 icon: ap.icon,
                                 kind: ap.kind,
                                 asc:  ap.asc

@@ -223,8 +223,10 @@ Rectangle {
             // every node. Overlapping draws are invisible anyway.
             var allocEdges = []
             var drawn = {}
-            ctx.lineWidth   = Math.max(0.3, 4 * s)
-            ctx.strokeStyle = "#181822"
+            // Dim steely-blue background lines so the tree's shape stays
+            // legible without competing with the allocated gold path.
+            ctx.lineWidth   = Math.max(0.4, 5 * s)
+            ctx.strokeStyle = "#3a4a60"
             ctx.beginPath()
             for (var nid in nodes) {
                 var n  = nodes[nid]
