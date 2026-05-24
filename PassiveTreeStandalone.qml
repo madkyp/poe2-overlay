@@ -45,11 +45,37 @@ PanelWindow {
     property real   minScale: 0.015
     property real   maxScale: 0.4
 
+    // Hover state
+    property string _hoverId:    ""
+    property real   _hoverScreenX: 0
+    property real   _hoverScreenY: 0
+
     Component.onCompleted: {
         State.addPassiveStandaloneListener(function(v) {
             root.isOpen = v
             if (v && !root.treeData) root._loadTree()
         })
+    }
+
+    function _updateHover(mx, my) {
+        var positions = nodesView ? nodesView.positionsById : null
+        if (!positions) { _hoverId = ""; return }
+        // Generous hit radius (in tree coords); scales inversely with zoom
+        var hitR = 80 / Math.max(0.02, scale)
+        var tx = (mx - panX) / scale
+        var ty = (my - panY) / scale
+        var bestId = "", bestDist = 1e9
+        for (var nid in positions) {
+            var p = positions[nid]
+            var dx = p.x - tx, dy = p.y - ty
+            var d  = dx * dx + dy * dy
+            if (d < hitR * hitR && d < bestDist) { bestDist = d; bestId = nid }
+        }
+        _hoverId = bestId
+        if (bestId) {
+            _hoverScreenX = positions[bestId].x * scale + panX
+            _hoverScreenY = positions[bestId].y * scale + panY
+        }
     }
 
     function _iconUrl(icon) {
@@ -297,11 +323,13 @@ PanelWindow {
                 }
             }
 
-            // ── Pan + zoom ────────────────────────────────────
+            // ── Pan + zoom + hover ────────────────────────────
             MouseArea {
+                id: viewMouse
                 anchors.fill: parent
                 cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
                 acceptedButtons: Qt.LeftButton
+                hoverEnabled: true
                 property real lastX: 0
                 property real lastY: 0
                 onPressed:         { lastX = mouseX; lastY = mouseY }
@@ -311,8 +339,12 @@ PanelWindow {
                         root.panY += (mouseY - lastY)
                         lastX = mouseX; lastY = mouseY
                         canvas.requestPaint()
+                        root._hoverId = ""
+                    } else {
+                        root._updateHover(mouseX, mouseY)
                     }
                 }
+                onExited: root._hoverId = ""
                 onWheel: function(wheel) {
                     var factor = wheel.angleDelta.y > 0 ? 1.15 : 1 / 1.15
                     var newScale = Math.max(root.minScale, Math.min(root.maxScale, root.scale * factor))
@@ -322,6 +354,71 @@ PanelWindow {
                     root.panX = wheel.x - tx * newScale
                     root.panY = wheel.y - ty * newScale
                     canvas.requestPaint()
+                    root._updateHover(wheel.x, wheel.y)
+                }
+            }
+
+            // ── Hover tooltip ──────────────────────────────────
+            Rectangle {
+                id: tip
+                visible: root._hoverId !== "" && !!root.treeData
+                readonly property var n: visible && root.treeData && root.treeData.nodes
+                                         ? root.treeData.nodes[root._hoverId] : null
+                z: 10
+                color: "#0c0e14"
+                border.color: "#5a6a80"; border.width: 1; radius: 4
+                property real targetX: root._hoverScreenX + 14
+                property real targetY: root._hoverScreenY - implicitHeight - 8
+                x: Math.max(4, Math.min(viewport.width  - implicitWidth  - 4, targetX))
+                y: Math.max(4, Math.min(viewport.height - implicitHeight - 4, targetY < 4 ? root._hoverScreenY + 14 : targetY))
+                implicitWidth:  tipCol.implicitWidth  + 16
+                implicitHeight: tipCol.implicitHeight + 12
+
+                RowLayout {
+                    id: tipCol
+                    x: 8; y: 6
+                    spacing: 8
+
+                    Image {
+                        visible: tip.n && tip.n.icon
+                        source: tip.n ? root._iconUrl(tip.n.icon) : ""
+                        sourceSize.width: 48; sourceSize.height: 48
+                        width: 48; height: 48
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        cache: true
+                        Layout.alignment: Qt.AlignTop
+                    }
+
+                    ColumnLayout {
+                        spacing: 2
+                        Text {
+                            visible: tip.n
+                            text: tip.n ? (tip.n.name || "") : ""
+                            color: tip.n && tip.n.isKeystone ? "#ff7a3a" :
+                                   tip.n && tip.n.isNotable  ? "#d4a843" :
+                                   tip.n && tip.n.isJewelSocket ? "#7adde0" :
+                                   tip.n && tip.n.isMastery ? "#e08545" : "#c0b090"
+                            font.pixelSize: 12; font.bold: true
+                        }
+                        Repeater {
+                            model: tip.n && tip.n.stats ? tip.n.stats : []
+                            Text {
+                                text: modelData
+                                color: "#9aa8b8"; font.pixelSize: 10
+                                wrapMode: Text.WordWrap
+                                Layout.maximumWidth: 320
+                            }
+                        }
+                        Text {
+                            visible: tip.n && (tip.n.isKeystone || tip.n.isNotable || tip.n.isJewelSocket || tip.n.isMastery)
+                            text: tip.n && tip.n.isKeystone ? "Keystone" :
+                                  tip.n && tip.n.isNotable  ? "Notable"  :
+                                  tip.n && tip.n.isJewelSocket ? "Jewel Socket" :
+                                  tip.n && tip.n.isMastery  ? "Mastery"  : ""
+                            color: "#5a6a80"; font.pixelSize: 9; font.italic: true
+                        }
+                    }
                 }
             }
 
