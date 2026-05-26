@@ -538,13 +538,11 @@ PanelWindow {
                         var cy = (minY + maxY) / 2
                         var spanX = Math.max(1, maxX - minX)
                         var spanY = Math.max(1, maxY - minY)
-                        // Bigger cluster (~70% of portrait diameter) so
-                        // nodes are spread out like Mobalytics. Slight
-                        // X offset so the constellation hugs the right
-                        // half of the portrait.
-                        var targetSide = 3400
+                        // Cluster centred inside the 3000-unit portrait
+                        // (~75% diameter) so the ascendancy nodes breathe.
+                        var targetSide = 2200
                         var ascZoom = targetSide / Math.max(spanX, spanY)
-                        var ascOffsetX = 600
+                        var ascOffsetX = 0
                         var ascOffsetY = 0
                         for (var j = 0; j < ascNatural.length; j++) {
                             var ap = ascNatural[j]
@@ -651,7 +649,7 @@ PanelWindow {
                 sourceClipRect: atlasRect
                                 ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                 : undefined
-                property real worldSize: 2400
+                property real worldSize: 3000
                 width:  worldSize * root.scale
                 height: worldSize * root.scale
                 x: root.panX - width  / 2
@@ -676,7 +674,9 @@ PanelWindow {
                 // wide) so it stays locked to the same area as the
                 // ascendancy cluster on top — no clamping, since clamping
                 // would desynchronise the two when the user zooms.
-                width:  4800 * root.scale
+                // Smaller portrait that hugs the class-start ring without
+                // hiding the outer passive nodes
+                width:  3000 * root.scale
                 height: width
                 z: 1
 

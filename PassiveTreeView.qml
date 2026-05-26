@@ -174,13 +174,12 @@ Rectangle {
             var cy = (minY + maxY) / 2
             var spanX = Math.max(1, maxX - minX)
             var spanY = Math.max(1, maxY - minY)
-            // Bigger cluster (~70% of portrait diameter) so nodes are
-            // spread out like Mobalytics rather than packed tight.
-            var targetSide = 3400
+            // Cluster fits inside the smaller (3000-unit) portrait — about
+            // 75% of its diameter so the ascendancy notables breathe.
+            var targetSide = 2200
             var ascZoom = targetSide / Math.max(spanX, spanY)
-            // Slight offset so the constellation floats over the right
-            // half of the portrait, matching Mobalytics' framing.
-            var ascOffsetX = 600
+            // Centred on the portrait
+            var ascOffsetX = 0
             var ascOffsetY = 0
             for (var k2 = 0; k2 < ascNatural.length; k2++) {
                 var ap = ascNatural[k2]
@@ -395,7 +394,7 @@ Rectangle {
         sourceClipRect: atlasRect
                         ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                         : undefined
-        property real worldSize: 2400
+        property real worldSize: 3000
         width:  worldSize * root.scale
         height: worldSize * root.scale
         x: root.offsetX - width / 2
@@ -412,7 +411,11 @@ Rectangle {
         visible: !!_portraitUrl() && portraitImg.status === Image.Ready
         x: root.offsetX - width  / 2
         y: root.offsetY - height / 2
-        width:  4800 * root.scale
+        // Sized to JUST cover the inner empty area between origin and the
+        // class-start ring (~1400 tree units), so class-start passive
+        // nodes stay visible around the portrait edge instead of being
+        // hidden behind it.
+        width:  3000 * root.scale
         height: width
         z: 1
 
