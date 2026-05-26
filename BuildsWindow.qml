@@ -193,9 +193,11 @@ PanelWindow {
     property var    _treeData:        null
     property bool   _treeLoading:     false
     property string _treeError:       ""
-    // Frame-sprite atlas (cached at .cache/assets/frame.{json,webp})
+    // GGG sprite atlases (cached at .cache/assets/)
     property var    _frameAtlasData:  null
     property string _frameAtlasUrl:   ""
+    property var    _bgAtlasData:     null
+    property string _bgAtlasUrl:      ""
 
     function _ensureTree() {
         if (_treeData || _treeLoading || _homeDir === "") return
@@ -222,13 +224,18 @@ PanelWindow {
                 }
                 try { root._treeData = JSON.parse(text) }
                 catch (e) { root._treeError = "tree.json inválido: " + e.message }
-                // Now also load the sprite atlas (small, ~95KB)
-                root._frameAtlasUrl = "file://" + root._homeDir +
-                                      "/.config/quickshell/poe2/.cache/assets/frame.webp"
+                // Sprite atlases
+                var base = "file://" + root._homeDir + "/.config/quickshell/poe2/.cache/assets/"
+                root._frameAtlasUrl = base + "frame.webp"
+                root._bgAtlasUrl    = base + "group-background.webp"
                 frameJsonProc.command = ["sh", "-c",
                     "cat \"" + root._homeDir +
                     "/.config/quickshell/poe2/.cache/assets/frame.json\" 2>/dev/null"]
                 frameJsonProc.running = true
+                bgJsonProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir +
+                    "/.config/quickshell/poe2/.cache/assets/group-background.json\" 2>/dev/null"]
+                bgJsonProc.running = true
             }
         }
     }
@@ -239,6 +246,16 @@ PanelWindow {
             if (!running) {
                 try { root._frameAtlasData = JSON.parse(frameJsonOut.text) }
                 catch (e) { /* atlas missing — falls back to no frame */ }
+            }
+        }
+    }
+    Process {
+        id: bgJsonProc
+        stdout: StdioCollector { id: bgJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try { root._bgAtlasData = JSON.parse(bgJsonOut.text) }
+                catch (e) { /* optional asset */ }
             }
         }
     }
@@ -916,6 +933,8 @@ PanelWindow {
                                             treeData:         root._treeData
                                             frameAtlasUrl:    root._frameAtlasUrl
                                             frameAtlasData:   root._frameAtlasData
+                                            bgAtlasUrl:       root._bgAtlasUrl
+                                            bgAtlasData:      root._bgAtlasData
                                             charClass:        detail.current ? (detail.current.charClass  || "") : ""
                                             ascendancyName:   detail.current ? (detail.current.ascendancy || "") : ""
                                             allocatedNodeIds: modelData.allocatedIds  || []

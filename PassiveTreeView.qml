@@ -30,9 +30,14 @@ Rectangle {
     property string ascendancyName:    ""
     property string charClass:         ""
 
-    // Local sprite-atlas paths (populated when BuildsWindow resolves $HOME)
-    property string frameAtlasUrl:     ""    // file:// path to frame.webp
-    property var    frameAtlasData:    null  // parsed frame.json
+    // GGG sprite-atlas (frame sprites) — populated by BuildsWindow once
+    // the tree cache is in place.
+    property string frameAtlasUrl:         ""
+    property var    frameAtlasData:        null
+    // Main-circle backdrop behind the class start area (a single big
+    // sprite from group-background.webp)
+    property string bgAtlasUrl:            ""
+    property var    bgAtlasData:           null
 
     // View transform
     property real   scale:    0.05
@@ -343,6 +348,38 @@ Rectangle {
                 }
             }
         }
+    }
+
+    // ── Main-circle backdrop (GGG group-background sprite) ────
+    // The "MainCircle" sprite is the big circular backdrop GGG draws
+    // behind the class-start area at world origin. Placed BEHIND the
+    // portrait (z:0) and BEHIND the main nodes layer (default z:0
+    // declared after Canvas) so it sits below everything else.
+    Image {
+        id: mainCircleBg
+        visible: !!root.bgAtlasUrl && !!root.bgAtlasData
+        source: root.bgAtlasUrl
+        sourceClipRect: {
+            if (!root.bgAtlasData) return Qt.rect(0, 0, 0, 0)
+            var r = root.bgAtlasData.frames
+                    ? root.bgAtlasData.frames["startNode:MainCircle"]
+                      && root.bgAtlasData.frames["startNode:MainCircle"].frame
+                    : null
+            return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+        }
+        // The sprite is 2000×2000 in source pixels, drawn 1:1 with tree
+        // units so it occupies the inner class-start ring naturally.
+        property real worldSize: 2400
+        sourceSize.width:  sourceClipRect.width
+        sourceSize.height: sourceClipRect.height
+        width:  worldSize * root.scale
+        height: worldSize * root.scale
+        x: root.offsetX - width / 2
+        y: root.offsetY - height / 2
+        smooth: true
+        cache: true
+        opacity: 0.55
+        z: -1
     }
 
     // ── Class portrait at origin (covers class-start area) ─────

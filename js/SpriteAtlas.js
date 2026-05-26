@@ -56,3 +56,21 @@ function frame(framesData, name) {
 function rect(framesData, kind, state) {
     return frame(framesData, pickFrame(kind, state))
 }
+
+// Icon sprite lookup — skills.json uses keys like
+//   "<prefix>:Art/2DArt/SkillIcons/passives/X.png"
+// where prefix is normalActive / notableActive / keystoneActive (skills.webp)
+// or normalInactive / notableInactive / keystoneInactive (skills-disabled.webp).
+function iconKey(kind, iconPath, active) {
+    var pref
+    if (kind === "keystone") pref = active ? "keystoneActive" : "keystoneInactive"
+    else if (kind === "notable") pref = active ? "notableActive" : "notableInactive"
+    else                          pref = active ? "normalActive"   : "normalInactive"
+    return pref + ":" + iconPath
+}
+
+function iconRect(skillsData, kind, iconPath, active) {
+    if (!skillsData || !iconPath) return null
+    var key = iconKey(kind, iconPath, active)
+    return frame(skillsData, key)
+}

@@ -6,6 +6,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
 import "js/State.js" as State
+import "js/SpriteAtlas.js" as SpriteAtlas
 
 // Standalone fullscreen-ish viewer for the PoE2 passive tree.
 // Uses real passive icons from Mobalytics' public CDN (which mirrors
@@ -36,7 +37,12 @@ PanelWindow {
     property int    offsetY:    50
     property real   windowW:    1100
     property real   windowH:    800
-    property var    treeData:   null
+    property var    treeData:           null
+    // GGG sprite atlases
+    property string frameAtlasUrl:      ""
+    property var    frameAtlasData:     null
+    property string bgAtlasUrl:         ""
+    property var    bgAtlasData:        null
 
     // View transform (much smaller initial scale than PassiveTreeView since
     // the panel is bigger and we want to see most of the tree)
@@ -154,6 +160,35 @@ PanelWindow {
                     "/usr/bin/python3 \"" + home + "/.config/quickshell/poe2/scripts/fetch-tree.py\" >&2; " +
                     "fi; cat \"$F\""]
                 loadProc.running = true
+                var base = "file://" + home + "/.config/quickshell/poe2/.cache/assets/"
+                root.frameAtlasUrl = base + "frame.webp"
+                root.bgAtlasUrl    = base + "group-background.webp"
+                frameAtlasJsonProc.command = ["sh", "-c",
+                    "cat \"" + home + "/.config/quickshell/poe2/.cache/assets/frame.json\" 2>/dev/null"]
+                frameAtlasJsonProc.running = true
+                bgAtlasJsonProc.command = ["sh", "-c",
+                    "cat \"" + home + "/.config/quickshell/poe2/.cache/assets/group-background.json\" 2>/dev/null"]
+                bgAtlasJsonProc.running = true
+            }
+        }
+    }
+    Process {
+        id: frameAtlasJsonProc
+        stdout: StdioCollector { id: frameAtlasJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try { root.frameAtlasData = JSON.parse(frameAtlasJsonOut.text) }
+                catch (e) { /* optional */ }
+            }
+        }
+    }
+    Process {
+        id: bgAtlasJsonProc
+        stdout: StdioCollector { id: bgAtlasJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try { root.bgAtlasData = JSON.parse(bgAtlasJsonOut.text) }
+                catch (e) { /* optional */ }
             }
         }
     }
@@ -510,7 +545,7 @@ PanelWindow {
 
                 Repeater {
                     model: nodesView.posList
-                    Image {
+                    Item {
                         property real baseSize: modelData.kind === "keystone" ? 200
                                               : modelData.kind === "notable"  ? 160
                                               : modelData.kind === "jewel"    ? 130
@@ -521,17 +556,63 @@ PanelWindow {
                         height: renderSize
                         x: modelData.x * root.scale + root.panX - width / 2
                         y: modelData.y * root.scale + root.panY - height / 2
-                        sourceSize.width:  Math.round(baseSize)
-                        sourceSize.height: Math.round(baseSize)
-                        source: modelData.icon
-                        asynchronous: true
-                        cache: true
-                        fillMode: Image.PreserveAspectFit
                         visible: renderSize > 3
                                  && (x + width)  > -10 && x < viewport.width  + 10
                                  && (y + height) > -10 && y < viewport.height + 10
+
+                        Image {
+                            anchors.fill: parent
+                            anchors.margins: parent.renderSize * 0.16
+                            sourceSize.width:  Math.round(parent.baseSize)
+                            sourceSize.height: Math.round(parent.baseSize)
+                            source: modelData.icon
+                            asynchronous: true
+                            cache: true
+                            fillMode: Image.PreserveAspectFit
+                        }
+                        Image {
+                            anchors.fill: parent
+                            source: root.frameAtlasUrl
+                            sourceClipRect: {
+                                if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                                var r = SpriteAtlas.rect(root.frameAtlasData,
+                                                         modelData.kind,
+                                                         "unallocated")
+                                return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                            }
+                            sourceSize.width:  sourceClipRect.width
+                            sourceSize.height: sourceClipRect.height
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            cache: true
+                        }
                     }
                 }
+            }
+
+            // Main-circle backdrop at world origin
+            Image {
+                visible: !!root.bgAtlasUrl && !!root.bgAtlasData
+                source: root.bgAtlasUrl
+                sourceClipRect: {
+                    if (!root.bgAtlasData) return Qt.rect(0, 0, 0, 0)
+                    var f = root.bgAtlasData.frames
+                            ? root.bgAtlasData.frames["startNode:MainCircle"]
+                              && root.bgAtlasData.frames["startNode:MainCircle"].frame
+                            : null
+                    return f ? Qt.rect(f.x, f.y, f.w, f.h) : Qt.rect(0, 0, 0, 0)
+                }
+                sourceSize.width:  sourceClipRect.width
+                sourceSize.height: sourceClipRect.height
+                property real worldSize: 2400
+                width:  worldSize * root.scale
+                height: worldSize * root.scale
+                x: root.panX - width  / 2
+                y: root.panY - height / 2
+                smooth: true
+                cache: true
+                opacity: 0.5
+                z: 0
             }
 
             // ── Class portrait at tree origin ─────────────────
@@ -660,31 +741,10 @@ PanelWindow {
                                  && (x + width)  > -10 && x < ascLayer.width  + 10
                                  && (y + height) > -10 && y < ascLayer.height + 10
 
-                        // Outer frame ring — dark fill with a coloured border
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: width / 2
-                            color: "#1a1c24"
-                            border.width: Math.max(1.5, parent.renderSize / 14)
-                            border.color: modelData.kind === "keystone" ? "#ffd060"
-                                         : modelData.kind === "notable"  ? "#d4a843"
-                                         : modelData.kind === "jewel"    ? "#7adde0"
-                                                                         : "#8a96b0"
-                        }
-                        // Inner subtle highlight, gives the frame depth
-                        Rectangle {
-                            anchors.fill: parent
-                            anchors.margins: Math.max(1, parent.renderSize / 14)
-                            radius: width / 2
-                            color: "transparent"
-                            border.color: "#3a3a45"
-                            border.width: 1
-                        }
-                        // Icon — pulled in so its square corners stay inside the
-                        // circular frame, making the ring clearly visible.
+                        // Icon, drawn underneath the frame sprite
                         Image {
                             anchors.fill: parent
-                            anchors.margins: Math.max(2, parent.renderSize * 0.18)
+                            anchors.margins: parent.renderSize * 0.18
                             source: modelData.icon
                             sourceSize.width:  Math.round(parent.baseSize)
                             sourceSize.height: Math.round(parent.baseSize)
@@ -692,6 +752,23 @@ PanelWindow {
                             asynchronous: true
                             cache: true
                             smooth: true
+                        }
+                        // Real GGG ascendancy frame
+                        Image {
+                            anchors.fill: parent
+                            source: root.frameAtlasUrl
+                            sourceClipRect: {
+                                if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                                var kind = (modelData.kind === "notable" || modelData.kind === "keystone")
+                                           ? "ascendancyNotable" : "ascendancyNormal"
+                                var r = SpriteAtlas.rect(root.frameAtlasData, kind, "unallocated")
+                                return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                            }
+                            sourceSize.width:  sourceClipRect.width
+                            sourceSize.height: sourceClipRect.height
+                            fillMode: Image.PreserveAspectFit
+                            smooth: true
+                            cache: true
                         }
                     }
                 }

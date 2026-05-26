@@ -42,6 +42,8 @@ ASSETS = [
     "frame.json",  "frame.webp",
     "skills.json", "skills.webp",
     "skills-disabled.json", "skills-disabled.webp",
+    "group-background.json", "group-background.webp",
+    "line.json", "line.webp",
 ]
 
 
