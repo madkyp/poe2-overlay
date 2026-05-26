@@ -241,11 +241,16 @@ def add_block(block, sections, ctx=None):
 
 
 def _to_webp(url):
-    """Mobalytics' CDN serves the same asset under .webp; rewrite from .avif so
-    Qt6 (which lacks AVIF without an extra plugin) can render the icon."""
-    if url and url.lower().endswith(".avif"):
-        return url[: -len(".avif")] + ".webp"
-    return url or ""
+    """Mobalytics' CDN serves the same asset under .webp; rewrite any other
+    image extension so Qt6 (which lacks AVIF without an extra plugin) can
+    render it directly."""
+    if not url:
+        return ""
+    low = url.lower()
+    for ext in (".avif", ".png", ".jpg", ".jpeg", ".dds"):
+        if low.endswith(ext):
+            return url[: -len(ext)] + ".webp"
+    return url
 
 
 def variant_equipment(variant):

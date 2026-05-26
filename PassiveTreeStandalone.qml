@@ -105,10 +105,11 @@ PanelWindow {
     }
 
     function _iconUrl(icon) {
-        // PoB stores icon as e.g. "Art/2DArt/SkillIcons/passives/Harrier.dds"
+        // GGG paths end in .png, older PoB-derived ones in .dds — Mobalytics
+        // CDN serves them all as .webp from the same base path.
         if (!icon || icon.length < 5) return ""
         return "https://cdn.mobalytics.gg/assets/poe-2/images/game/" +
-               icon.replace(/\.dds$/i, ".webp")
+               icon.replace(/\.(dds|png|avif|jpg|jpeg)$/i, ".webp")
     }
 
     function _centreTree() {

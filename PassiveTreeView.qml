@@ -53,10 +53,12 @@ Rectangle {
     onWidthChanged:            _refit()
     onHeightChanged:           _refit()
 
+    // Map any icon path to a Mobalytics CDN WebP URL.
+    // PoB-Community paths ended in .dds; official GGG paths end in .png.
     function _iconUrl(icon) {
         if (!icon || icon.length < 5) return ""
         return "https://cdn.mobalytics.gg/assets/poe-2/images/game/" +
-               icon.replace(/\.dds$/i, ".webp")
+               icon.replace(/\.(dds|png|avif|jpg|jpeg)$/i, ".webp")
     }
 
     function _portraitUrl() {
