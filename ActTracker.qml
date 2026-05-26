@@ -47,24 +47,47 @@ PanelWindow {
     function _renderStep(text) {
         if (!text) return ""
         var out = text
-        // areaid<id>  →  zone name (if known) wrapped in "[Name]"
+
+        // areaid<id> → "[zone name]" (resolves to leveling DB or raw id)
         out = out.replace(/areaid([a-zA-Z0-9_]+)/g, function(_, id) {
-            if (!levelingData) return id
-            for (var k in levelingData.zones) {
-                if (levelingData.zones[k].id === id) {
-                    return "[" + levelingData.zones[k].name + "]"
+            if (levelingData) {
+                for (var k in levelingData.zones) {
+                    if (levelingData.zones[k].id === id) {
+                        return "[" + levelingData.zones[k].name + "]"
+                    }
                 }
             }
             return "[" + id + "]"
         })
-        out = out.replace(/\(img:[^)]+\)/g, "")        // strip image tags
-        out = out.replace(/\(color:[a-fA-F0-9]+\)/g, "")  // strip colour tags
-        out = out.replace(/\(hint\)\s*/g, "  → ")      // hint sub-bullet
+
+        // Strip all (tag:value) markup — works for color names, image
+        // names, quest refs, anything. e.g. (color:red), (img:skill),
+        // (quest:runed_spikes), (color:cc99ff), (color:ff00ff).
+        out = out.replace(/\([a-zA-Z_][a-zA-Z0-9_]*:[^)]*\)/g, "")
+        // Tag-only markers (hint), (logout), (img:skill), etc.
+        out = out.replace(/\(hint\)\s*/g, "  → ")
+        out = out.replace(/\([a-zA-Z][a-zA-Z0-9_-]*\)/g, "")
+
+        // Leaguestart prefixes / labels users don't need to see
+        out = out.replace(/(?:^|\n)\s*leaguestart:\s*/g, "\n• Liga: ")
+        out = out.replace(/(?:^|\n)\s*optional:\s*/g, "\n· Opcional: ")
+        out = out.replace(/(?:^|\n)\s*twinkrun:\s*/g, "\n· Twink: ")
+        out = out.replace(/(?:^|\n)\s*kill\s+/g,      "\nKill ")
+        out = out.replace(/(?:^|\n)\s*enter\s+/g,     "\nIr a ")
+
+        // Quest text helpers
         out = out.replace(/\(quest_text\|([^)]+)\)/g, "$1")
-        out = out.replace(/\(quest:[^)]+\)/g, "")
-        out = out.replace(/_/g, " ")                    // underscore separators
-        out = out.replace(/\s{3,}/g, "  ")               // squeeze whitespace
-        return out
+
+        // "command ;; comment"  →  "comment"  (the prose explanation)
+        out = out.replace(/[^\n]*?;;\s*([^\n]+)/g, "$1")
+        // "alt1 || alt2"  →  "alt1  ·  alt2"
+        out = out.replace(/\s*\|\|\s*/g, "  ·  ")
+
+        // Cleanup
+        out = out.replace(/_/g, " ")
+        out = out.replace(/\s{3,}/g, "  ")
+        out = out.replace(/\n\s*\n+/g, "\n")
+        return out.trim()
     }
 
     // ── Resolve $HOME, locate Client.txt, load leveling data ─────
