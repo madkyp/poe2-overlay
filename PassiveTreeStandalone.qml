@@ -489,6 +489,9 @@ PanelWindow {
                             if (n.x === null || n.x === undefined ||
                                 n.y === null || n.y === undefined) continue
                         }
+                        // Skip nodes with no icon (stat-only +5 attribute
+                        // stubs) — they render as empty frames otherwise.
+                        if (!n.icon) continue
                         var rx, ry
                         if (n.x !== undefined && n.x !== null &&
                             n.y !== undefined && n.y !== null) {

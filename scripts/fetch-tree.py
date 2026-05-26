@@ -135,7 +135,13 @@ def convert(data, tag):
                 connections.append({"id": int(tgt)})
             except (ValueError, TypeError):
                 pass
-        # GGG stores edges bidirectionally; out already covers each edge.
+        # The data contains legacy PoE1 ascendancy nodes (Templar*, Marauder*,
+        # Duelist*, Shadow*) that aren't mapped in the classes table.
+        # Resolve their name when possible; otherwise fall back to the raw
+        # ascendancyId so the QML filter still recognises them as ascendancy
+        # and doesn't render them as orphan main-tree nodes.
+        asc_id = n.get("ascendancyId")
+        asc_name = asc_map.get(asc_id) or asc_id or ""
         out["nodes"][nid] = {
             "name":           n.get("name"),
             "icon":           n.get("icon"),
@@ -150,7 +156,7 @@ def convert(data, tag):
             "isKeystone":     n.get("isKeystone"),
             "isJewelSocket":  n.get("isJewelSocket"),
             "isMastery":      n.get("isMastery"),
-            "ascendancyName": asc_map.get(n.get("ascendancyId")) or "",
+            "ascendancyName": asc_name,
             "classStartIndex": n.get("classStartIndex"),
         }
 

@@ -131,6 +131,10 @@ Rectangle {
                 if (n.x === null || n.x === undefined ||
                     n.y === null || n.y === undefined) continue
             }
+            // Skip nodes with no icon — they're stat-only attribute stubs
+            // (+5 STR/DEX/INT class-start picks) that would render as empty
+            // frames with nothing inside.
+            if (!n.icon) continue
             var rx, ry
             if (n.x !== undefined && n.x !== null &&
                 n.y !== undefined && n.y !== null) {
