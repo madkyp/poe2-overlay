@@ -184,7 +184,13 @@ PanelWindow {
                 try {
                     root.frameAtlasData = JSON.parse(frameAtlasJsonOut.text)
                     root.frameAtlasUrl = root._assetsBase + "frame.webp"
-                } catch (e) { /* optional */ }
+                    console.log("[Tree] frame atlas loaded:",
+                                Object.keys(root.frameAtlasData.frames || {}).length,
+                                "frames; url:", root.frameAtlasUrl)
+                } catch (e) {
+                    console.log("[Tree] frame atlas FAILED:", e.message,
+                                "bytes:", frameAtlasJsonOut.text.length)
+                }
             }
         }
     }
@@ -208,7 +214,13 @@ PanelWindow {
                 try {
                     root.skillsAtlasData = JSON.parse(skillsAtlasJsonOut.text)
                     root.skillsAtlasUrl  = root._assetsBase + "skills.webp"
-                } catch (e) { /* optional */ }
+                    console.log("[Tree] skills atlas loaded:",
+                                Object.keys(root.skillsAtlasData.frames || {}).length,
+                                "icons; url:", root.skillsAtlasUrl)
+                } catch (e) {
+                    console.log("[Tree] skills atlas FAILED:", e.message,
+                                "bytes:", skillsAtlasJsonOut.text.length)
+                }
             }
         }
     }
