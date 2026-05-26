@@ -613,8 +613,6 @@ PanelWindow {
                             sourceClipRect: atlasRect
                                             ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                             : undefined
-                            sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
-                            sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                             asynchronous: true
                             cache: true
                             fillMode: Image.PreserveAspectFit
@@ -631,8 +629,6 @@ PanelWindow {
                             sourceClipRect: atlasRect
                                             ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                             : undefined
-                            sourceSize.width:  atlasRect ? atlasRect.w : 0
-                            sourceSize.height: atlasRect ? atlasRect.h : 0
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             cache: true
@@ -653,8 +649,6 @@ PanelWindow {
                 sourceClipRect: atlasRect
                                 ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                 : undefined
-                sourceSize.width:  atlasRect ? atlasRect.w : 0
-                sourceSize.height: atlasRect ? atlasRect.h : 0
                 property real worldSize: 2400
                 width:  worldSize * root.scale
                 height: worldSize * root.scale
@@ -805,8 +799,6 @@ PanelWindow {
                             sourceClipRect: atlasRect
                                             ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                             : Qt.rect(0, 0, 0, 0)
-                            sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
-                            sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
                             cache: true
@@ -826,8 +818,6 @@ PanelWindow {
                             sourceClipRect: atlasRect
                                             ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
                                             : undefined
-                            sourceSize.width:  atlasRect ? atlasRect.w : 0
-                            sourceSize.height: atlasRect ? atlasRect.h : 0
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             cache: true
