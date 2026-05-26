@@ -43,8 +43,10 @@ PanelWindow {
     property var    filteredEntries: []
     property var    currencyEntries:  []
 
-    property bool   currencyWidgetOn: true
-    property bool   sessionWidgetOn:  true
+    property bool   currencyWidgetOn:   true
+    property bool   sessionWidgetOn:    true
+    property bool   stopwatchWidgetOn:  true
+    property bool   actTrackerWidgetOn: true
     property string craftSubTab:    "chuleta"
     property int    guideExpanded:  -1
     property string guideSearch:    ""
@@ -144,10 +146,14 @@ PanelWindow {
     Component.onCompleted: {
         root.filteredGuides = CraftingGuides.GUIDES
         State.addEconomyListener(function(v) { root.isOpen = v })
-        root.currencyWidgetOn = State.isCurrencyVisible()
-        root.sessionWidgetOn  = State.isSessionVisible()
-        State.addCurrencyVisibleListener(function(v) { root.currencyWidgetOn = v })
-        State.addSessionVisibleListener(function(v)  { root.sessionWidgetOn  = v })
+        root.currencyWidgetOn   = State.isCurrencyVisible()
+        root.sessionWidgetOn    = State.isSessionVisible()
+        root.stopwatchWidgetOn  = State.isStopwatchVisible()
+        root.actTrackerWidgetOn = State.isActTrackerVisible()
+        State.addCurrencyVisibleListener(function(v)   { root.currencyWidgetOn   = v })
+        State.addSessionVisibleListener(function(v)    { root.sessionWidgetOn    = v })
+        State.addStopwatchVisibleListener(function(v)  { root.stopwatchWidgetOn  = v })
+        State.addActTrackerVisibleListener(function(v) { root.actTrackerWidgetOn = v })
         // fetchLeagues / startFetch / prefetchCategoryIcons are deferred until
         // homeProc → leagueReadProc chain completes, so selectedLeague is correct first.
         NeverSink.checkLatestVersion(function(err, data) {
@@ -1286,8 +1292,11 @@ PanelWindow {
                                 // ── Widgets ─────────────────────────────────
                                 Text { text: "Widgets"; color: "#d4a843"; font.pixelSize: 14; font.bold: true }
 
-                                RowLayout {
-                                    width: parent.width; spacing: 8
+                                GridLayout {
+                                    width: parent.width
+                                    columns: 2
+                                    columnSpacing: 8
+                                    rowSpacing: 8
                                     Rectangle {
                                         Layout.fillWidth: true; height: 36; radius: 5
                                         color:        root.currencyWidgetOn ? "#0e2a1a" : "#131b26"
@@ -1316,6 +1325,36 @@ PanelWindow {
                                         MouseArea {
                                             anchors.fill: parent; cursorShape: Qt.PointingHandCursor
                                             onClicked: State.setSessionVisible(!root.sessionWidgetOn)
+                                        }
+                                    }
+                                    Rectangle {
+                                        Layout.fillWidth: true; height: 36; radius: 5
+                                        color:        root.stopwatchWidgetOn ? "#0e2a1a" : "#131b26"
+                                        border.color: root.stopwatchWidgetOn ? "#4fc3a0" : "#2a3d50"
+                                        border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (root.stopwatchWidgetOn ? "✓ " : "") + "⏲ Cronómetro"
+                                            color: root.stopwatchWidgetOn ? "#4fc3a0" : "#6a8aaa"; font.pixelSize: 11
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: State.setStopwatchVisible(!root.stopwatchWidgetOn)
+                                        }
+                                    }
+                                    Rectangle {
+                                        Layout.fillWidth: true; height: 36; radius: 5
+                                        color:        root.actTrackerWidgetOn ? "#0e2a1a" : "#131b26"
+                                        border.color: root.actTrackerWidgetOn ? "#4fc3a0" : "#2a3d50"
+                                        border.width: 1
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: (root.actTrackerWidgetOn ? "✓ " : "") + "📜 Guía de leveo"
+                                            color: root.actTrackerWidgetOn ? "#4fc3a0" : "#6a8aaa"; font.pixelSize: 11
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+                                            onClicked: State.setActTrackerVisible(!root.actTrackerWidgetOn)
                                         }
                                     }
                                 }
