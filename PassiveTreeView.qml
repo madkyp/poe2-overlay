@@ -174,14 +174,20 @@ Rectangle {
             var cy = (minY + maxY) / 2
             var spanX = Math.max(1, maxX - minX)
             var spanY = Math.max(1, maxY - minY)
-            var targetSide = 2200
+            // Bigger cluster (~70% of portrait diameter) so nodes are
+            // spread out like Mobalytics rather than packed tight.
+            var targetSide = 3400
             var ascZoom = targetSide / Math.max(spanX, spanY)
+            // Slight offset so the constellation floats over the right
+            // half of the portrait, matching Mobalytics' framing.
+            var ascOffsetX = 600
+            var ascOffsetY = 0
             for (var k2 = 0; k2 < ascNatural.length; k2++) {
                 var ap = ascNatural[k2]
                 out[ap.nid] = {
                     id: ap.nid,
-                    x:  (ap.rx - cx) * ascZoom,
-                    y:  (ap.ry - cy) * ascZoom,
+                    x:  (ap.rx - cx) * ascZoom + ascOffsetX,
+                    y:  (ap.ry - cy) * ascZoom + ascOffsetY,
                     icon: ap.icon, iconPath: ap.iconPath, k: ap.k, a: ap.a
                 }
             }
