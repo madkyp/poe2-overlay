@@ -109,8 +109,15 @@ Rectangle {
             var ascName = n.ascendancyName || ""
             if (ascName !== "" && ascName !== ascendancyName) continue
             if (n.group === undefined || n.group === null) continue
+            // Skip the synthetic "root" pseudo-node and anything else with
+            // no name (null icon, null position).
+            if (n.name === null || n.name === "") {
+                if (n.x === null || n.x === undefined ||
+                    n.y === null || n.y === undefined) continue
+            }
             var rx, ry
-            if (n.x !== undefined && n.y !== undefined) {
+            if (n.x !== undefined && n.x !== null &&
+                n.y !== undefined && n.y !== null) {
                 rx = n.x; ry = n.y
             } else {
                 var g = groups[String(n.group)]; if (!g) continue
