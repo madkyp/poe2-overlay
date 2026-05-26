@@ -11,4 +11,5 @@ ShellRoot {
     StopwatchWidget {}
     QuickSearchPopup {}
     MapEventNotifier {}
+    ActTracker {}
 }

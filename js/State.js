@@ -86,6 +86,16 @@ function setStopwatchVisible(v) {
 function isStopwatchVisible() { return _stopwatchVisible }
 function addStopwatchVisibleListener(fn) { _swListeners.push(fn) }
 
+// Act-Tracker widget visibility
+var _actTrackerVisible = true
+var _atListeners       = []
+function setActTrackerVisible(v) {
+    _actTrackerVisible = (v === true)
+    for (var i = 0; i < _atListeners.length; i++) _atListeners[i](_actTrackerVisible)
+}
+function isActTrackerVisible() { return _actTrackerVisible }
+function addActTrackerVisibleListener(fn) { _atListeners.push(fn) }
+
 // Lookup by name (for CurrencyTracker)
 function getRate(name) {
     for (var i = 0; i < _entries.length; i++) {
