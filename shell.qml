@@ -8,4 +8,7 @@ ShellRoot {
     EconomyWindow {}
     BuildsWindow {}
     PassiveTreeStandalone {}
+    StopwatchWidget {}
+    QuickSearchPopup {}
+    MapEventNotifier {}
 }

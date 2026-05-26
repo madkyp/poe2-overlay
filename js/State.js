@@ -76,6 +76,16 @@ function setSessionVisible(v)  { _sessionVisible  = (v === true); for (var i=0;i
 function isSessionVisible()    { return _sessionVisible }
 function addSessionVisibleListener(fn) { _svListeners.push(fn) }
 
+// Stopwatch widget visibility
+var _stopwatchVisible = true
+var _swListeners      = []
+function setStopwatchVisible(v) {
+    _stopwatchVisible = (v === true)
+    for (var i = 0; i < _swListeners.length; i++) _swListeners[i](_stopwatchVisible)
+}
+function isStopwatchVisible() { return _stopwatchVisible }
+function addStopwatchVisibleListener(fn) { _swListeners.push(fn) }
+
 // Lookup by name (for CurrencyTracker)
 function getRate(name) {
     for (var i = 0; i < _entries.length; i++) {
