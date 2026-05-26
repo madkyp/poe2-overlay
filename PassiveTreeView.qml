@@ -80,13 +80,17 @@ Rectangle {
     }
 
     function _rebuildPositions() {
-        if (!treeData || !treeData.nodes || !treeData.groups || !treeData.constants) {
+        if (!treeData || !treeData.nodes || !treeData.groups) {
             _nodePositions = {}
             return
         }
-        var radii    = treeData.constants.orbitRadii         || []
-        var perOrb   = treeData.constants.skillsPerOrbit     || []
-        var angTable = treeData.constants.orbitAnglesByOrbit || []
+        // The GGG official export ships pre-computed x/y for every node and
+        // does NOT include orbit constants. Older PoB-Community-derived
+        // caches do include orbits but not x/y. Use x/y when present, fall
+        // back to orbit math otherwise.
+        var radii    = (treeData.constants && treeData.constants.orbitRadii)         || []
+        var perOrb   = (treeData.constants && treeData.constants.skillsPerOrbit)     || []
+        var angTable = (treeData.constants && treeData.constants.orbitAnglesByOrbit) || []
         function angleFor(orbit, idx) {
             var per = angTable[orbit]
             if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
@@ -102,17 +106,18 @@ Rectangle {
             var n = nodes[nid]
             var ascName = n.ascendancyName || ""
             if (ascName !== "" && ascName !== ascendancyName) continue
-            // Don't filter 0-connection Attribute nodes any more — some of
-            // them are referenced as targets by other nodes' connections
-            // and act as implicit bridges in the actual game tree. Skipping
-            // them broke the gold path on builds that allocate them.
             if (n.group === undefined || n.group === null) continue
-            var g = groups[String(n.group)]; if (!g) continue
-            var orbit = n.orbit || 0, idx = n.orbitIndex || 0
-            var r = radii[orbit] || 0
-            var a = angleFor(orbit, idx)
-            var rx = g.x + r * Math.cos(a)
-            var ry = g.y + r * Math.sin(a)
+            var rx, ry
+            if (n.x !== undefined && n.y !== undefined) {
+                rx = n.x; ry = n.y
+            } else {
+                var g = groups[String(n.group)]; if (!g) continue
+                var orbit = n.orbit || 0, idx = n.orbitIndex || 0
+                var r = radii[orbit] || 0
+                var a = angleFor(orbit, idx)
+                rx = g.x + r * Math.cos(a)
+                ry = g.y + r * Math.sin(a)
+            }
             var kind = n.isKeystone ? "keystone" :
                        n.isNotable  ? "notable"  :
                        n.isJewelSocket ? "jewel" :

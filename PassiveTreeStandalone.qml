@@ -392,9 +392,11 @@ PanelWindow {
                 }
                 function _computePositions() {
                     if (!root.treeData) return {}
-                    var radii    = root.treeData.constants.orbitRadii         || []
-                    var perOrb   = root.treeData.constants.skillsPerOrbit     || []
-                    var angTable = root.treeData.constants.orbitAnglesByOrbit || []
+                    // Prefer node.x/y from the official GGG export; fall back
+                    // to PoB-style orbit math when constants are present.
+                    var radii    = (root.treeData.constants && root.treeData.constants.orbitRadii)         || []
+                    var perOrb   = (root.treeData.constants && root.treeData.constants.skillsPerOrbit)     || []
+                    var angTable = (root.treeData.constants && root.treeData.constants.orbitAnglesByOrbit) || []
                     function angleFor(orbit, idx) {
                         var per = angTable[orbit]
                         if (per && per[idx] !== undefined) return per[idx] - Math.PI / 2
@@ -405,21 +407,24 @@ PanelWindow {
                     var nodes  = root.treeData.nodes
                     var selectedAsc = root.selectedAscendancy
 
-                    // ─── Pass 1: main-tree positions
                     var out = {}
-                    var ascNatural = []   // [{ nid, rx, ry, icon, kind }] in original coords
+                    var ascNatural = []
                     for (var nid in nodes) {
                         var n = nodes[nid]
                         var ascName = n.ascendancyName || ""
                         if (ascName !== "" && ascName !== selectedAsc) continue
-                        if ((n.connections || []).length === 0 && n.name === "Attribute") continue
                         if (n.group === undefined || n.group === null) continue
-                        var g = groups[String(n.group)]; if (!g) continue
-                        var orbit = n.orbit || 0, idx = n.orbitIndex || 0
-                        var r = radii[orbit] || 0
-                        var a = angleFor(orbit, idx)
-                        var rx = g.x + r * Math.cos(a)
-                        var ry = g.y + r * Math.sin(a)
+                        var rx, ry
+                        if (n.x !== undefined && n.y !== undefined) {
+                            rx = n.x; ry = n.y
+                        } else {
+                            var g = groups[String(n.group)]; if (!g) continue
+                            var orbit = n.orbit || 0, idx = n.orbitIndex || 0
+                            var r = radii[orbit] || 0
+                            var a = angleFor(orbit, idx)
+                            rx = g.x + r * Math.cos(a)
+                            ry = g.y + r * Math.sin(a)
+                        }
                         var kind = n.isKeystone ? "keystone" :
                                    n.isNotable  ? "notable"  :
                                    n.isJewelSocket ? "jewel" :
