@@ -600,7 +600,7 @@ PanelWindow {
                             source: atlasRect ? root.skillsAtlasUrl : modelData.icon
                             sourceClipRect: atlasRect
                                             ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
-                                            : Qt.rect(0, 0, 0, 0)
+                                            : undefined
                             sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
                             sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                             asynchronous: true
@@ -609,16 +609,18 @@ PanelWindow {
                         }
                         Image {
                             anchors.fill: parent
-                            source: root.frameAtlasUrl
-                            sourceClipRect: {
-                                if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
-                                var r = SpriteAtlas.rect(root.frameAtlasData,
-                                                         modelData.kind,
-                                                         "unallocated")
-                                return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                            property var atlasRect: {
+                                if (!root.frameAtlasData) return null
+                                return SpriteAtlas.rect(root.frameAtlasData,
+                                                        modelData.kind, "unallocated")
                             }
-                            sourceSize.width:  sourceClipRect.width
-                            sourceSize.height: sourceClipRect.height
+                            visible: !!atlasRect && !!root.frameAtlasUrl
+                            source: visible ? root.frameAtlasUrl : ""
+                            sourceClipRect: atlasRect
+                                            ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                            : undefined
+                            sourceSize.width:  atlasRect ? atlasRect.w : 0
+                            sourceSize.height: atlasRect ? atlasRect.h : 0
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             cache: true
@@ -629,18 +631,18 @@ PanelWindow {
 
             // Main-circle backdrop at world origin
             Image {
-                visible: !!root.bgAtlasUrl && !!root.bgAtlasData
-                source: root.bgAtlasUrl
-                sourceClipRect: {
-                    if (!root.bgAtlasData) return Qt.rect(0, 0, 0, 0)
-                    var f = root.bgAtlasData.frames
-                            ? root.bgAtlasData.frames["startNode:MainCircle"]
-                              && root.bgAtlasData.frames["startNode:MainCircle"].frame
-                            : null
-                    return f ? Qt.rect(f.x, f.y, f.w, f.h) : Qt.rect(0, 0, 0, 0)
+                property var atlasRect: {
+                    if (!root.bgAtlasData || !root.bgAtlasData.frames) return null
+                    var f = root.bgAtlasData.frames["startNode:MainCircle"]
+                    return f && f.frame ? f.frame : null
                 }
-                sourceSize.width:  sourceClipRect.width
-                sourceSize.height: sourceClipRect.height
+                visible: !!atlasRect && !!root.bgAtlasUrl
+                source: visible ? root.bgAtlasUrl : ""
+                sourceClipRect: atlasRect
+                                ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                : undefined
+                sourceSize.width:  atlasRect ? atlasRect.w : 0
+                sourceSize.height: atlasRect ? atlasRect.h : 0
                 property real worldSize: 2400
                 width:  worldSize * root.scale
                 height: worldSize * root.scale
@@ -801,16 +803,19 @@ PanelWindow {
                         // Real GGG ascendancy frame
                         Image {
                             anchors.fill: parent
-                            source: root.frameAtlasUrl
-                            sourceClipRect: {
-                                if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                            property var atlasRect: {
+                                if (!root.frameAtlasData) return null
                                 var kind = (modelData.kind === "notable" || modelData.kind === "keystone")
                                            ? "ascendancyNotable" : "ascendancyNormal"
-                                var r = SpriteAtlas.rect(root.frameAtlasData, kind, "unallocated")
-                                return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                                return SpriteAtlas.rect(root.frameAtlasData, kind, "unallocated")
                             }
-                            sourceSize.width:  sourceClipRect.width
-                            sourceSize.height: sourceClipRect.height
+                            visible: !!atlasRect && !!root.frameAtlasUrl
+                            source: visible ? root.frameAtlasUrl : ""
+                            sourceClipRect: atlasRect
+                                            ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                            : undefined
+                            sourceSize.width:  atlasRect ? atlasRect.w : 0
+                            sourceSize.height: atlasRect ? atlasRect.h : 0
                             fillMode: Image.PreserveAspectFit
                             smooth: true
                             cache: true

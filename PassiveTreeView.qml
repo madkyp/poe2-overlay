@@ -325,9 +325,11 @@ Rectangle {
                          && (x + width)  > -8 && x < nodesLayer.width  + 8
                          && (y + height) > -8 && y < nodesLayer.height + 8
 
-                // Icon — prefer the local sprite atlas (handles new 0.5
-                // ascendancies whose icons Mobalytics CDN doesn't have yet).
-                // Falls back to the CDN URL otherwise.
+                // Icon — atlas-first with CDN fallback. Qt treats an
+                // empty sourceClipRect as "use whole image", so we ONLY
+                // set the clip rect (and the atlas URL) when we actually
+                // resolved a sprite; otherwise we leave both unset and use
+                // the plain CDN URL.
                 Image {
                     anchors.fill: parent
                     anchors.margins: parent.renderSize * 0.16
@@ -339,7 +341,7 @@ Rectangle {
                     source: atlasRect ? root.skillsAtlasUrl : modelData.icon
                     sourceClipRect: atlasRect
                                     ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
-                                    : Qt.rect(0, 0, 0, 0)
+                                    : undefined
                     sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
                     sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                     fillMode: Image.PreserveAspectFit
@@ -347,21 +349,25 @@ Rectangle {
                     cache: true
                     smooth: true
                 }
-                // Real PoE2 frame sprite from GGG atlas, clipped to the
-                // right sub-rect by sourceClipRect.
+                // Frame sprite — only renders when the frame atlas data is
+                // ready. Otherwise the Image is hidden so it can't fall back
+                // to "show the entire atlas".
                 Image {
                     id: frameImg
                     anchors.fill: parent
-                    source: root.frameAtlasUrl
-                    sourceClipRect: {
-                        if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
-                        var r = SpriteAtlas.rect(root.frameAtlasData,
-                                                 modelData.k,
-                                                 parent.isAlloc ? "allocated" : "unallocated")
-                        return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                    property var atlasRect: {
+                        if (!root.frameAtlasData) return null
+                        return SpriteAtlas.rect(root.frameAtlasData,
+                                                modelData.k,
+                                                parent.isAlloc ? "allocated" : "unallocated")
                     }
-                    sourceSize.width:  sourceClipRect.width
-                    sourceSize.height: sourceClipRect.height
+                    visible: !!atlasRect && !!root.frameAtlasUrl
+                    source: visible ? root.frameAtlasUrl : ""
+                    sourceClipRect: atlasRect
+                                    ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                    : undefined
+                    sourceSize.width:  atlasRect ? atlasRect.w : 0
+                    sourceSize.height: atlasRect ? atlasRect.h : 0
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     cache: true
@@ -377,21 +383,19 @@ Rectangle {
     // declared after Canvas) so it sits below everything else.
     Image {
         id: mainCircleBg
-        visible: !!root.bgAtlasUrl && !!root.bgAtlasData
-        source: root.bgAtlasUrl
-        sourceClipRect: {
-            if (!root.bgAtlasData) return Qt.rect(0, 0, 0, 0)
-            var r = root.bgAtlasData.frames
-                    ? root.bgAtlasData.frames["startNode:MainCircle"]
-                      && root.bgAtlasData.frames["startNode:MainCircle"].frame
-                    : null
-            return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+        property var atlasRect: {
+            if (!root.bgAtlasData || !root.bgAtlasData.frames) return null
+            var f = root.bgAtlasData.frames["startNode:MainCircle"]
+            return f && f.frame ? f.frame : null
         }
-        // The sprite is 2000×2000 in source pixels, drawn 1:1 with tree
-        // units so it occupies the inner class-start ring naturally.
+        visible: !!atlasRect && !!root.bgAtlasUrl
+        source: visible ? root.bgAtlasUrl : ""
+        sourceClipRect: atlasRect
+                        ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                        : undefined
+        sourceSize.width:  atlasRect ? atlasRect.w : 0
+        sourceSize.height: atlasRect ? atlasRect.h : 0
         property real worldSize: 2400
-        sourceSize.width:  sourceClipRect.width
-        sourceSize.height: sourceClipRect.height
         width:  worldSize * root.scale
         height: worldSize * root.scale
         x: root.offsetX - width / 2
@@ -539,18 +543,20 @@ Rectangle {
                 // GGG ascendancy frame sprite
                 Image {
                     anchors.fill: parent
-                    source: root.frameAtlasUrl
-                    sourceClipRect: {
-                        if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                    property var atlasRect: {
+                        if (!root.frameAtlasData) return null
                         var kind = (modelData.k === "notable" || modelData.k === "keystone")
                                    ? "ascendancyNotable" : "ascendancyNormal"
-                        var r = SpriteAtlas.rect(root.frameAtlasData,
-                                                 kind,
-                                                 parent.isAlloc ? "allocated" : "unallocated")
-                        return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                        return SpriteAtlas.rect(root.frameAtlasData, kind,
+                                                parent.isAlloc ? "allocated" : "unallocated")
                     }
-                    sourceSize.width:  sourceClipRect.width
-                    sourceSize.height: sourceClipRect.height
+                    visible: !!atlasRect && !!root.frameAtlasUrl
+                    source: visible ? root.frameAtlasUrl : ""
+                    sourceClipRect: atlasRect
+                                    ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                    : undefined
+                    sourceSize.width:  atlasRect ? atlasRect.w : 0
+                    sourceSize.height: atlasRect ? atlasRect.h : 0
                     fillMode: Image.PreserveAspectFit
                     smooth: true
                     cache: true
