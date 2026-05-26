@@ -160,9 +160,7 @@ PanelWindow {
                     "/usr/bin/python3 \"" + home + "/.config/quickshell/poe2/scripts/fetch-tree.py\" >&2; " +
                     "fi; cat \"$F\""]
                 loadProc.running = true
-                var base = "file://" + home + "/.config/quickshell/poe2/.cache/assets/"
-                root.frameAtlasUrl = base + "frame.webp"
-                root.bgAtlasUrl    = base + "group-background.webp"
+                root._assetsBase = "file://" + home + "/.config/quickshell/poe2/.cache/assets/"
                 frameAtlasJsonProc.command = ["sh", "-c",
                     "cat \"" + home + "/.config/quickshell/poe2/.cache/assets/frame.json\" 2>/dev/null"]
                 frameAtlasJsonProc.running = true
@@ -172,13 +170,16 @@ PanelWindow {
             }
         }
     }
+    property string _assetsBase: ""
     Process {
         id: frameAtlasJsonProc
         stdout: StdioCollector { id: frameAtlasJsonOut }
         onRunningChanged: {
             if (!running) {
-                try { root.frameAtlasData = JSON.parse(frameAtlasJsonOut.text) }
-                catch (e) { /* optional */ }
+                try {
+                    root.frameAtlasData = JSON.parse(frameAtlasJsonOut.text)
+                    root.frameAtlasUrl = root._assetsBase + "frame.webp"
+                } catch (e) { /* optional */ }
             }
         }
     }
@@ -187,8 +188,10 @@ PanelWindow {
         stdout: StdioCollector { id: bgAtlasJsonOut }
         onRunningChanged: {
             if (!running) {
-                try { root.bgAtlasData = JSON.parse(bgAtlasJsonOut.text) }
-                catch (e) { /* optional */ }
+                try {
+                    root.bgAtlasData = JSON.parse(bgAtlasJsonOut.text)
+                    root.bgAtlasUrl   = root._assetsBase + "group-background.webp"
+                } catch (e) { /* optional */ }
             }
         }
     }

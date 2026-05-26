@@ -198,6 +198,7 @@ PanelWindow {
     property string _frameAtlasUrl:   ""
     property var    _bgAtlasData:     null
     property string _bgAtlasUrl:      ""
+    property string _assetsBase:      ""
 
     function _ensureTree() {
         if (_treeData || _treeLoading || _homeDir === "") return
@@ -224,10 +225,10 @@ PanelWindow {
                 }
                 try { root._treeData = JSON.parse(text) }
                 catch (e) { root._treeError = "tree.json inválido: " + e.message }
-                // Sprite atlases
-                var base = "file://" + root._homeDir + "/.config/quickshell/poe2/.cache/assets/"
-                root._frameAtlasUrl = base + "frame.webp"
-                root._bgAtlasUrl    = base + "group-background.webp"
+                // Sprite atlases — assign URLs only AFTER the JSON parses
+                // so the Image components that depend on both don't render
+                // an empty clip rect on first paint.
+                root._assetsBase = "file://" + root._homeDir + "/.config/quickshell/poe2/.cache/assets/"
                 frameJsonProc.command = ["sh", "-c",
                     "cat \"" + root._homeDir +
                     "/.config/quickshell/poe2/.cache/assets/frame.json\" 2>/dev/null"]
@@ -244,8 +245,10 @@ PanelWindow {
         stdout: StdioCollector { id: frameJsonOut }
         onRunningChanged: {
             if (!running) {
-                try { root._frameAtlasData = JSON.parse(frameJsonOut.text) }
-                catch (e) { /* atlas missing — falls back to no frame */ }
+                try {
+                    root._frameAtlasData = JSON.parse(frameJsonOut.text)
+                    root._frameAtlasUrl = root._assetsBase + "frame.webp"
+                } catch (e) { /* atlas missing — falls back to no frame */ }
             }
         }
     }
@@ -254,8 +257,10 @@ PanelWindow {
         stdout: StdioCollector { id: bgJsonOut }
         onRunningChanged: {
             if (!running) {
-                try { root._bgAtlasData = JSON.parse(bgJsonOut.text) }
-                catch (e) { /* optional asset */ }
+                try {
+                    root._bgAtlasData = JSON.parse(bgJsonOut.text)
+                    root._bgAtlasUrl  = root._assetsBase + "group-background.webp"
+                } catch (e) { /* optional asset */ }
             }
         }
     }
