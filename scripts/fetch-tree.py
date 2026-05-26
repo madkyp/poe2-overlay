@@ -32,8 +32,17 @@ REPO_API = "https://api.github.com/repos/grindinggear/poe2-skilltree-export"
 RAW      = "https://raw.githubusercontent.com/grindinggear/poe2-skilltree-export"
 
 CACHE_DIR  = os.path.expanduser("~/.config/quickshell/poe2/.cache")
+ASSETS_DIR = os.path.join(CACHE_DIR, "assets")
 JSON_FILE  = os.path.join(CACHE_DIR, "tree.json")
 VER_FILE   = os.path.join(CACHE_DIR, "tree.version")
+
+# Sprite atlases we mirror locally so QML can render proper frames + icons
+# without hammering Mobalytics' CDN for every node icon.
+ASSETS = [
+    "frame.json",  "frame.webp",
+    "skills.json", "skills.webp",
+    "skills-disabled.json", "skills-disabled.webp",
+]
 
 
 def gh_get(url):
@@ -65,6 +74,18 @@ def download_data(tag):
     raw = gh_get(f"{RAW}/{tag}/data.json")
     sys.stderr.write(f"Got {len(raw)} bytes\n")
     return json.loads(raw)
+
+
+def download_assets(tag):
+    """Mirror the GGG asset atlases locally."""
+    os.makedirs(ASSETS_DIR, exist_ok=True)
+    for name in ASSETS:
+        url = f"{RAW}/{tag}/assets/{name}"
+        sys.stderr.write(f"Downloading assets/{name}\n")
+        data = gh_get(url)
+        with open(os.path.join(ASSETS_DIR, name), "wb") as f:
+            f.write(data)
+        sys.stderr.write(f"  {len(data)} bytes\n")
 
 
 def build_ascendancy_id_map(classes):
@@ -157,6 +178,7 @@ def main():
             tag = pick_latest_tag()
         sys.stderr.write(f"Using GGG tree release {tag}\n")
         data = download_data(tag)
+        download_assets(tag)
         out = convert(data, tag)
         os.makedirs(CACHE_DIR, exist_ok=True)
         with open(JSON_FILE, "w", encoding="utf-8") as f:

@@ -193,6 +193,9 @@ PanelWindow {
     property var    _treeData:        null
     property bool   _treeLoading:     false
     property string _treeError:       ""
+    // Frame-sprite atlas (cached at .cache/assets/frame.{json,webp})
+    property var    _frameAtlasData:  null
+    property string _frameAtlasUrl:   ""
 
     function _ensureTree() {
         if (_treeData || _treeLoading || _homeDir === "") return
@@ -214,11 +217,28 @@ PanelWindow {
                 root._treeLoading = false
                 var text = treeFetchOut.text
                 if (text.length < 1000) {
-                    root._treeError = "No se pudo cargar tree.json (¿python3 / lua / red OK?)"
+                    root._treeError = "No se pudo cargar tree.json"
                     return
                 }
                 try { root._treeData = JSON.parse(text) }
                 catch (e) { root._treeError = "tree.json inválido: " + e.message }
+                // Now also load the sprite atlas (small, ~95KB)
+                root._frameAtlasUrl = "file://" + root._homeDir +
+                                      "/.config/quickshell/poe2/.cache/assets/frame.webp"
+                frameJsonProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir +
+                    "/.config/quickshell/poe2/.cache/assets/frame.json\" 2>/dev/null"]
+                frameJsonProc.running = true
+            }
+        }
+    }
+    Process {
+        id: frameJsonProc
+        stdout: StdioCollector { id: frameJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try { root._frameAtlasData = JSON.parse(frameJsonOut.text) }
+                catch (e) { /* atlas missing — falls back to no frame */ }
             }
         }
     }
@@ -893,9 +913,11 @@ PanelWindow {
                                         PassiveTreeView {
                                             Layout.fillWidth: true
                                             Layout.preferredHeight: 460
-                                            treeData: root._treeData
-                                            charClass:      detail.current ? (detail.current.charClass  || "") : ""
-                                            ascendancyName: detail.current ? (detail.current.ascendancy || "") : ""
+                                            treeData:         root._treeData
+                                            frameAtlasUrl:    root._frameAtlasUrl
+                                            frameAtlasData:   root._frameAtlasData
+                                            charClass:        detail.current ? (detail.current.charClass  || "") : ""
+                                            ascendancyName:   detail.current ? (detail.current.ascendancy || "") : ""
                                             allocatedNodeIds: modelData.allocatedIds  || []
                                             ascendancyIds:    modelData.ascendancyIds || []
                                         }

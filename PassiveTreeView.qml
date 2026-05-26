@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Effects
+import "js/SpriteAtlas.js" as SpriteAtlas
 
 // Renders the PoE2 passive tree for a build guide, with the build's
 // allocated nodes highlighted gold and the ascendancy overlaid on a
@@ -28,6 +29,10 @@ Rectangle {
     property var    ascendancyIds:     []
     property string ascendancyName:    ""
     property string charClass:         ""
+
+    // Local sprite-atlas paths (populated when BuildsWindow resolves $HOME)
+    property string frameAtlasUrl:     ""    // file:// path to frame.webp
+    property var    frameAtlasData:    null  // parsed frame.json
 
     // View transform
     property real   scale:    0.05
@@ -305,18 +310,10 @@ Rectangle {
                          && (x + width)  > -8 && x < nodesLayer.width  + 8
                          && (y + height) > -8 && y < nodesLayer.height + 8
 
-                Rectangle {
-                    visible: parent.isAlloc
-                    anchors.centerIn: parent
-                    width: parent.width * 1.6; height: width
-                    radius: width / 2
-                    color: "transparent"
-                    border.color: "#d4a843"
-                    border.width: Math.max(1, parent.renderSize / 14)
-                    opacity: 0.45
-                }
+                // Icon goes underneath the frame sprite.
                 Image {
                     anchors.fill: parent
+                    anchors.margins: parent.renderSize * 0.16
                     source: modelData.icon
                     sourceSize.width:  Math.round(parent.baseSize)
                     sourceSize.height: Math.round(parent.baseSize)
@@ -324,6 +321,25 @@ Rectangle {
                     asynchronous: true
                     cache: true
                     smooth: true
+                }
+                // Real PoE2 frame sprite from GGG atlas, clipped to the
+                // right sub-rect by sourceClipRect.
+                Image {
+                    id: frameImg
+                    anchors.fill: parent
+                    source: root.frameAtlasUrl
+                    sourceClipRect: {
+                        if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                        var r = SpriteAtlas.rect(root.frameAtlasData,
+                                                 modelData.k,
+                                                 parent.isAlloc ? "allocated" : "unallocated")
+                        return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                    }
+                    sourceSize.width:  sourceClipRect.width
+                    sourceSize.height: sourceClipRect.height
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    cache: true
                 }
             }
         }
@@ -444,28 +460,9 @@ Rectangle {
                          && (x + width)  > -10 && x < ascLayer.width  + 10
                          && (y + height) > -10 && y < ascLayer.height + 10
 
-                Rectangle {
-                    anchors.fill: parent
-                    radius: width / 2
-                    color: "#1a1c24"
-                    border.width: Math.max(1.5, parent.renderSize / 14)
-                    border.color: parent.isAlloc ? "#ffd060"
-                                : modelData.k === "keystone" ? "#ffd060"
-                                : modelData.k === "notable"  ? "#d4a843"
-                                : modelData.k === "jewel"    ? "#7adde0"
-                                                             : "#8a96b0"
-                }
-                Rectangle {
-                    anchors.fill: parent
-                    anchors.margins: Math.max(1, parent.renderSize / 14)
-                    radius: width / 2
-                    color: "transparent"
-                    border.color: "#3a3a45"
-                    border.width: 1
-                }
                 Image {
                     anchors.fill: parent
-                    anchors.margins: Math.max(2, parent.renderSize * 0.18)
+                    anchors.margins: parent.renderSize * 0.18
                     source: modelData.icon
                     sourceSize.width:  Math.round(parent.baseSize)
                     sourceSize.height: Math.round(parent.baseSize)
@@ -473,6 +470,25 @@ Rectangle {
                     asynchronous: true
                     cache: true
                     smooth: true
+                }
+                // GGG ascendancy frame sprite
+                Image {
+                    anchors.fill: parent
+                    source: root.frameAtlasUrl
+                    sourceClipRect: {
+                        if (!root.frameAtlasData) return Qt.rect(0, 0, 0, 0)
+                        var kind = (modelData.k === "notable" || modelData.k === "keystone")
+                                   ? "ascendancyNotable" : "ascendancyNormal"
+                        var r = SpriteAtlas.rect(root.frameAtlasData,
+                                                 kind,
+                                                 parent.isAlloc ? "allocated" : "unallocated")
+                        return r ? Qt.rect(r.x, r.y, r.w, r.h) : Qt.rect(0, 0, 0, 0)
+                    }
+                    sourceSize.width:  sourceClipRect.width
+                    sourceSize.height: sourceClipRect.height
+                    fillMode: Image.PreserveAspectFit
+                    smooth: true
+                    cache: true
                 }
             }
         }
