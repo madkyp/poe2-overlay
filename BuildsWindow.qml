@@ -198,6 +198,8 @@ PanelWindow {
     property string _frameAtlasUrl:   ""
     property var    _bgAtlasData:     null
     property string _bgAtlasUrl:      ""
+    property var    _skillsAtlasData: null
+    property string _skillsAtlasUrl:  ""
     property string _assetsBase:      ""
 
     function _ensureTree() {
@@ -237,6 +239,10 @@ PanelWindow {
                     "cat \"" + root._homeDir +
                     "/.config/quickshell/poe2/.cache/assets/group-background.json\" 2>/dev/null"]
                 bgJsonProc.running = true
+                skillsJsonProc.command = ["sh", "-c",
+                    "cat \"" + root._homeDir +
+                    "/.config/quickshell/poe2/.cache/assets/skills.json\" 2>/dev/null"]
+                skillsJsonProc.running = true
             }
         }
     }
@@ -260,6 +266,18 @@ PanelWindow {
                 try {
                     root._bgAtlasData = JSON.parse(bgJsonOut.text)
                     root._bgAtlasUrl  = root._assetsBase + "group-background.webp"
+                } catch (e) { /* optional asset */ }
+            }
+        }
+    }
+    Process {
+        id: skillsJsonProc
+        stdout: StdioCollector { id: skillsJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try {
+                    root._skillsAtlasData = JSON.parse(skillsJsonOut.text)
+                    root._skillsAtlasUrl  = root._assetsBase + "skills.webp"
                 } catch (e) { /* optional asset */ }
             }
         }
@@ -940,6 +958,8 @@ PanelWindow {
                                             frameAtlasData:   root._frameAtlasData
                                             bgAtlasUrl:       root._bgAtlasUrl
                                             bgAtlasData:      root._bgAtlasData
+                                            skillsAtlasUrl:   root._skillsAtlasUrl
+                                            skillsAtlasData:  root._skillsAtlasData
                                             charClass:        detail.current ? (detail.current.charClass  || "") : ""
                                             ascendancyName:   detail.current ? (detail.current.ascendancy || "") : ""
                                             allocatedNodeIds: modelData.allocatedIds  || []

@@ -43,6 +43,8 @@ PanelWindow {
     property var    frameAtlasData:     null
     property string bgAtlasUrl:         ""
     property var    bgAtlasData:        null
+    property string skillsAtlasUrl:     ""
+    property var    skillsAtlasData:    null
 
     // View transform (much smaller initial scale than PassiveTreeView since
     // the panel is bigger and we want to see most of the tree)
@@ -167,6 +169,9 @@ PanelWindow {
                 bgAtlasJsonProc.command = ["sh", "-c",
                     "cat \"" + home + "/.config/quickshell/poe2/.cache/assets/group-background.json\" 2>/dev/null"]
                 bgAtlasJsonProc.running = true
+                skillsAtlasJsonProc.command = ["sh", "-c",
+                    "cat \"" + home + "/.config/quickshell/poe2/.cache/assets/skills.json\" 2>/dev/null"]
+                skillsAtlasJsonProc.running = true
             }
         }
     }
@@ -191,6 +196,18 @@ PanelWindow {
                 try {
                     root.bgAtlasData = JSON.parse(bgAtlasJsonOut.text)
                     root.bgAtlasUrl   = root._assetsBase + "group-background.webp"
+                } catch (e) { /* optional */ }
+            }
+        }
+    }
+    Process {
+        id: skillsAtlasJsonProc
+        stdout: StdioCollector { id: skillsAtlasJsonOut }
+        onRunningChanged: {
+            if (!running) {
+                try {
+                    root.skillsAtlasData = JSON.parse(skillsAtlasJsonOut.text)
+                    root.skillsAtlasUrl  = root._assetsBase + "skills.webp"
                 } catch (e) { /* optional */ }
             }
         }
@@ -477,9 +494,15 @@ PanelWindow {
                                    n.isJewelSocket ? "jewel" :
                                    n.isMastery ? "mastery" : "normal"
                         if (ascName === "") {
-                            out[nid] = { x: rx, y: ry, icon: root._iconUrl(n.icon), kind: kind, asc: "" }
+                            out[nid] = { x: rx, y: ry,
+                                         icon: root._iconUrl(n.icon),
+                                         iconPath: n.icon || "",
+                                         kind: kind, asc: "" }
                         } else {
-                            ascNatural.push({ nid: nid, rx: rx, ry: ry, icon: root._iconUrl(n.icon), kind: kind, asc: ascName })
+                            ascNatural.push({ nid: nid, rx: rx, ry: ry,
+                                              icon: root._iconUrl(n.icon),
+                                              iconPath: n.icon || "",
+                                              kind: kind, asc: ascName })
                         }
                     }
 
@@ -515,6 +538,7 @@ PanelWindow {
                                 x:    (ap.rx - cx) * ascZoom,
                                 y:    (ap.ry - cy) * ascZoom,
                                 icon: ap.icon,
+                                iconPath: ap.iconPath,
                                 kind: ap.kind,
                                 asc:  ap.asc
                             }
@@ -541,7 +565,9 @@ PanelWindow {
                         var p = positionsById[k]
                         var isAsc = !!(p.asc && p.asc !== "")
                         if (isAsc !== wantAsc) continue
-                        arr.push({ id: k, x: p.x, y: p.y, icon: p.icon, kind: p.kind, asc: p.asc || "" })
+                        arr.push({ id: k, x: p.x, y: p.y, icon: p.icon,
+                                    iconPath: p.iconPath || "",
+                                    kind: p.kind, asc: p.asc || "" })
                     }
                     return arr
                 }
@@ -566,9 +592,17 @@ PanelWindow {
                         Image {
                             anchors.fill: parent
                             anchors.margins: parent.renderSize * 0.16
-                            sourceSize.width:  Math.round(parent.baseSize)
-                            sourceSize.height: Math.round(parent.baseSize)
-                            source: modelData.icon
+                            property var atlasRect: {
+                                if (!root.skillsAtlasData || !modelData.iconPath) return null
+                                return SpriteAtlas.iconRect(root.skillsAtlasData,
+                                                            modelData.kind, modelData.iconPath, true)
+                            }
+                            source: atlasRect ? root.skillsAtlasUrl : modelData.icon
+                            sourceClipRect: atlasRect
+                                            ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                            : Qt.rect(0, 0, 0, 0)
+                            sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
+                            sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                             asynchronous: true
                             cache: true
                             fillMode: Image.PreserveAspectFit
@@ -748,9 +782,17 @@ PanelWindow {
                         Image {
                             anchors.fill: parent
                             anchors.margins: parent.renderSize * 0.18
-                            source: modelData.icon
-                            sourceSize.width:  Math.round(parent.baseSize)
-                            sourceSize.height: Math.round(parent.baseSize)
+                            property var atlasRect: {
+                                if (!root.skillsAtlasData || !modelData.iconPath) return null
+                                return SpriteAtlas.iconRect(root.skillsAtlasData,
+                                                            modelData.kind, modelData.iconPath, true)
+                            }
+                            source: atlasRect ? root.skillsAtlasUrl : modelData.icon
+                            sourceClipRect: atlasRect
+                                            ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                            : Qt.rect(0, 0, 0, 0)
+                            sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
+                            sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                             fillMode: Image.PreserveAspectFit
                             asynchronous: true
                             cache: true

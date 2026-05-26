@@ -38,6 +38,12 @@ Rectangle {
     // sprite from group-background.webp)
     property string bgAtlasUrl:            ""
     property var    bgAtlasData:           null
+    // Skill-icon atlas (skills.webp + skills.json) — primary icon source.
+    // Falls back to Mobalytics CDN when an icon isn't in the atlas
+    // (e.g. masteries, jewel sockets, or pre-existing builds whose
+    // icons aren't yet shipped by GGG).
+    property string skillsAtlasUrl:        ""
+    property var    skillsAtlasData:       null
 
     // View transform
     property real   scale:    0.05
@@ -142,9 +148,13 @@ Rectangle {
                        n.isJewelSocket ? "jewel" :
                        n.isMastery ? "mastery" : "normal"
             if (ascName === "") {
-                out[nid] = { id: nid, x: rx, y: ry, icon: _iconUrl(n.icon), k: kind, a: "" }
+                out[nid] = { id: nid, x: rx, y: ry,
+                             icon: _iconUrl(n.icon), iconPath: n.icon || "",
+                             k: kind, a: "" }
             } else {
-                ascNatural.push({ nid: nid, rx: rx, ry: ry, icon: _iconUrl(n.icon), k: kind, a: ascName })
+                ascNatural.push({ nid: nid, rx: rx, ry: ry,
+                                  icon: _iconUrl(n.icon), iconPath: n.icon || "",
+                                  k: kind, a: ascName })
             }
         }
 
@@ -172,7 +182,7 @@ Rectangle {
                     id: ap.nid,
                     x:  (ap.rx - cx) * ascZoom,
                     y:  (ap.ry - cy) * ascZoom,
-                    icon: ap.icon, k: ap.k, a: ap.a
+                    icon: ap.icon, iconPath: ap.iconPath, k: ap.k, a: ap.a
                 }
             }
         }
@@ -315,13 +325,23 @@ Rectangle {
                          && (x + width)  > -8 && x < nodesLayer.width  + 8
                          && (y + height) > -8 && y < nodesLayer.height + 8
 
-                // Icon goes underneath the frame sprite.
+                // Icon — prefer the local sprite atlas (handles new 0.5
+                // ascendancies whose icons Mobalytics CDN doesn't have yet).
+                // Falls back to the CDN URL otherwise.
                 Image {
                     anchors.fill: parent
                     anchors.margins: parent.renderSize * 0.16
-                    source: modelData.icon
-                    sourceSize.width:  Math.round(parent.baseSize)
-                    sourceSize.height: Math.round(parent.baseSize)
+                    property var atlasRect: {
+                        if (!root.skillsAtlasData || !modelData.iconPath) return null
+                        return SpriteAtlas.iconRect(root.skillsAtlasData,
+                                                    modelData.k, modelData.iconPath, true)
+                    }
+                    source: atlasRect ? root.skillsAtlasUrl : modelData.icon
+                    sourceClipRect: atlasRect
+                                    ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                    : Qt.rect(0, 0, 0, 0)
+                    sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
+                    sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
                     cache: true
@@ -500,9 +520,17 @@ Rectangle {
                 Image {
                     anchors.fill: parent
                     anchors.margins: parent.renderSize * 0.18
-                    source: modelData.icon
-                    sourceSize.width:  Math.round(parent.baseSize)
-                    sourceSize.height: Math.round(parent.baseSize)
+                    property var atlasRect: {
+                        if (!root.skillsAtlasData || !modelData.iconPath) return null
+                        return SpriteAtlas.iconRect(root.skillsAtlasData,
+                                                    modelData.k, modelData.iconPath, true)
+                    }
+                    source: atlasRect ? root.skillsAtlasUrl : modelData.icon
+                    sourceClipRect: atlasRect
+                                    ? Qt.rect(atlasRect.x, atlasRect.y, atlasRect.w, atlasRect.h)
+                                    : Qt.rect(0, 0, 0, 0)
+                    sourceSize.width:  atlasRect ? atlasRect.w : Math.round(parent.baseSize)
+                    sourceSize.height: atlasRect ? atlasRect.h : Math.round(parent.baseSize)
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
                     cache: true
