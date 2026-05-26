@@ -99,23 +99,19 @@ PanelWindow {
         return id
     }
 
-    // Stylize already-escaped plain text: keyword accents, ||, ;;.
+    // Stylize already-escaped plain text: keyword accents, ||.
+    // (;; comments are stripped before tokenization, not here.)
     function _stylePlain(escaped) {
         var t = escaped
-        // "command ;; comment" — keep only the comment, line by line
-        t = t.split("\n").map(function(line) {
-            var i = line.indexOf(";;")
-            return i === -1 ? line : line.substring(i + 2).replace(/^\s+/, "")
-        }).join("\n")
-        // Keyword accents
+        // Keyword accents — use <font> for max Qt RichText compatibility
         t = t.replace(/\b(kill)\b/gi,
-                      '<span style="color:#e07070;font-weight:bold">$1</span>')
+                      '<font color="#e07070"><b>$1</b></font>')
         t = t.replace(/\b(enter)\b/gi,
-                      '<span style="color:#7adda0;font-weight:bold">$1</span>')
-        t = t.replace(/\b(optional|leaguestart|twinkrun)\b/gi,
-                      '<span style="color:#7a8aaa">$1</span>')
+                      '<font color="#7adda0"><b>$1</b></font>')
+        t = t.replace(/\b(optional|leaguestart|twinkrun)\s*:/gi,
+                      '<font color="#7a8aaa"><b>$1:</b></font>')
         // "alt1 || alt2" — bullet separator
-        t = t.replace(/\s*\|\|\s*/g, ' <span style="color:#5a6a80">·</span> ')
+        t = t.replace(/\s*\|\|\s*/g, ' <font color="#5a6a80">·</font> ')
         // Underscore→space for tokens like "the_bloated_miller"
         t = t.replace(/_/g, " ")
         // Newlines become breaks
@@ -126,18 +122,27 @@ PanelWindow {
     // Single-pass converter from Lailloken markup to Qt RichText HTML.
     function _renderStep(text) {
         if (!text) return ""
+
+        // Strip "<cmd> ;; <comment>" fallback labels per line. The bit
+        // after ;; is a human-readable name that Lailloken uses for
+        // tooling that can't resolve areaid<id>; we resolve it already.
+        var src = text.split("\n").map(function(line) {
+            var i = line.indexOf(";;")
+            return i === -1 ? line : line.substring(0, i).replace(/\s+$/, "")
+        }).join("\n")
+
         var html = ""
-        var openSpans = 0
+        var openFonts = 0
         var re = /\(([a-zA-Z_][a-zA-Z0-9_-]*)(?::([^)]*))?\)|areaid([a-zA-Z0-9_]+)/g
         var last = 0
         var m
-        while ((m = re.exec(text)) !== null) {
-            html += _stylePlain(_esc(text.substring(last, m.index)))
+        while ((m = re.exec(src)) !== null) {
+            html += _stylePlain(_esc(src.substring(last, m.index)))
             last = re.lastIndex
 
             if (m[3] !== undefined) {
-                html += '<b style="color:#8ab4d4">' +
-                        _esc(_resolveAreaId(m[3])) + '</b>'
+                html += '<font color="#8ab4d4"><b>' +
+                        _esc(_resolveAreaId(m[3])) + '</b></font>'
                 continue
             }
 
@@ -148,21 +153,21 @@ PanelWindow {
                 var hex = _namedColors[c] ||
                           (/^[0-9a-f]{3,8}$/i.test(c) ? "#" + c : null)
                 if (hex) {
-                    html += '<span style="color:' + hex + '">'
-                    openSpans++
+                    html += '<font color="' + hex + '">'
+                    openFonts++
                 }
             } else if (tag === "hint") {
-                html += '<br>&nbsp;&nbsp;<span style="color:#7a8aaa">→ '
-                openSpans++
+                html += '<br>&nbsp;&nbsp;<font color="#7a8aaa">→ '
+                openFonts++
             } else if (tag === "img") {
                 html += (_imgIcons[val.toLowerCase()] || "•") + " "
             } else if (tag === "quest_text" && val) {
-                html += '<i style="color:#c0b090">' + _esc(val) + '</i>'
+                html += '<font color="#c0b090"><i>' + _esc(val) + '</i></font>'
             }
             // unknown / no-op tags silently consumed
         }
-        html += _stylePlain(_esc(text.substring(last)))
-        while (openSpans-- > 0) html += '</span>'
+        html += _stylePlain(_esc(src.substring(last)))
+        while (openFonts-- > 0) html += '</font>'
         return html
     }
 
