@@ -16,9 +16,11 @@ PanelWindow {
 
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.keyboardFocus: isOpen ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
-    WlrLayershell.margins.top: 80
-    anchors.top: true
-    anchors.horizontalCenter: true
+    WlrLayershell.margins.top:  80
+    WlrLayershell.margins.left: 740
+
+    anchors.top:  true
+    anchors.left: true
 
     color: "transparent"
     implicitWidth:  isOpen ? 440 : 1
