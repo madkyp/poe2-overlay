@@ -66,6 +66,24 @@ PanelWindow {
             { label: "Time-lost / Talisman",  query: "Talisman" },
             { label: "Soul Core",             query: "Soul Core" },
         ]},
+        { name: "Stats en gear (vendor/stash)", entries: [
+            { label: "Vida máxima",           query: "to maximum Life" },
+            { label: "Resistencias (cualq.)", query: "Resistance" },
+            { label: "Res. al caos",          query: "to Chaos Resistance" },
+            { label: "Velocidad de mov.",     query: "increased Movement Speed" },
+            { label: "Spirit en gear",        query: "to Spirit" },
+            { label: "+ niveles de skills",   query: "Level of all" },
+        ]},
+        { name: "Crafteo PoE2 (early)", entries: [
+            { label: "Runas (socket)",         query: "Rune" },
+            { label: "Soul Core (socket)",     query: "Soul Core" },
+            { label: "Artificer (add socket)", query: "Artificer's Orb" },
+            { label: "Esencia (mod fijo)",     query: "Essence of" },
+            { label: "Calidad arma marcial",   query: "Whetstone" },
+            { label: "Calidad arma lanzador",  query: "Arcanist's Etcher" },
+            { label: "Calidad armadura",       query: "Armourer's Scrap" },
+            { label: "Calidad flask",          query: "Glassblower" },
+        ]},
     ])
 
     function _copyAndPaste(query) {

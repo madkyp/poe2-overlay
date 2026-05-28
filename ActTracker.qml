@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import "js/State.js" as State
+import "js/Markup.js" as Markup
 
 // Campaign leveling guide overlay. Reads the current zone from
 // Client.txt and shows the matching steps from a leveling DB derived
@@ -42,133 +43,8 @@ PanelWindow {
         currentEntry = levelingData.zones[(z || "").trim().toLowerCase()] || null
     }
 
-    // ── Lailloken markup → Qt RichText ─────────────────────────────
-    // The leveling guide's raw text uses Lailloken/Exile-UI markup:
-    //   (color:red), (color:7adda0)   inline color
-    //   (img:skill), (img:quest)      inline icon
-    //   (hint) ...                    indented hint block
-    //   (quest_text:Quest Name)       italic quest reference
-    //   areaidg1_1                    zone-id reference
-    //   foo ;; comment                show "comment" only, drop "foo"
-    //   alt_a || alt_b                bullet-separated alternatives
-
-    readonly property var _namedColors: ({
-        "red":     "#e07070",
-        "green":   "#7adda0",
-        "blue":    "#7adde0",
-        "yellow":  "#e0d060",
-        "orange":  "#e0a040",
-        "purple":  "#c080e0",
-        "white":   "#dde8f0",
-        "gray":    "#9aa8b8",
-        "grey":    "#9aa8b8"
-    })
-
-    readonly property var _imgIcons: ({
-        "skill":      "💎",
-        "support":    "💠",
-        "spirit":     "✨",
-        "quest":      "📜",
-        "quest_2":    "📜",
-        "quest_3":    "📜",
-        "waypoint":   "🌀",
-        "checkpoint": "🚩",
-        "trial":      "⚔",
-        "boss":       "💀",
-        "in-out":     "↔",
-        "in-out2":    "↔",
-        "portal":     "🚪",
-        "logout":     "🚪",
-        "vendor":     "🛒",
-        "stash":      "📦"
-    })
-
-    function _esc(s) {
-        return s.replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-    }
-
-    function _resolveAreaId(id) {
-        if (levelingData && levelingData.zones) {
-            for (var k in levelingData.zones) {
-                if (levelingData.zones[k].id === id)
-                    return levelingData.zones[k].name
-            }
-        }
-        return id
-    }
-
-    // Stylize already-escaped plain text: keyword accents, ||.
-    // (;; comments are stripped before tokenization, not here.)
-    function _stylePlain(escaped) {
-        var t = escaped
-        // Keyword accents — use <font> for max Qt RichText compatibility
-        t = t.replace(/\b(kill)\b/gi,
-                      '<font color="#e07070"><b>$1</b></font>')
-        t = t.replace(/\b(enter)\b/gi,
-                      '<font color="#7adda0"><b>$1</b></font>')
-        t = t.replace(/\b(optional|leaguestart|twinkrun)\s*:/gi,
-                      '<font color="#7a8aaa"><b>$1:</b></font>')
-        // "alt1 || alt2" — bullet separator
-        t = t.replace(/\s*\|\|\s*/g, ' <font color="#5a6a80">·</font> ')
-        // Underscore→space for tokens like "the_bloated_miller"
-        t = t.replace(/_/g, " ")
-        // Newlines become breaks
-        t = t.replace(/\n/g, "<br>")
-        return t
-    }
-
-    // Single-pass converter from Lailloken markup to Qt RichText HTML.
     function _renderStep(text) {
-        if (!text) return ""
-
-        // Strip "<cmd> ;; <comment>" fallback labels per line. The bit
-        // after ;; is a human-readable name that Lailloken uses for
-        // tooling that can't resolve areaid<id>; we resolve it already.
-        var src = text.split("\n").map(function(line) {
-            var i = line.indexOf(";;")
-            return i === -1 ? line : line.substring(0, i).replace(/\s+$/, "")
-        }).join("\n")
-
-        var html = ""
-        var openFonts = 0
-        var re = /\(([a-zA-Z_][a-zA-Z0-9_-]*)(?::([^)]*))?\)|areaid([a-zA-Z0-9_]+)/g
-        var last = 0
-        var m
-        while ((m = re.exec(src)) !== null) {
-            html += _stylePlain(_esc(src.substring(last, m.index)))
-            last = re.lastIndex
-
-            if (m[3] !== undefined) {
-                html += '<font color="#8ab4d4"><b>' +
-                        _esc(_resolveAreaId(m[3])) + '</b></font>'
-                continue
-            }
-
-            var tag = m[1].toLowerCase()
-            var val = m[2] || ""
-            if (tag === "color") {
-                var c = val.toLowerCase()
-                var hex = _namedColors[c] ||
-                          (/^[0-9a-f]{3,8}$/i.test(c) ? "#" + c : null)
-                if (hex) {
-                    html += '<font color="' + hex + '">'
-                    openFonts++
-                }
-            } else if (tag === "hint") {
-                html += '<br>&nbsp;&nbsp;<font color="#7a8aaa">→ '
-                openFonts++
-            } else if (tag === "img") {
-                html += (_imgIcons[val.toLowerCase()] || "•") + " "
-            } else if (tag === "quest_text" && val) {
-                html += '<font color="#c0b090"><i>' + _esc(val) + '</i></font>'
-            }
-            // unknown / no-op tags silently consumed
-        }
-        html += _stylePlain(_esc(src.substring(last)))
-        while (openFonts-- > 0) html += '</font>'
-        return html
+        return Markup.render(text, levelingData ? levelingData.zones : null)
     }
 
     // ── Resolve $HOME, locate Client.txt, load leveling data ─────

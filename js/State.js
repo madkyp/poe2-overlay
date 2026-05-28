@@ -96,6 +96,16 @@ function setActTrackerVisible(v) {
 function isActTrackerVisible() { return _actTrackerVisible }
 function addActTrackerVisibleListener(fn) { _atListeners.push(fn) }
 
+// Quest reward checklist visibility (off by default — large panel)
+var _rewardChecklistVisible = false
+var _rcListeners            = []
+function setRewardChecklistVisible(v) {
+    _rewardChecklistVisible = (v === true)
+    for (var i = 0; i < _rcListeners.length; i++) _rcListeners[i](_rewardChecklistVisible)
+}
+function isRewardChecklistVisible() { return _rewardChecklistVisible }
+function addRewardChecklistVisibleListener(fn) { _rcListeners.push(fn) }
+
 // Lookup by name (for CurrencyTracker)
 function getRate(name) {
     for (var i = 0; i < _entries.length; i++) {

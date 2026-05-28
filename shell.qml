@@ -12,4 +12,5 @@ ShellRoot {
     QuickSearchPopup {}
     MapEventNotifier {}
     ActTracker {}
+    RewardChecklist {}
 }
