@@ -42,8 +42,8 @@ PanelWindow {
     property var    _zoneMandatory: ({})
 
     readonly property var _actOrder: [
-        "Act 1", "Act 2", "Act 3",
-        "Cruel Act 1", "Cruel Act 2", "Cruel Act 3", "Endgame"
+        "Act 1", "Act 2", "Act 3", "Act 4",
+        "Interludio 1", "Interludio 2", "Interludio 3", "Endgame"
     ]
     readonly property var _kindColor: ({
         "skill":   "#7adde0",

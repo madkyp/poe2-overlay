@@ -60,9 +60,10 @@ def main():
     guide = json.loads(guide_raw)
 
     # Build id → metadata map. areas is a list of sections, each section is
-    # a list of area entries. Sections roughly correspond to acts.
+    # a list of area entries. Sections map to the 0.5 campaign structure:
+    # 4 acts (g1–g4) + 3 interludes (p1–p3) + endgame.
     act_names = ["Act 1", "Act 2", "Act 3", "Act 4",
-                 "Cruel Act 1", "Cruel Act 2", "Cruel Act 3", "Endgame"]
+                 "Interludio 1", "Interludio 2", "Interludio 3", "Endgame"]
     id_to_meta = {}
     for sect_idx, sect in enumerate(areas):
         act = act_names[sect_idx] if sect_idx < len(act_names) else f"Section {sect_idx + 1}"
@@ -84,11 +85,16 @@ def main():
     # Walk the guide. Each section is a list of step-groups. The "current
     # zone" for a group is the zone the player is in WHEN the group's
     # instructions run — i.e. the destination of the previous group's last
-    # `enter`. Each section (act) starts at that act's first area (g1_1 for
-    # Act 1, g2_1 for Act 2, etc.).
+    # `enter`. Each section starts at that section's first area, derived
+    # from the matching areas section (robust against id changes between
+    # versions, e.g. g4_town / p1_town in 0.5).
     enter_re   = re.compile(r"areaid([a-zA-Z0-9_]+)")
-    sect_first = ["g1_1", "g2_1", "g3_1", "g4_1_1",
-                  "p1_1", "p2_1", "p3_1", "g_endgame_town"]
+    sect_first = []
+    for sect in areas:
+        if isinstance(sect, list) and sect and sect[0].get("id"):
+            sect_first.append(sect[0]["id"])
+        else:
+            sect_first.append(None)
     for sect_idx, sect in enumerate(guide):
         if not isinstance(sect, list):
             continue
