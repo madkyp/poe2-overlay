@@ -37,6 +37,9 @@ PanelWindow {
     property var    actModel:      []
     property var    checked:       ({})
     property string expandedAct:   "Act 1"
+    property bool   autoMode:      false
+    // zone (lowercase) → array of mandatory item ids, for auto-ticking
+    property var    _zoneMandatory: ({})
 
     readonly property var _actOrder: [
         "Act 1", "Act 2", "Act 3",
@@ -53,6 +56,7 @@ PanelWindow {
     function _rebuild() {
         if (!levelingData || !levelingData.zones) { actModel = []; return }
         var byAct = {}
+        var mandMap = {}
         var zones = levelingData.zones
         for (var key in zones) {
             var z = zones[key]
@@ -62,15 +66,25 @@ PanelWindow {
                 var txt = steps[i].text
                 var kind = Markup.rewardKind(txt)
                 if (!kind) continue
+                var id = act + "|" + z.name + "|" + i
+                // "optional:" / "leaguestart:" / "twinkrun:" steps are skippable
+                var optional = /\b(optional|leaguestart|twinkrun)\s*:/i.test(txt)
                 if (!byAct[act]) byAct[act] = []
                 byAct[act].push({
-                    "id":   act + "|" + z.name + "|" + i,
-                    "kind": kind,
-                    "zone": z.name,
-                    "html": Markup.render(txt, zones)
+                    "id":       id,
+                    "kind":     kind,
+                    "zone":     z.name,
+                    "optional": optional,
+                    "html":     Markup.render(txt, zones)
                 })
+                if (!optional) {
+                    var zk = z.name.toLowerCase()
+                    if (!mandMap[zk]) mandMap[zk] = []
+                    mandMap[zk].push(id)
+                }
             }
         }
+        _zoneMandatory = mandMap
         var ordered = []
         for (var a = 0; a < _actOrder.length; a++) {
             var name = _actOrder[a]
@@ -100,6 +114,31 @@ PanelWindow {
         _saveChecked()
     }
 
+    // Look up the act a zone belongs to (for auto-expand).
+    function _zoneAct(zoneLower) {
+        if (levelingData && levelingData.zones && levelingData.zones[zoneLower])
+            return levelingData.zones[zoneLower].act || ""
+        return ""
+    }
+
+    // Client.txt can't tell us when a reward was claimed, only when the
+    // zone changes. So when the player leaves a zone we tick that zone's
+    // *mandatory* objectives (quests you must do to progress); optionals
+    // are left for the player to confirm by hand.
+    function _onZoneChange(zone, prevZone) {
+        var act = _zoneAct((zone || "").trim().toLowerCase())
+        if (act) expandedAct = act
+        if (!autoMode || !prevZone) return
+        var ids = _zoneMandatory[prevZone.trim().toLowerCase()]
+        if (!ids || !ids.length) return
+        var c = {}, changed = false
+        for (var k in checked) c[k] = checked[k]
+        for (var i = 0; i < ids.length; i++) {
+            if (!c[ids[i]]) { c[ids[i]] = true; changed = true }
+        }
+        if (changed) { checked = c; _saveChecked() }
+    }
+
     // ── Persistence: $HOME, leveling DB, position, visibility, checks
     Process {
         id: homeProc
@@ -125,6 +164,9 @@ PanelWindow {
                 checkedLoadProc.command = ["sh", "-c",
                     "cat \"" + base + "/.saved-rewards-checked\" 2>/dev/null"]
                 checkedLoadProc.running = true
+                autoLoadProc.command = ["sh", "-c",
+                    "cat \"" + base + "/.saved-rewards-auto\" 2>/dev/null"]
+                autoLoadProc.running = true
             }
         }
     }
@@ -182,10 +224,27 @@ PanelWindow {
             }
         }
     }
+    Process {
+        id: autoLoadProc
+        stdout: StdioCollector { id: autoLoadOut }
+        onRunningChanged: {
+            if (!running && autoLoadOut.text.trim() === "1")
+                root.autoMode = true
+        }
+    }
 
     Process { id: savePosProc }
     Process { id: saveVisProc }
     Process { id: saveCheckedProc }
+    Process { id: saveAutoProc }
+
+    function _saveAuto() {
+        if (_homeDir === "" || saveAutoProc.running) return
+        saveAutoProc.command = ["sh", "-c",
+            "printf '%s' " + (autoMode ? "1" : "0") +
+            " > \"" + _homeDir + "/.config/quickshell/poe2/.saved-rewards-auto\""]
+        saveAutoProc.running = true
+    }
 
     function _savePos() {
         if (_homeDir === "" || savePosProc.running) return
@@ -220,6 +279,10 @@ PanelWindow {
                 saveVisProc.running = true
             }
         })
+        // Auto-tick mandatory objectives + auto-expand as the player advances
+        State.addZoneListener(function(zone, prev) { root._onZoneChange(zone, prev) })
+        if (State.getCurrentZone())
+            root.expandedAct = root._zoneAct(State.getCurrentZone().trim().toLowerCase()) || root.expandedAct
     }
 
     // ── UI ─────────────────────────────────────────────────────────
@@ -238,8 +301,9 @@ PanelWindow {
             RowLayout {
                 Layout.fillWidth: true
                 Text {
-                    text: "⠿ 🏆 Recompensas por acto"
+                    text: "⠿ 🏆 Recompensas"
                     color: "#d4a843"; font.pixelSize: 11; font.bold: true
+                    elide: Text.ElideRight
                     Layout.fillWidth: true
                     MouseArea {
                         anchors.fill: parent
@@ -249,6 +313,28 @@ PanelWindow {
                         onPressed:         { mx = mouseX; my = mouseY; ox = root.offsetX; oy = root.offsetY }
                         onPositionChanged: { if (pressed) { root.offsetX = Math.max(0, ox + (mouseX - mx)); root.offsetY = Math.max(0, oy + (mouseY - my)) } }
                         onReleased:        root._savePos()
+                    }
+                }
+                // Auto-tick toggle
+                Rectangle {
+                    Layout.alignment: Qt.AlignVCenter
+                    implicitWidth: autoLbl.implicitWidth + 12
+                    implicitHeight: 16
+                    radius: 8
+                    color:        root.autoMode ? "#1e3a28" : "#26201a"
+                    border.color: root.autoMode ? "#7adda0" : "#4a4036"
+                    border.width: 1
+                    Text {
+                        id: autoLbl
+                        anchors.centerIn: parent
+                        text: (root.autoMode ? "⟳ auto" : "auto off")
+                        color: root.autoMode ? "#7adda0" : "#8a7a60"
+                        font.pixelSize: 8; font.bold: true
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: { root.autoMode = !root.autoMode; root._saveAuto() }
                     }
                 }
                 Text {

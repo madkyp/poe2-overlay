@@ -106,6 +106,19 @@ function setRewardChecklistVisible(v) {
 function isRewardChecklistVisible() { return _rewardChecklistVisible }
 function addRewardChecklistVisibleListener(fn) { _rcListeners.push(fn) }
 
+// ── Current campaign zone bus (fed by ActTracker, used by RewardChecklist)
+var _currentZone   = ""
+var _zoneListeners = []
+function setCurrentZone(z) {
+    z = z || ""
+    if (z === _currentZone) return
+    var prev = _currentZone
+    _currentZone = z
+    for (var i = 0; i < _zoneListeners.length; i++) _zoneListeners[i](z, prev)
+}
+function getCurrentZone() { return _currentZone }
+function addZoneListener(fn) { _zoneListeners.push(fn) }
+
 // Lookup by name (for CurrencyTracker)
 function getRate(name) {
     for (var i = 0; i < _entries.length; i++) {

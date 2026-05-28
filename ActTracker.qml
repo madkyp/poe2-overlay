@@ -39,6 +39,7 @@ PanelWindow {
 
     function _setZone(z) {
         currentZone = z
+        State.setCurrentZone(z)
         if (!levelingData) return
         currentEntry = levelingData.zones[(z || "").trim().toLowerCase()] || null
     }
