@@ -141,6 +141,7 @@ PanelWindow {
         { label: "Omens",      type: "Ritual"     },
         { label: "Expedition", type: "Expedition" },
         { label: "Catalysts",  type: "Breach"     },
+        { label: "Delirium",   type: "Delirium"   },
         { label: "⚙ Options",  type: "__options__" }
     ]
 
