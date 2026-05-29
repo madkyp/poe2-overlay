@@ -36,10 +36,10 @@ var SECTIONS = [
                 tip: "Mayor calidad en gemas suele aumentar el efecto base de la habilidad."
             },
             {
-                name: "Vaal Infuser",
-                applies: "Arma o Armadura",
-                effect: "Mejora la calidad por encima del 20% con probabilidad de corromper el item.",
-                tip: "NUEVO — Fate of the Vaal. Solo úsalo si el item ya está bien crafteado — la corrupción es irreversible."
+                name: "Vaal Infusers (4 tipos)",
+                applies: "Item con 20%+ calidad",
+                effect: "Sube la calidad por encima del 20% corrompiendo el item. En 0.5 hay 4 variantes: Armourer's (armadura), Blacksmith's (armas marciales), Arcanist's (varita/bastón/cetro), Catalysing (joyería). Requieren ya 20% de calidad.",
+                tip: "Solo úsalo si el item ya está bien crafteado — la corrupción es irreversible."
             }
         ]
     },
@@ -51,13 +51,13 @@ var SECTIONS = [
                 name: "Orb of Transmutation",
                 applies: "Normal",
                 effect: "Convierte un item Normal en Magic con 1 modificador aleatorio.",
-                tip: ""
+                tip: "En 0.5 (Runes of Aldur) son notablemente más raras que antes."
             },
             {
                 name: "Orb of Augmentation",
                 applies: "Magic",
                 effect: "Añade un nuevo modificador aleatorio a un item Magic.",
-                tip: "Úsalo cuando el Magic tiene solo 1 mod y quieres intentar conseguir el segundo."
+                tip: "Úsalo cuando el Magic tiene solo 1 mod y quieres intentar conseguir el segundo. En 0.5 son más raras; las versiones Greater caen desde el Acto 4 con nivel mín. de mod 44."
             },
             {
                 name: "Regal Orb",
@@ -105,7 +105,7 @@ var SECTIONS = [
                 name: "Divine Orb",
                 applies: "Magic / Rare / Unique",
                 effect: "Rerollea los valores numéricos de todos los mods del item. Los tipos de mod no cambian.",
-                tip: "Para maximizar valores. Muy caro — úsalo solo en items casi perfectos."
+                tip: "Para maximizar valores. En 0.5 son más comunes que antes, así que optimizar valores es más asequible."
             },
             {
                 name: "Fracturing Orb",
@@ -147,49 +147,7 @@ var SECTIONS = [
                 name: "Vaal Cultivation Orb",
                 applies: "Unique Vaal corrompido / Unique normal",
                 effect: "En Uniques Vaal corrompidos: reemplaza hasta 2 modificadores. En otros Uniques: los convierte en un Unique corrompido de la misma clase de item.",
-                tip: "NUEVO — Fate of the Vaal. Útil para mejorar Uniques Vaal o transformar Uniques normales en variantes corrompidas."
-            },
-            {
-                name: "Vaal Siphoner",
-                applies: "Joyería Rare corrompida",
-                effect: "Añade un Kill Threshold al item. Al alcanzarse, sifona un modificador aleatorio y mejora los valores numéricos del resto.",
-                tip: "NUEVO — Fate of the Vaal. Progresivo: cuantos más kills, mejor se vuelve el item."
-            },
-            {
-                name: "Architect's Orb",
-                applies: "Equipamiento o Joya corrompida",
-                effect: "Modifica un item corrompido de forma impredecible, o lo destruye.",
-                tip: "NUEVO — Fate of the Vaal. Alto riesgo, úsalo solo si el item ya no tiene otro uso."
-            },
-            {
-                name: "Crystallised Corruption",
-                applies: "Gema de habilidad corrompida",
-                effect: "Modifica una gema de habilidad corrompida de forma impredecible, o la destruye.",
-                tip: "NUEVO — Fate of the Vaal. Para intentar mejorar gemas corrompidas ya sin otro valor."
-            }
-        ]
-    },
-    {
-        title: "Fate of the Vaal — Nuevos items",
-        color: "#c47a3a",
-        orbs: [
-            {
-                name: "Ancient Infuser",
-                applies: "Precursor Tablet",
-                effect: "Modifica un Precursor Tablet de forma impredecible, con posibilidad de destruirlo.",
-                tip: "NUEVO — para intentar mejorar tablets de endgame."
-            },
-            {
-                name: "Core Destabiliser",
-                applies: "Soul Core",
-                effect: "Modifica un Soul Core de forma impredecible, con posibilidad de destruirlo.",
-                tip: "NUEVO — úsalo en Soul Cores con mods que no quieres."
-            },
-            {
-                name: "Orb of Extraction",
-                applies: "Equipamiento o Joya",
-                effect: "Destruye el item devolviendo todos los Augments (Runes, Soul Cores) que tenía socketados.",
-                tip: "NUEVO — imprescindible para recuperar Runes y Soul Cores valiosos antes de desechar un item."
+                tip: "Útil para mejorar Uniques Vaal o transformar Uniques normales en variantes corrompidas. En 0.5 se rebajaron los valores en algunos uniques concretos."
             }
         ]
     },
@@ -276,12 +234,6 @@ var SECTIONS = [
                 tip: "Elimina el riesgo del Annulment — borra el mod malo con total seguridad."
             },
             {
-                name: "Omen of Corruption",
-                applies: "Junto a Vaal Orb",
-                effect: "Al corromper con Vaal Orb, garantiza que se aplique un implicit corrupto en vez de efectos negativos.",
-                tip: "Reduce el riesgo de corrupción en items valiosos."
-            },
-            {
                 name: "Omen of Sinistral Erasure",
                 applies: "Magic / Rare",
                 effect: "Elimina un prefijo aleatorio del item.",
@@ -352,6 +304,30 @@ var SECTIONS = [
                 applies: "Joyería",
                 effect: "Añade calidad sesgando hacia mods de Crítico.",
                 tip: "Muy valorado en builds de crítico."
+            }
+        ]
+    },
+    {
+        title: "Runes of Aldur (0.5) — Crafteo rúnico",
+        color: "#5a8aca",
+        orbs: [
+            {
+                name: "Remnant",
+                applies: "Mecánica de liga",
+                effect: "Aparece en cada zona de la liga. Te deja craftear un item a elegir grabando Runic Recipes en sus slots. Tiene entre 2 y 10 slots (más slots = más raro, pero permite craftear items mucho mejores). Al activarlo te enfrentas a un encuentro que debes superar para reclamar el item.",
+                tip: "Añadir más Runeshapes aumenta las oleadas de enemigos y les pone modificadores rúnicos, a cambio de mejores resultados."
+            },
+            {
+                name: "Verisium (Runeforging)",
+                applies: "Armadura",
+                effect: "Se desbloquea en el Acto 1. Gastas Verisium para añadir Runic Ward (nueva defensa) a tus armaduras. Por debajo de nivel 55 la armadura gana Runic Ward sin penalización; las armaduras de nivel alto cambian parte de su defensa base por Runic Ward. Desde el Acto 3 también mejora armaduras Unique.",
+                tip: "Runic Ward se activa al llegar a 1 de vida y absorbe daño mientras dura — una capa extra de supervivencia."
+            },
+            {
+                name: "Runas nuevas (0.5)",
+                applies: "Sockets de Rune",
+                effect: "13 Ancient Runes (bonus por tipo de arma), 13 Mythical (boosts early lvl 15+), 60+ Unique Power Runes (creadas destruyendo Uniques, heredan parte de sus propiedades), 15+ Runic Ward Runes y 15 Meta-crafting Runes para crafteo de late-game.",
+                tip: "Las Unique Power Runes son la gran novedad: sacrificas un Unique para meter parte de su poder en una runa socketeable."
             }
         ]
     }

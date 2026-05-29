@@ -405,8 +405,9 @@ var GUIDES = [
                 content: "Al corromper con Vaal Orb, uno de los resultados posibles es añadir un implicit corrupto al item (además de otros resultados: sin cambio, modificar un mod existente, o añadir un socket). Los implicits corruptos son únicos y no pueden conseguirse de ninguna otra forma. Cada tipo de item tiene su propio pool de implicits posibles.",
                 steps: [],
                 tips: [
-                    "Usa Omen of Corruption para garantizar que la Vaal Orb aplica un implicit corrupto en lugar de otros efectos",
-                    "Hinekora's Lock previsualiza el resultado — usa ambas en items muy valiosos"
+                    "⚠ En 0.5 (Runes of Aldur) el Omen of Corruption ya NO se obtiene — la corrupción es RNG puro, no puedes forzar el implicit",
+                    "Hinekora's Lock previsualiza el resultado de la Vaal Orb — úsalo en items valiosos para no corromper a ciegas",
+                    "El resultado de corrupción que rerollea valores numéricos ahora MULTIPLICA cada mod según su valor actual (antes era totalmente aleatorio)"
                 ]
             },
             {
@@ -429,7 +430,7 @@ var GUIDES = [
             },
             {
                 heading: "Cuándo corromper para implicits",
-                content: "Solo merece la pena intentar implicits específicos cuando el item base ya es casi perfecto y tienes Omen of Corruption para garantizar que salga un implicit (en lugar de un resultado menos útil). Sin el Omen, la corrupción puede simplemente bloquear el item sin añadir nada.",
+                content: "Solo merece la pena cuando el item base ya es casi perfecto y aceptas el riesgo: la corrupción puede no añadir nada (o bloquear el item) y es irreversible. En 0.5 ya no existe el Omen of Corruption, así que no hay forma de garantizar el implicit — es RNG. Previsualiza con Hinekora's Lock antes de tirar.",
                 steps: [],
                 tips: [
                     "Comprar items ya corrompidos con el implicit que buscas en el trade suele ser más barato que intentar conseguirlo tú mismo",
@@ -1058,7 +1059,7 @@ var GUIDES = [
                 heading: "What Corruption Does",
                 content: "Applies a random effect to the item — stats can go up, down, or the item may simply become locked with no change. Once corrupted, the item cannot be modified further by any standard crafting currency.",
                 steps: [],
-                tips: ["Always corrupt as the very last crafting step", "Use Omen of Corruption to guarantee a corrupted implicit instead of random negative effects", "Use Hinekora's Lock to preview the result before committing the Vaal Orb"]
+                tips: ["Always corrupt as the very last crafting step", "⚠ Omen of Corruption was removed in 0.5 (Runes of Aldur) — corruption can no longer be steered, it's pure RNG", "Use Hinekora's Lock to preview the result before committing the Vaal Orb"]
             },
             {
                 heading: "How to Corrupt",
@@ -1067,10 +1068,10 @@ var GUIDES = [
                 tips: []
             },
             {
-                heading: "Fate of the Vaal — New Tools",
-                content: "New items added in the Fate of the Vaal league allow further manipulation of already-corrupted items: Vaal Cultivation Orb (replace up to 2 mods on corrupted Uniques, or convert normal Uniques into corrupted variants), Vaal Siphoner (adds a kill threshold — on reaching it, siphons a random mod and improves values of the rest), Architect's Orb (randomly modify or destroy corrupted gear/jewels), Crystallised Corruption (for corrupted skill gems).",
+                heading: "Manipulating corrupted items",
+                content: "Vaal Cultivation Orb can further alter already-corrupted Uniques: it replaces up to 2 mods on corrupted Uniques, or converts a normal Unique into a corrupted variant of the same item class. In 0.5 its outcome values were reduced on certain specific Uniques.",
                 steps: [],
-                tips: ["Architect's Orb is high risk — only use on items with no other value", "Vaal Siphoner grows stronger with more kills — great for long-term improvement on a solid item"]
+                tips: ["Corrupted items can't be touched by standard currency — Vaal Cultivation Orb is one of the few exceptions, and only on Uniques"]
             }
         ]
     },
@@ -1160,7 +1161,7 @@ var GUIDES = [
                 heading: "Soul Cores",
                 content: "Drop from the Temple of Atzoatl. Provide varied effects depending on whether socketed in weapon or armor: life on kill, bleed/poison chance, elemental bonuses, stat conversions, minion bonuses.",
                 steps: [],
-                tips: ["Soul Cores are tradeable and often valuable — check poe2.ninja rates before selling or destroying", "Core Destabiliser (Fate of the Vaal) rerolls a Soul Core randomly — use it on unwanted cores only"]
+                tips: ["Soul Cores are tradeable and often valuable — check poe2.ninja rates before selling or destroying"]
             },
             {
                 heading: "Idols",
