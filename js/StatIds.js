@@ -29,16 +29,27 @@ function fetchStats(callback) {
     xhr.send()
 }
 
+// Suffixes the in-game clipboard appends per mod source — none of these
+// exist in the trade API stat templates, so they have to come off before
+// matching or the mod is silently dropped.
+var _SUFFIX_RE = /\s*\((?:implicit|crafted|rune|enchant|enchanted|fractured|desecrated|corrupted|scourge|veiled)\)\s*$/i
+
+function _stripSuffix(text) { return text.replace(_SUFFIX_RE, "") }
+
 function _norm(text) {
-    // Replace actual numbers (consuming any leading +/-), then strip remaining
-    // + signs before placeholders so "+# to maximum..." matches "# to maximum..."
-    return text.replace(/[+\-]?\d+(\.\d+)?/g, "#")
+    // Drop the per-source suffix, replace actual numbers (consuming any
+    // leading +/-), then strip remaining + signs before placeholders so
+    // "+# to maximum..." matches "# to maximum...".
+    return _stripSuffix(text)
+               .replace(/[+\-]?\d+(\.\d+)?/g, "#")
                .replace(/\+#/g, "#")
                .replace(/\s+/g, " ").trim().toLowerCase()
 }
 
-// Type search priority — explicit first, then special mod types
-var TYPE_PRIORITY = ["explicit", "desecrated", "fractured", "implicit", "enchant"]
+// Type search priority — explicit first, then special mod types.
+// "rune" added in 0.5: rune-granted mods that don't exist as explicit
+// (Unique Power Runes etc.) would otherwise be dropped.
+var TYPE_PRIORITY = ["explicit", "desecrated", "fractured", "implicit", "rune", "enchant"]
 
 // Returns { id, min } or null if no match found
 function mapMod(modText) {
