@@ -83,15 +83,35 @@ function searchItem(item, statFilters, league, poesessid, callback) {
     }
 
     if (item.rarity === "Unique") {
-        var query = _buildUniqueQuery(item)
-        _postSearch(query, league, poesessid, function(err, data) {
-            if (err) { callback(err, null); return }
-            _fetchListings(data.id, (data.result || []).slice(0, 6),
-                           league, poesessid, 0, callback)
-        })
+        _searchUniqueWithFallback(item, league, poesessid, callback)
     } else {
         _searchRareWithFallback(item, statFilters || [], league, poesessid, callback)
     }
+}
+
+// Try the precise unique-name query first; on "Unknown item name" (common
+// during the first hours of a patch — GGG's items dictionary lags the
+// game), fall back to a base+rarity=unique search so the user at least
+// gets every unique of that base type to compare against.
+function _searchUniqueWithFallback(item, league, poesessid, callback) {
+    _postSearch(_buildUniqueQuery(item), league, poesessid, function(err, data) {
+        if (err) { callback(err, null); return }
+        if (!data.error && data.id) {
+            _fetchListings(data.id, (data.result || []).slice(0, 6),
+                           league, poesessid, 0, callback)
+            return
+        }
+        // Fallback path
+        _postSearch(_buildUniqueFallbackQuery(item), league, poesessid, function(err2, data2) {
+            if (err2) { callback(err2, null); return }
+            if (data2.error || !data2.id) {
+                var msg = (data2.error && data2.error.message) || "Unique no encontrado"
+                callback(msg, null); return
+            }
+            _fetchListings(data2.id, (data2.result || []).slice(0, 6),
+                           league, poesessid, 0, callback)
+        })
+    })
 }
 
 // Progressive fallback: try up to 6 mods, drop one at a time only when 0 results.
@@ -134,6 +154,23 @@ function _buildUniqueQuery(item) {
             type: item.baseType,
             stats: [{ type: "and", filters: [] }],
             filters: BUYOUT_FILTER
+        },
+        sort: { price: "asc" }
+    }
+}
+
+// Fallback for uniques whose name isn't in the trade2 dictionary yet.
+// Drops the name and forces rarity=unique on the base, so the user gets
+// every unique of that base type instead of a broken empty page.
+function _buildUniqueFallbackQuery(item) {
+    return {
+        query: {
+            status: { option: "securable" },
+            type: item.baseType,
+            filters: {
+                type_filters: { filters: { rarity: { option: "unique" } } },
+                trade_filters: { filters: { sale_type: { option: "priced" } } }
+            }
         },
         sort: { price: "asc" }
     }
