@@ -168,7 +168,16 @@ PanelWindow {
         // Ensure stat ID cache is loaded, then map mods and search
         var _item   = item
         var _league = league
-        StatIds.fetchStats(function(err2, _) {
+        StatIds.fetchStats(function(err2, cache) {
+            if (err2 || !cache || cache.length === 0) {
+                console.log("[PriceCheck] ✗ StatIds.fetchStats failed:", err2,
+                            "| cache size:", cache ? cache.length : 0)
+                root.loading = false
+                root.errorMsg = "No se pudo cargar el diccionario de stats del API: " +
+                                (err2 || "respuesta vacía") + ". Reintenta en unos segundos."
+                return
+            }
+            console.log("[PriceCheck] ✓ stats cache loaded:", cache.length, "entries")
             var statFilters = []
             if (_item.rarity !== "Unique") {
                 var mods = _item.mods || []
