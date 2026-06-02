@@ -177,14 +177,24 @@ PanelWindow {
                 // "60% increased Spell Damage" vs explicit "147%") so we don't
                 // waste a filter slot or send conflicting values.
                 var statMap = {}
+                var unmapped = []
+                console.log("[PriceCheck] item:", _item.name, "/", _item.baseType,
+                            "| rarity:", _item.rarity, "| mods:", mods.length)
                 for (var mi = 0; mi < mods.length; mi++) {
                     var mapped = StatIds.mapMod(mods[mi])
-                    if (!mapped) continue
+                    if (!mapped) {
+                        console.log("[PriceCheck]   ✗ unmapped:", JSON.stringify(mods[mi]))
+                        unmapped.push(mods[mi])
+                        continue
+                    }
+                    console.log("[PriceCheck]   ✓", mods[mi], "→", mapped.id,
+                                "min=" + (mapped.min !== undefined ? mapped.min : "-"))
                     var existing = statMap[mapped.id]
                     if (!existing || (mapped.min !== undefined && mapped.min > (existing.min || 0))) {
                         statMap[mapped.id] = { id: mapped.id, min: mapped.min, origText: mods[mi] }
                     }
                 }
+                _item._unmapped = unmapped
                 // Sort by weight descending so fallback drops least-important mods first
                 var weightedPairs = []
                 for (var sid2 in statMap) {
@@ -209,6 +219,8 @@ PanelWindow {
                     listings: data.listings || [],
                     total: data.total || 0,
                     modsUsed: data.modsUsed || 0,
+                    modsTotal: (_item.mods || []).length,
+                    unmapped: _item._unmapped || [],
                     confidence: TradeApi.getConfidence(data.modsUsed || 0, data.total || 0),
                     tradeUrl: sid ? "https://www.pathofexile.com/trade2/search/poe2/" + encodeURIComponent(lg) + "/" + sid : ""
                 }
@@ -455,6 +467,38 @@ PanelWindow {
                         text: root.priceResult ? root.priceResult.total + " listings" : ""
                         color: "#3a3a3a"
                         font.pixelSize: 10
+                    }
+                    Text {
+                        visible: !!root.priceResult && root.priceResult.type !== "unique"
+                                 && root.priceResult.modsTotal !== undefined
+                        text: root.priceResult
+                              ? (root.priceResult.modsUsed + "/" + root.priceResult.modsTotal + " mods")
+                              : ""
+                        color: root.priceResult && root.priceResult.modsUsed < root.priceResult.modsTotal
+                               ? "#a06030" : "#3a3a3a"
+                        font.pixelSize: 10
+                    }
+                }
+
+                // Show which mods couldn't be mapped to a trade stat id, so
+                // the user can see what's getting dropped from the search.
+                ColumnLayout {
+                    visible: !!root.priceResult && root.priceResult.unmapped
+                             && root.priceResult.unmapped.length > 0
+                    Layout.fillWidth: true
+                    spacing: 1
+                    Text {
+                        text: "✗ no mapeados (no se buscan):"
+                        color: "#a06030"; font.pixelSize: 9; font.italic: true
+                    }
+                    Repeater {
+                        model: root.priceResult ? (root.priceResult.unmapped || []) : []
+                        Text {
+                            text: "  • " + modelData
+                            color: "#806040"; font.pixelSize: 9
+                            wrapMode: Text.WordWrap
+                            Layout.fillWidth: true
+                        }
                     }
                 }
 
