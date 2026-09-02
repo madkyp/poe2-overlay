@@ -111,7 +111,7 @@ PanelWindow {
         return v.toFixed(3) + " c"
     }
 
-    property string selectedLeague:  "Fate of the Vaal"
+    property string selectedLeague:  "Runes of Aldur"
     property var    availableLeagues: []
     property bool   leaguesFetched:  false
     property var    categoryIcons:   ({})
@@ -207,7 +207,7 @@ PanelWindow {
             if (!running) {
                 root._homeDir = homeOut.text.trim()
                 leagueReadProc.command = ["sh", "-c",
-                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-league\" 2>/dev/null || printf 'Fate of the Vaal'"]
+                    "cat \"" + root._homeDir + "/.config/quickshell/poe2/.saved-league\" 2>/dev/null || printf 'Runes of Aldur'"]
                 leagueReadProc.running = true
                 versionCheckProc.command = ["sh", "-c",
                     "cat \"" + root.effectiveInstallPath + "/.neversink-version\" 2>/dev/null"]

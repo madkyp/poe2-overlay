@@ -4,7 +4,7 @@ var API_URL   = "https://poe.ninja/poe2/api/economy/exchange/current/overview"
 var IMAGE_CDN = "https://web.poecdn.com"
 
 function fetchAll(league, type, callback) {
-    var url = API_URL + "?league=" + encodeURIComponent(league || "Fate of the Vaal")
+    var url = API_URL + "?league=" + encodeURIComponent(league || "Runes of Aldur")
                       + "&type="   + encodeURIComponent(type   || "Currency")
     var xhr = new XMLHttpRequest()
     xhr.open("GET", url, true)

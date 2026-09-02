@@ -52,7 +52,7 @@ function getError() { return _fetchErr }
 function addRateListener(fn) { _rateListeners.push(fn) }
 
 // ── Current league ───────────────────────────────────────────
-var _league = "Fate of the Vaal"
+var _league = "Runes of Aldur"
 var _leagueListeners = []
 
 function setLeague(name) {

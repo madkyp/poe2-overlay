@@ -1143,31 +1143,31 @@ var GUIDES = [
         category: "Sockets",
         categoryColor: "#6a7aaa",
         difficulty: "Beginner",
-        summary: "Add augment slots to gear and fill them with Runes, Soul Cores, or Idols.",
+        summary: "Add Augment Sockets to weapons/armour for Runes and Soul Cores, and use the dedicated Idol sockets on Helmet/Body/Gloves/Boots/Sceptre for build-defining bonuses.",
         sections: [
             {
                 heading: "Socket Limits",
-                content: "Max 7 sockets across full gear: Weapons 2, Body Armour 2, Gloves / Boots / Helmet 1 each. Certain unique or corrupted items may exceed these limits.",
+                content: "Artificer's Orb (crafted from 10 Artificer's Shards) adds an Augment Socket to a martial weapon, wand, staff or armour piece — up to 2 sockets on body armour and two-handed weapons, up to 1 on other weapon/armour slots by default. Corrupted or unique items can exceed the normal cap.",
                 steps: [],
-                tips: ["Use Artificer's Orb to add sockets (craft from 10 Artificer's Shards)", "Vaal Orb can add an extra socket beyond the normal cap on corrupted gear"]
+                tips: ["Sockets can be filled and emptied freely at any time at no cost", "Cadigan's Epiphany destroys all Augment Sockets on an item and converts them into a single Jewel socket instead"]
             },
             {
                 heading: "Runes",
-                content: "3 tiers: Lesser, Standard, Greater. Body Rune: life leech (weapon) / max life (armor). Iron Rune: physical damage (weapon) / defense (armor). Storm / Desert / Glacial: elemental damage or resistance. Inspiration / Mind / Rebirth: mana recovery. Stone Rune: stun. Vision Rune: accuracy or flask recovery. Greater runes provide significantly higher percentages than Lesser.",
+                content: "Standard Runes come in 4 tiers — Lesser, Normal, Greater, Perfect — across categories: Elemental (Desert/Glacial/Storm — elemental damage or resistance), Attribute (Robust/Adept/Resolve — Str/Dex/Int), Resource (Body/Mind/Rebirth/Inspiration — leech and recovery), Utility (Iron/Stone/Vision/Tempered — damage scaling and defence). 0.5 (Runes of Aldur) added: Ancient Runes (special weapon-specific effects), Runic Ward runes (Ward/Charging/Warding, tied to the new Runic Ward defence) and Augment/meta-crafting runes that add a whole new modifier line instead of a fixed bonus (e.g. Uhtred's Sidereus on Boots grants Chronomancy modifiers).",
                 steps: [],
-                tips: ["Match rune tier to your character level — Greater runes are endgame investment", "Sockets can be filled and emptied freely at any time at no cost"]
+                tips: ["Match rune tier to your character level — Greater/Perfect runes are an endgame investment", "Aldur's Legacy destroys a Kalguuran or Ezomyte Unique to forge a rune that inherits part of its modifiers (named variants like Passion/Breath/Ire of Aldur)"]
             },
             {
                 heading: "Soul Cores",
-                content: "Drop from the Temple of Atzoatl. Provide varied effects depending on whether socketed in weapon or armor: life on kill, bleed/poison chance, elemental bonuses, stat conversions, minion bonuses.",
+                content: "Farmed mainly from the Trial of Chaos (via Inscribed Ultimatums) — at least 1 Soul Core is guaranteed per run, more from higher-level Ultimatums, and rounds 4, 7 and 10 always offer one as a reward. Effects vary heavily depending on whether the core is socketed in a weapon or in armour.",
                 steps: [],
-                tips: ["Soul Cores are tradeable and often valuable — check poe2.ninja rates before selling or destroying"]
+                tips: ["Core Destabiliser (found in Atziri's Temple) can upgrade a Soul Core into a rarer Ancient Soul Core — but risks destroying it instead", "Orb of Extraction recovers a socketed Soul Core at the cost of destroying the host item", "Soul Cores are tradeable and often valuable — check poe2.ninja rates before selling or destroying"]
             },
             {
                 heading: "Idols",
-                content: "Armor-type specific socketables. Provide minor bonuses: Area of Effect, attack speed, curse magnitude, cooldown recovery, item rarity, skill quality.",
+                content: "Socket directly into 5 specific gear types — Helmet, Body Armour, Gloves, Boots, Sceptre. One of the most build-defining endgame systems: the same Idol gives a different effect depending on which of those slots it's socketed into (e.g. offensive/defensive stats in armour vs. minion/ally bonuses in a Sceptre).",
                 steps: [],
-                tips: []
+                tips: ["Drop mainly from Azmerian Spirit-Possessed monsters", "Once socketed an Idol can't be removed — only replaced with another socketable"]
             }
         ]
     },

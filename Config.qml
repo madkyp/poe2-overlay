@@ -5,7 +5,7 @@ Singleton {
         id: store
         restoreId: "poe2overlay-v3"
 
-        property string league:                 "Fate of the Vaal"
+        property string league:                 "Runes of Aldur"
         property string poesessid:              ""
         property string buildNotes:             "# Notas de Build\n\n## Skills\n\n## Items necesarios\n\n## Pasivas clave"
         property string filterInstalledVersion: ""

@@ -13,8 +13,8 @@ Overlay de escritorio para **Path of Exile 2** construido con **Quickshell** (QM
 - **Session Tracker** — Widget de sesión con cronómetro, contador de muertes (detectado automáticamente desde el log del juego) y zona actual. Arrastrable y colapsable. Reseteable con un clic.
 - **Notas de Build** — Panel lateral con editor Markdown para apuntar skills, items clave y pasivas de tu build.
 - **Economy Window** — Tabla completa de divisa con popup de tasas cruzadas al pasar el ratón. Selección de categoría lateral. Ventana redimensionable arrastrando los bordes (tamaño persistente entre sesiones).
-- **Opciones de liga** — Cambia al vuelo entre ligas (Fate of the Vaal, HC, Standard, Hardcore…) sin reiniciar. Controla la visibilidad de los widgets desde la pestaña Opciones.
-- **Crafting Cheat Sheet** — Panel de referencia rápida con todos los orbes, essences, omens, catalysts y los nuevos items de Fate of the Vaal. Incluye descripción, a qué se aplica y tips de uso para cada uno.
+- **Opciones de liga** — Cambia al vuelo entre ligas (Runes of Aldur, HC, Standard, Hardcore…) sin reiniciar. Controla la visibilidad de los widgets desde la pestaña Opciones.
+- **Crafting Cheat Sheet** — Panel de referencia rápida con todos los orbes, essences, omens, catalysts y el crafteo rúnico de Runes of Aldur. Incluye descripción, a qué se aplica y tips de uso para cada uno.
 - **Instalador NeverSink** — Descarga e instala directamente los filtros NeverSink para PoE2 desde GitHub. Detecta automáticamente la carpeta del juego, muestra la versión instalada y avisa cuando hay actualizaciones.
 
 ---
@@ -152,10 +152,11 @@ Accesible desde la pestaña **📖 Crafting** en la ventana de economía. La sub
 - **Cambio de rareza** — Transmutation, Augmentation, Regal, Alchemy, Chance
 - **Modificación de mods** — Chaos Orb *(⚠ en PoE2 solo cambia 1 mod)*, Exalted, Annulment, Divine, Fracturing, Hinekora's Lock
 - **Essences, Omens (Ritual), Catalysts (Breach)**
-- **Corrupción y Vaal** — Vaal Orb, Vaal Cultivation Orb, Vaal Siphoner, Architect's Orb, Crystallised Corruption
-- **Fate of the Vaal** — Ancient Infuser, Core Destabiliser, Orb of Extraction
+- **Corrupción y Vaal** — Vaal Orb, Vaal Cultivation Orb
 - **Desecramiento (Abyss)** — Collarbone, Jawbone, Rib, Cranium, Vertebrae
 - **Sockets de gema** — Artificer's Orb, Jeweller's Orbs
+- **Runes of Aldur (0.5)** — crafteo rúnico: Remnant, Verisium/Runeforging, Ancient Runes, Runic Ward Runes, runas de Augment/meta-crafting, Aldur's Legacy
+- **Soul Cores** — Trial of Chaos, Core Destabiliser → Ancient Soul Core, Orb of Extraction
 
 ---
 
@@ -171,7 +172,7 @@ Accesible desde la pestaña **📖 Crafting** en la ventana de economía. La sub
   <br><em>Vista expandida de una guía — pasos numerados, materiales necesarios y tips</em>
 </p>
 
-> ⚠️ **Aviso sobre las guías de crafting y ejemplos:** El contenido de las guías está generado en base a las mecánicas conocidas de PoE2 hasta **Fate of the Vaal (0.4)**. Algunos valores numéricos exactos, nombres de mods o builds meta pueden estar ligeramente desactualizados respecto a los últimos patches y balance changes. **La base conceptual del crafteo (prefijos/sufijos, tiers, Essences, Catalysts, Exalted, Chaos, Divine, Corruption…) sigue siendo la misma** y las guías son una referencia válida para entender el sistema. Para valores exactos y mods actuales consulta siempre [poe2db.tw](https://poe2db.tw).
+> ⚠️ **Aviso sobre las guías de crafting y ejemplos:** El contenido de las guías está generado en base a las mecánicas conocidas de PoE2 hasta **Runes of Aldur (0.5)**. Algunos valores numéricos exactos, nombres de mods o builds meta pueden estar ligeramente desactualizados respecto a los últimos patches y balance changes. **La base conceptual del crafteo (prefijos/sufijos, tiers, Essences, Catalysts, Exalted, Chaos, Divine, Corruption…) sigue siendo la misma** y las guías son una referencia válida para entender el sistema. Para valores exactos y mods actuales consulta siempre [poe2db.tw](https://poe2db.tw).
 
 La sub-pestaña **Guías** incluye 28 guías de crafting organizadas en dos grupos:
 
