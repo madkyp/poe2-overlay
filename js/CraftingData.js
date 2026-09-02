@@ -320,14 +320,38 @@ var SECTIONS = [
             {
                 name: "Verisium (Runeforging)",
                 applies: "Armadura",
-                effect: "Se desbloquea en el Acto 1. Gastas Verisium para añadir Runic Ward (nueva defensa) a tus armaduras. Por debajo de nivel 55 la armadura gana Runic Ward sin penalización; las armaduras de nivel alto cambian parte de su defensa base por Runic Ward. Desde el Acto 3 también mejora armaduras Unique.",
+                effect: "Se desbloquea en el Acto 1 (misión en Ogham). Gastas Verisium para añadir Runic Ward (nueva defensa) a tus armaduras. Por debajo de nivel 55 la armadura gana Runic Ward sin penalización; las de nivel alto cambian parte de su defensa base por Runic Ward. El Runeforging de armas (con Transcendent Alloy, aplicable a Staves/Wands/Foci) se desbloquea en el Acto 3.",
                 tip: "Runic Ward se activa al llegar a 1 de vida y absorbe daño mientras dura — una capa extra de supervivencia."
             },
             {
                 name: "Runas nuevas (0.5)",
                 applies: "Sockets de Rune",
-                effect: "13 Ancient Runes (bonus por tipo de arma), 13 Mythical (boosts early lvl 15+), 60+ Unique Power Runes (creadas destruyendo Uniques, heredan parte de sus propiedades), 15+ Runic Ward Runes y 15 Meta-crafting Runes para crafteo de late-game.",
-                tip: "Las Unique Power Runes son la gran novedad: sacrificas un Unique para meter parte de su poder en una runa socketeable."
+                effect: "Ancient Runes (efectos especiales según el tipo de arma), Runic Ward Runes (ligadas a la nueva defensa Runic Ward) y runas de Augment/meta-crafting que, en vez de un bonus fijo, añaden una línea de modificador nueva al item (ej. Uhtred's Sidereus en botas añade mods de Chronomancy).",
+                tip: "Aldur's Legacy destruye un Unique Kalguuran o Ezomyte y forja una runa que hereda parte de sus mods (variantes como Passion/Breath/Ire of Aldur). Cadigan's Epiphany convierte todos los sockets de Rune del item en un único socket de Joya."
+            }
+        ]
+    },
+    {
+        title: "Soul Cores",
+        color: "#4a6a9a",
+        orbs: [
+            {
+                name: "Soul Core",
+                applies: "Socket de Rune/Augment (arma, armadura, casco, guantes, botas, escudo/foco)",
+                effect: "Socketable mucho más potente que una Rune normal: bonus fuertes y a menudo build-defining (escalado de ailments, crítico, generación de cargas, penetración, conversión de daño, resistencias, recoup...). El efecto cambia según si se coloca en arma o en armadura.",
+                tip: "Se obtienen sobre todo del Trial of Chaos (Inscribed Ultimatums) — mínimo 1 garantizada por run, más en Ultimatums de nivel alto; las rondas 4, 7 y 10 siempre ofrecen una como recompensa."
+            },
+            {
+                name: "Core Destabiliser",
+                applies: "Soul Core",
+                effect: "Intenta mejorar una Soul Core a Ancient Soul Core (mucho más fuerte). Riesgo real de destruir la Soul Core en el intento.",
+                tip: "Se encuentra en el Templo de Atziri. Solo puedes llevar un Ancient Augment por personaje — Ancient Soul Core y Abyssal Eye son mutuamente excluyentes."
+            },
+            {
+                name: "Orb of Extraction",
+                applies: "Item con Soul Core socketeada",
+                effect: "Recupera la Soul Core de un item, destruyendo el item en el proceso.",
+                tip: "Útil para recuperar una Soul Core cara antes de descartar o reemplazar el item que la lleva."
             }
         ]
     }
